@@ -118,6 +118,9 @@ msgstr "これらの項目をメモに追加して保存しますか？保存に
 msgid "Add to note"
 msgstr "メモに追加"
 
+msgid "Additional instructions"
+msgstr "追加の指示"
+
 msgid "Address"
 msgstr "アドレス"
 
@@ -517,6 +520,9 @@ msgstr "クラウドバックアップをアップロードしました。"
 msgid "Code"
 msgstr "コード"
 
+msgid "Compare and edit both versions. Your original text changes only when you choose Use text."
+msgstr "両方の文章を比較・編集できます。「文章を使用」を選ぶまで元の文章は変更されません。"
+
 msgid "Compensatory leave"
 msgstr "代休"
 
@@ -898,6 +904,9 @@ msgstr "休暇は「手動入力」で記録してください。"
 msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 msgstr "完了した作業は開始・終了時刻を入力し、作業中なら「自動記録」で計測します。詳細は「ノート」に残し、まとめが必要になったら「レポート」を開きます。"
 
+msgid "Enter the text to polish."
+msgstr "推敲する文章を入力してください。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "開始時刻と終了時刻を HH:mm 形式で正しく入力してください。"
 
@@ -1053,6 +1062,9 @@ msgstr "初回保存日時：古い順"
 
 msgid "First saved: {time}"
 msgstr "初回保存: {time}"
+
+msgid "For example: make it more concise, keep the bullet points, or use a formal tone."
+msgstr "例：簡潔にする、箇条書きを維持する、丁寧な表現にする。"
 
 msgid "Force quit"
 msgstr "強制終了"
@@ -1858,6 +1870,9 @@ msgstr "現在のリクエストが完了するまでお待ちください。"
 msgid "Please wait for the current update check."
 msgstr "現在の更新確認が完了するまでお待ちください。"
 
+msgid "Polish again"
+msgstr "もう一度推敲"
+
 msgid "Polish text"
 msgstr "文章を整える"
 
@@ -2172,6 +2187,12 @@ msgstr "保持日数"
 
 msgid "Retry"
 msgstr "再試行"
+
+msgid "Review AI text"
+msgstr "AI の文章を確認"
+
+msgid "Revised text"
+msgstr "推敲結果"
 
 msgid "Revision"
 msgstr "更新番号"
@@ -2506,6 +2527,9 @@ msgstr "この報告書の出典情報はありません。"
 msgid "Source references: {count}"
 msgstr "出典参照数：{count}"
 
+msgid "Source text"
+msgstr "元の文章"
+
 msgid "Sources"
 msgstr "出典"
 
@@ -2712,6 +2736,9 @@ msgstr "レポートが読み込まれていません。再度読み込んでか
 
 msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
 msgstr "必要なファイルまたは保存先を利用できません。ドライブの接続とフォルダーへのアクセスを確認し、再試行してください。"
+
+msgid "The revised text will appear here."
+msgstr "推敲後の文章がここに表示されます。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "保存済みレポートを利用できません。レポートを再読み込みして、もう一度お試しください。"
@@ -3108,6 +3135,9 @@ msgstr "外部モデルを使用"
 
 msgid "Use model"
 msgstr "モデルを使用"
+
+msgid "Use text"
+msgstr "文章を使用"
 
 msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
 msgstr "このキーはパスワードを忘れたときの再設定に使用します。通常のログイン用パスワードではありません。他人に共有せず保管してください。"

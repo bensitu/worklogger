@@ -118,6 +118,9 @@ msgstr "이 항목들을 메모에 추가하고 저장할까요? 저장에 성�
 msgid "Add to note"
 msgstr "메모에 추가"
 
+msgid "Additional instructions"
+msgstr "추가 요청"
+
 msgid "Address"
 msgstr "주소"
 
@@ -517,6 +520,9 @@ msgstr "클라우드 백업을 업로드했습니다."
 msgid "Code"
 msgstr "코드"
 
+msgid "Compare and edit both versions. Your original text changes only when you choose Use text."
+msgstr "두 버전을 비교하고 편집하세요. ‘텍스트 사용’을 선택해야 원문이 바뀝니다."
+
 msgid "Compensatory leave"
 msgstr "대체 휴가"
 
@@ -898,6 +904,9 @@ msgstr "휴가는 수동 입력에서 기록하세요."
 msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 msgstr "완료한 업무는 시작 및 종료 시간을 입력하고, 진행 중인 업무는 자동 기록으로 시간을 측정하세요. 세부 내용은 메모에 남기고 요약이 필요할 때 보고서를 여세요."
 
+msgid "Enter the text to polish."
+msgstr "다듬을 텍스트를 입력하세요."
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "유효한 시작 및 종료 시간을 HH:mm 형식으로 입력하세요."
 
@@ -1053,6 +1062,9 @@ msgstr "최초 저장: 오래된순"
 
 msgid "First saved: {time}"
 msgstr "최초 저장: {time}"
+
+msgid "For example: make it more concise, keep the bullet points, or use a formal tone."
+msgstr "예: 더 간결하게, 글머리 기호 유지, 격식 있는 어조 사용."
 
 msgid "Force quit"
 msgstr "강제 종료"
@@ -1858,6 +1870,9 @@ msgstr "현재 요청이 완료될 때까지 기다려 주세요."
 msgid "Please wait for the current update check."
 msgstr "현재 업데이트 확인이 완료될 때까지 기다려 주세요."
 
+msgid "Polish again"
+msgstr "다시 다듬기"
+
 msgid "Polish text"
 msgstr "문장 다듬기"
 
@@ -2172,6 +2187,12 @@ msgstr "보관 일수"
 
 msgid "Retry"
 msgstr "다시 시도"
+
+msgid "Review AI text"
+msgstr "AI 텍스트 검토"
+
+msgid "Revised text"
+msgstr "다듬은 텍스트"
 
 msgid "Revision"
 msgstr "변경 번호"
@@ -2506,6 +2527,9 @@ msgstr "이 보고서의 출처 정보가 없습니다."
 msgid "Source references: {count}"
 msgstr "출처 참조: {count}"
 
+msgid "Source text"
+msgstr "원문"
+
 msgid "Sources"
 msgstr "출처"
 
@@ -2712,6 +2736,9 @@ msgstr "보고서가 로드되지 않았습니다. 다시 불러온 후 계속�
 
 msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
 msgstr "필요한 파일이나 저장 위치를 사용할 수 없습니다. 드라이브 연결과 폴더 접근 권한을 확인한 후 다시 시도하세요."
+
+msgid "The revised text will appear here."
+msgstr "다듬은 텍스트가 여기에 표시됩니다."
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "저장된 보고서를 사용할 수 없습니다. 보고서를 다시 불러온 후 다시 시도하세요."
@@ -3108,6 +3135,9 @@ msgstr "외부 모델 사용"
 
 msgid "Use model"
 msgstr "모델 사용"
+
+msgid "Use text"
+msgstr "텍스트 사용"
 
 msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
 msgstr "비밀번호를 잊으면 이 키로 재설정할 수 있습니다. 로그인 비밀번호와는 다릅니다. 다른 사람과 공유하지 말고 안전하게 보관하세요."

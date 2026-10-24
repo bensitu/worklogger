@@ -47,7 +47,7 @@ from worklogger.presentation.widgets import (
     SegmentedControl,
 )
 from worklogger.presentation.widgets.report_editor import ReportEditorPanel
-from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.text_review import TextReviewTask
 
 
 _READ_BLOCKED_EVENTS = frozenset((
@@ -81,7 +81,7 @@ class ReportsPage(QWidget):
         self._rendered_report_key = None
         self._confirm_discard = confirm_discard
         self._job_runner = job_runner or shared_job_runner()
-        self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
+        self._rewrite_task = TextReviewTask(self, job_runner=self._job_runner)
         self._rewrite_busy = False
         self._delete_busy = False
         self._generate_busy = False
@@ -473,8 +473,9 @@ class ReportsPage(QWidget):
         instructions = self.ai_hint_line_edit.text()
         self._set_rewrite_busy(True)
         self._set_status(_("Rewriting report..."), notify=False)
-        self._rewrite_task.run("rewrite_report", lambda token: self._view_model.rewrite(state, content, instructions, cancellation_token=token),
-                               on_complete=self._complete_rewrite)
+        self._rewrite_task.run_review("rewrite_report", content,
+            lambda source, hints, token: self._view_model.rewrite(state, source, hints, cancellation_token=token),
+            instructions=instructions, available=lambda: self._view_model.rewrite_available, on_complete=self._complete_rewrite)
 
     def _set_rewrite_busy(self, busy: bool) -> None:
         self._rewrite_busy = busy

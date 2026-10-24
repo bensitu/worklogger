@@ -118,6 +118,9 @@ msgstr "Add these entries to the note and save it? Their original records will b
 msgid "Add to note"
 msgstr "Add to note"
 
+msgid "Additional instructions"
+msgstr "Additional instructions"
+
 msgid "Address"
 msgstr "Address"
 
@@ -517,6 +520,9 @@ msgstr "Cloud backup uploaded."
 msgid "Code"
 msgstr "Code"
 
+msgid "Compare and edit both versions. Your original text changes only when you choose Use text."
+msgstr "Compare and edit both versions. Your original text changes only when you choose Use text."
+
 msgid "Compensatory leave"
 msgstr "Compensatory leave"
 
@@ -898,6 +904,9 @@ msgstr "Enter leave in Manual Input."
 msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 msgstr "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 
+msgid "Enter the text to polish."
+msgstr "Enter the text to polish."
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "Enter valid start and end times in HH:mm format."
 
@@ -1053,6 +1062,9 @@ msgstr "First saved: oldest first"
 
 msgid "First saved: {time}"
 msgstr "First saved: {time}"
+
+msgid "For example: make it more concise, keep the bullet points, or use a formal tone."
+msgstr "For example: make it more concise, keep the bullet points, or use a formal tone."
 
 msgid "Force quit"
 msgstr "Force quit"
@@ -1858,6 +1870,9 @@ msgstr "Please wait for the current request."
 msgid "Please wait for the current update check."
 msgstr "Please wait for the current update check."
 
+msgid "Polish again"
+msgstr "Polish again"
+
 msgid "Polish text"
 msgstr "Polish text"
 
@@ -2172,6 +2187,12 @@ msgstr "Retention days"
 
 msgid "Retry"
 msgstr "Retry"
+
+msgid "Review AI text"
+msgstr "Review AI text"
+
+msgid "Revised text"
+msgstr "Revised text"
 
 msgid "Revision"
 msgstr "Revision"
@@ -2506,6 +2527,9 @@ msgstr "Source information unavailable for this report."
 msgid "Source references: {count}"
 msgstr "Source references: {count}"
 
+msgid "Source text"
+msgstr "Source text"
+
 msgid "Sources"
 msgstr "Sources"
 
@@ -2712,6 +2736,9 @@ msgstr "The report has not loaded. Reload it before continuing."
 
 msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
 msgstr "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
+
+msgid "The revised text will appear here."
+msgstr "The revised text will appear here."
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "The saved report is no longer available. Reload the reports and try again."
@@ -3108,6 +3135,9 @@ msgstr "Use external model"
 
 msgid "Use model"
 msgstr "Use model"
+
+msgid "Use text"
+msgstr "Use text"
 
 msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
 msgstr "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."

@@ -22,7 +22,7 @@ from worklogger.presentation.widgets.icons import set_button_icon, ui_icon
 from worklogger.presentation.widgets.time_picker import TimePickerDialog
 from worklogger.presentation.widgets.classification_picker import ClassificationButton, ClassificationPicker
 from worklogger.presentation.entry_type_labels import classification_label
-from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.text_review import TextReviewTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 from worklogger.presentation.widgets.feedback import confirm_discard_record_changes
@@ -47,7 +47,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self.view_model = view_model
         self._job_runner = job_runner
         self._ai_ready = view_model.rewrite_available
-        self._polish_task = TextProcessingTask(self, job_runner=job_runner)
+        self._polish_task = TextReviewTask(self, job_runner=job_runner)
         self.is_busy = False
         self._updating = False
         self._timer_failed = False
@@ -679,7 +679,9 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
             if not isinstance(result.error, CancellationError):
                 self._ai_ready = self.view_model.rewrite_available
             self._update_actions()
-        self._polish_task.run("polish_record_content", lambda token: self.view_model.rewrite_content(content, cancellation_token=token), on_complete=complete)
+        self._polish_task.run_review("polish_record_content", content,
+            lambda source, instructions, token: self.view_model.rewrite_content(source, cancellation_token=token, instructions=instructions),
+            available=lambda: self.view_model.rewrite_available, on_complete=complete)
         self._update_actions()
 
 

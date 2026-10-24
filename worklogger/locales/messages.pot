@@ -116,6 +116,9 @@ msgstr ""
 msgid "Add to note"
 msgstr ""
 
+msgid "Additional instructions"
+msgstr ""
+
 msgid "Address"
 msgstr ""
 
@@ -515,6 +518,9 @@ msgstr ""
 msgid "Code"
 msgstr ""
 
+msgid "Compare and edit both versions. Your original text changes only when you choose Use text."
+msgstr ""
+
 msgid "Compensatory leave"
 msgstr ""
 
@@ -896,6 +902,9 @@ msgstr ""
 msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 msgstr ""
 
+msgid "Enter the text to polish."
+msgstr ""
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr ""
 
@@ -1050,6 +1059,9 @@ msgid "First saved: oldest first"
 msgstr ""
 
 msgid "First saved: {time}"
+msgstr ""
+
+msgid "For example: make it more concise, keep the bullet points, or use a formal tone."
 msgstr ""
 
 msgid "Force quit"
@@ -1856,6 +1868,9 @@ msgstr ""
 msgid "Please wait for the current update check."
 msgstr ""
 
+msgid "Polish again"
+msgstr ""
+
 msgid "Polish text"
 msgstr ""
 
@@ -2169,6 +2184,12 @@ msgid "Retention days"
 msgstr ""
 
 msgid "Retry"
+msgstr ""
+
+msgid "Review AI text"
+msgstr ""
+
+msgid "Revised text"
 msgstr ""
 
 msgid "Revision"
@@ -2504,6 +2525,9 @@ msgstr ""
 msgid "Source references: {count}"
 msgstr ""
 
+msgid "Source text"
+msgstr ""
+
 msgid "Sources"
 msgstr ""
 
@@ -2709,6 +2733,9 @@ msgid "The report has not loaded. Reload it before continuing."
 msgstr ""
 
 msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
+msgstr ""
+
+msgid "The revised text will appear here."
 msgstr ""
 
 msgid "The saved report is no longer available. Reload the reports and try again."
@@ -3105,6 +3132,9 @@ msgid "Use external model"
 msgstr ""
 
 msgid "Use model"
+msgstr ""
+
+msgid "Use text"
 msgstr ""
 
 msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."

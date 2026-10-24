@@ -18,7 +18,7 @@ from worklogger.presentation.job_runner import shared_job_runner, owned_callback
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.feedback import show_information, show_warning
-from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.text_review import TextReviewTask
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
 
@@ -30,7 +30,7 @@ class NoteEditorDialog(QDialog):
         self._view_model, self._day = view_model, day
         self._ai_ready = view_model.rewrite_available
         self._job_runner = job_runner or shared_job_runner()
-        self._rewrite_task = TextProcessingTask(self, job_runner=self._job_runner)
+        self._rewrite_task = TextReviewTask(self, job_runner=self._job_runner)
         self._confirm_discard_changes = confirm_discard_changes
         self._state = None
         self._last_error = None
@@ -390,7 +390,9 @@ class NoteEditorDialog(QDialog):
             if not isinstance(result.error, CancellationError):
                 self._ai_ready = self._view_model.rewrite_available
             self._update_actions()
-        self._rewrite_task.run("rewrite_note", lambda token: self._view_model.rewrite(content, cancellation_token=token), on_complete=completed)
+        self._rewrite_task.run_review("rewrite_note", content,
+            lambda source, instructions, token: self._view_model.rewrite(source, cancellation_token=token, instructions=instructions),
+            available=lambda: self._view_model.rewrite_available, on_complete=completed)
 
     def export_markdown(self, destination: Path):
         content = self.editor.toPlainText()

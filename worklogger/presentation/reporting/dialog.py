@@ -30,7 +30,7 @@ from worklogger.presentation.viewmodels import ReportEditorState, ReportEditorVi
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
-from worklogger.presentation.processing import TextProcessingTask
+from worklogger.presentation.text_review import TextReviewTask
 from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 
@@ -193,7 +193,7 @@ class ReportDialog(QDialog):
         self._states: dict[str, ReportEditorState] = {}
         self._saved_content: dict[str, str] = {}
         self._last_error: AppError | None = None
-        self._rewrite_task = TextProcessingTask(self, job_runner=job_runner)
+        self._rewrite_task = TextReviewTask(self, job_runner=job_runner)
         self.setObjectName("report_dialog")
         self.setWindowTitle(_("Work Report"))
         apply_window_icon(self)
@@ -393,7 +393,9 @@ class ReportDialog(QDialog):
                 return
             editor.setPlainText(result.value)
             self.status_label.setText(_("Rewritten"))
-        self._rewrite_task.run("rewrite_report", lambda token: self._view_model.rewrite(state, content, cancellation_token=token), on_complete=completed)
+        self._rewrite_task.run_review("rewrite_report", content,
+            lambda source, instructions, token: self._view_model.rewrite(state, source, instructions, cancellation_token=token),
+            available=lambda: self._view_model.rewrite_available, on_complete=completed)
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = None if isinstance(error, CancellationError) else error

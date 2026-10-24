@@ -1312,6 +1312,10 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         panel.view_model._rewrite_handler = Rewriter()
         panel.refresh_ai_availability()
         panel.polish_button.click()
+        self.assertEqual(panel.content_input.toPlainText(), "Draft description")
+        review = panel._polish_task.review_dialog
+        self.assertEqual(review.source_edit.toPlainText(), "Draft description")
+        review.use_button.click()
         self.assertEqual(panel.content_input.toPlainText(), "Prepared agenda")
         self.assertEqual((panel.start_input.text(), panel.end_input.text(), editor_state(panel).entry_type), ("09:15", "10:00", "meeting"))
         self.assertEqual(commands[0].context, "time_entry")

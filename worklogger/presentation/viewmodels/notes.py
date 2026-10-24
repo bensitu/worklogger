@@ -65,9 +65,9 @@ class NoteEditorViewModel:
     def export_markdown(self, destination: Path, content: str):
         return self._markdown_exporter.export_markdown(destination, content)
 
-    def rewrite(self, content: str, cancellation_token=None):
+    def rewrite(self, content: str, cancellation_token=None, *, instructions=""):
         result = self._rewrite_handler.handle(RewriteTextCommand(self.service.user_id, content,
-                                               context="daily_note", language=self._language), cancellation_token=cancellation_token)
+                                               context="daily_note", language=self._language, instructions=instructions), cancellation_token=cancellation_token)
         if not result.ok or result.value is None:
             return Result.failure(result.error or ValidationError("rewrite_failed", "rewrite_failed"))
         return Result.success(result.value.content)

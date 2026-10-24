@@ -3,6 +3,7 @@
 QLineEdit,
 QTextEdit,
 QPlainTextEdit,
+QFrame[role="processing_input"],
 QComboBox,
 QAbstractSpinBox {
   background: {{ input_fill }};

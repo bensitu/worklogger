@@ -118,6 +118,9 @@ msgstr "將這些歷史事項加入筆記並儲存嗎？僅在儲存成功後刪
 msgid "Add to note"
 msgstr "加入筆記"
 
+msgid "Additional instructions"
+msgstr "追加要求"
+
 msgid "Address"
 msgstr "位址"
 
@@ -517,6 +520,9 @@ msgstr "雲端備份已上傳。"
 msgid "Code"
 msgstr "編號"
 
+msgid "Compare and edit both versions. Your original text changes only when you choose Use text."
+msgstr "比較並編輯兩個版本。只有按下「使用文字」後才會取代原文。"
+
 msgid "Compensatory leave"
 msgstr "補休"
 
@@ -898,6 +904,9 @@ msgstr "休假請在「手動輸入」中錄入。"
 msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
 msgstr "已完成的工作可填寫開始和結束時間；進行中的工作可使用「自動記錄」計時。日常細節記在「筆記」中，需要總結時再開啟「報表」。"
 
+msgid "Enter the text to polish."
+msgstr "輸入需要潤飾的文字。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "請以 HH:mm 格式輸入有效的開始和結束時間。"
 
@@ -1053,6 +1062,9 @@ msgstr "首次儲存：從舊到新"
 
 msgid "First saved: {time}"
 msgstr "首次儲存：{time}"
+
+msgid "For example: make it more concise, keep the bullet points, or use a formal tone."
+msgstr "例如：更加精簡、保留項目符號，或使用正式語氣。"
 
 msgid "Force quit"
 msgstr "強制結束"
@@ -1858,6 +1870,9 @@ msgstr "請等待目前的請求完成。"
 msgid "Please wait for the current update check."
 msgstr "請等待目前的更新檢查完成。"
 
+msgid "Polish again"
+msgstr "再次潤飾"
+
 msgid "Polish text"
 msgstr "潤飾內容"
 
@@ -2172,6 +2187,12 @@ msgstr "保留天數"
 
 msgid "Retry"
 msgstr "重試"
+
+msgid "Review AI text"
+msgstr "檢查 AI 文字"
+
+msgid "Revised text"
+msgstr "潤飾結果"
 
 msgid "Revision"
 msgstr "修訂號"
@@ -2506,6 +2527,9 @@ msgstr "此報表沒有來源資訊。"
 msgid "Source references: {count}"
 msgstr "來源引用：{count}"
 
+msgid "Source text"
+msgstr "原始文字"
+
 msgid "Sources"
 msgstr "來源"
 
@@ -2712,6 +2736,9 @@ msgstr "報表尚未載入，請重新載入後繼續。"
 
 msgid "The required file or storage location is unavailable. Check that the drive is connected and the directory is accessible, then retry."
 msgstr "所需檔案或儲存位置無法使用。請確認磁碟已連接，且目錄可以存取，然後重試。"
+
+msgid "The revised text will appear here."
+msgstr "潤飾後的文字將顯示在這裡。"
 
 msgid "The saved report is no longer available. Reload the reports and try again."
 msgstr "已儲存的報表已無法使用。請重新載入報表後再試。"
@@ -3108,6 +3135,9 @@ msgstr "使用外部模型"
 
 msgid "Use model"
 msgstr "使用模型"
+
+msgid "Use text"
+msgstr "使用文字"
 
 msgid "Use this key to reset a forgotten password. It is not your sign-in password. Keep it private."
 msgstr "忘記密碼時，可用此金鑰重設密碼。它不是日常登入密碼，請妥善保管，不要分享給他人。"
