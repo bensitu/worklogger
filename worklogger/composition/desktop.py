@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication
 
 from worklogger.app.job_runner import JobRunner
 from worklogger.app.use_cases.work_planning import WorkPlanningService
+from worklogger.app.use_cases.getting_started import GettingStartedService
 from worklogger.app.use_cases.auth import (
     RevokeRememberedSessionHandler,
 )
@@ -53,6 +54,7 @@ from worklogger.infrastructure.repositories import (
     SQLiteSettingsRepository,
 )
 from worklogger.presentation.auth import AuthSession
+from worklogger.presentation.shell.getting_started import GettingStartedController
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.notes import NotesWorkflowController
 from worklogger.presentation.settings import SettingsWorkflowController
@@ -340,6 +342,8 @@ def _runtime_result(
     revoke_remembered_session=None,
 ) -> Result[DesktopRuntime]:
     settings_workflow = getattr(window, "_settings_workflow", None)
+    window.getting_started = GettingStartedController(window,
+        GettingStartedService(SQLiteSettingsRepository(connection_factory), user_id=user.id), job_runner=job_runner)
     if settings_workflow is not None:
         settings_workflow.set_restore_handler(window.logout_requested.emit)
         settings_workflow.start_cloud_backups(window)

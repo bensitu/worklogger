@@ -883,6 +883,9 @@ msgstr "계속하기 전에 내용을 입력하세요."
 msgid "Enter leave in Manual Input."
 msgstr "휴가는 수동 입력에서 기록하세요."
 
+msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
+msgstr "완료한 업무는 시작 및 종료 시간을 입력하고, 진행 중인 업무는 자동 기록으로 시간을 측정하세요. 세부 내용은 메모에 남기고 요약이 필요할 때 보고서를 여세요."
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "유효한 시작 및 종료 시간을 HH:mm 형식으로 입력하세요."
 
@@ -1083,6 +1086,9 @@ msgstr "생성된 초안"
 
 msgid "Generated: {time}"
 msgstr "생성: {time}"
+
+msgid "Getting started"
+msgstr "시작 안내"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -1458,6 +1464,9 @@ msgstr "최대 백업 보관 수"
 
 msgid "May"
 msgstr "5월"
+
+msgid "Maybe later"
+msgstr "나중에"
 
 msgid "Meeting"
 msgstr "회의"
@@ -1914,6 +1923,9 @@ msgstr "최근 사용한 프로젝트 및 항목"
 
 msgid "Record ID"
 msgstr "기록 ID"
+
+msgid "Record a time period"
+msgstr "시간 기록"
 
 msgid "Record actions"
 msgstr "기록 작업"
@@ -2481,6 +2493,9 @@ msgstr "계속하기 전에 기록 또는 휴식을 시작하세요."
 
 msgid "Start week on Monday"
 msgstr "월요일부터 한 주 시작"
+
+msgid "Start with your first record"
+msgstr "첫 기록부터 시작하세요"
 
 msgid "Start with your own local account. No online registration is required."
 msgstr "먼저 나만의 로컬 계정을 만드세요. 온라인 가입은 필요하지 않습니다."
@@ -3066,6 +3081,9 @@ msgstr "사용자가 생성되었습니다."
 
 msgid "User deleted."
 msgstr "사용자가 삭제되었습니다."
+
+msgid "User guide"
+msgstr "사용 가이드"
 
 msgid "User updated."
 msgstr "사용자가 업데이트되었습니다."

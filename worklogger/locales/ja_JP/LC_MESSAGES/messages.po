@@ -883,6 +883,9 @@ msgstr "続行する前に内容を入力してください。"
 msgid "Enter leave in Manual Input."
 msgstr "休暇は「手動入力」で記録してください。"
 
+msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
+msgstr "完了した作業は開始・終了時刻を入力し、作業中なら「自動記録」で計測します。詳細は「ノート」に残し、まとめが必要になったら「レポート」を開きます。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "開始時刻と終了時刻を HH:mm 形式で正しく入力してください。"
 
@@ -1083,6 +1086,9 @@ msgstr "生成した下書き"
 
 msgid "Generated: {time}"
 msgstr "生成日時：{time}"
+
+msgid "Getting started"
+msgstr "はじめに"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -1458,6 +1464,9 @@ msgstr "バックアップ保持数の上限"
 
 msgid "May"
 msgstr "5月"
+
+msgid "Maybe later"
+msgstr "後で"
 
 msgid "Meeting"
 msgstr "会議"
@@ -1914,6 +1923,9 @@ msgstr "最近使用したプロジェクトと項目"
 
 msgid "Record ID"
 msgstr "記録 ID"
+
+msgid "Record a time period"
+msgstr "時間を記録"
 
 msgid "Record actions"
 msgstr "記録の操作"
@@ -2481,6 +2493,9 @@ msgstr "続行する前に記録または休憩を開始してください。"
 
 msgid "Start week on Monday"
 msgstr "月曜始まり"
+
+msgid "Start with your first record"
+msgstr "最初の記録を始めましょう"
 
 msgid "Start with your own local account. No online registration is required."
 msgstr "まず自分用のローカルアカウントを作成します。オンライン登録は不要です。"
@@ -3066,6 +3081,9 @@ msgstr "ユーザーを作成しました。"
 
 msgid "User deleted."
 msgstr "ユーザーを削除しました。"
+
+msgid "User guide"
+msgstr "ユーザーガイド"
 
 msgid "User updated."
 msgstr "ユーザーを更新しました。"

@@ -881,6 +881,9 @@ msgstr ""
 msgid "Enter leave in Manual Input."
 msgstr ""
 
+msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
+msgstr ""
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr ""
 
@@ -1080,6 +1083,9 @@ msgid "Generated draft"
 msgstr ""
 
 msgid "Generated: {time}"
+msgstr ""
+
+msgid "Getting started"
 msgstr ""
 
 msgid "GitHub"
@@ -1455,6 +1461,9 @@ msgid "Maximum retained backups"
 msgstr ""
 
 msgid "May"
+msgstr ""
+
+msgid "Maybe later"
 msgstr ""
 
 msgid "Meeting"
@@ -1911,6 +1920,9 @@ msgid "Recent context"
 msgstr ""
 
 msgid "Record ID"
+msgstr ""
+
+msgid "Record a time period"
 msgstr ""
 
 msgid "Record actions"
@@ -2478,6 +2490,9 @@ msgid "Start recording or a break before continuing."
 msgstr ""
 
 msgid "Start week on Monday"
+msgstr ""
+
+msgid "Start with your first record"
 msgstr ""
 
 msgid "Start with your own local account. No online registration is required."
@@ -3063,6 +3078,9 @@ msgid "User created."
 msgstr ""
 
 msgid "User deleted."
+msgstr ""
+
+msgid "User guide"
 msgstr ""
 
 msgid "User updated."

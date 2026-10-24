@@ -883,6 +883,9 @@ msgstr "请先输入内容。"
 msgid "Enter leave in Manual Input."
 msgstr "休假请在“手动输入”中录入。"
 
+msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
+msgstr "已完成的工作可填写开始和结束时间；正在进行的工作可使用“自动记录”计时。日常细节记在“笔记”中，需要总结时再打开“报表”。"
+
 msgid "Enter valid start and end times in HH:mm format."
 msgstr "请按 HH:mm 格式输入有效的开始和结束时间。"
 
@@ -1083,6 +1086,9 @@ msgstr "生成的草稿"
 
 msgid "Generated: {time}"
 msgstr "生成时间：{time}"
+
+msgid "Getting started"
+msgstr "快速入门"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -1458,6 +1464,9 @@ msgstr "最多保留备份数"
 
 msgid "May"
 msgstr "5月"
+
+msgid "Maybe later"
+msgstr "稍后再说"
 
 msgid "Meeting"
 msgstr "会议"
@@ -1914,6 +1923,9 @@ msgstr "最近使用的项目与事项"
 
 msgid "Record ID"
 msgstr "记录 ID"
+
+msgid "Record a time period"
+msgstr "记录一段时间"
 
 msgid "Record actions"
 msgstr "记录操作"
@@ -2481,6 +2493,9 @@ msgstr "请先开始记录或休息。"
 
 msgid "Start week on Monday"
 msgstr "每周从周一开始"
+
+msgid "Start with your first record"
+msgstr "从第一条记录开始"
 
 msgid "Start with your own local account. No online registration is required."
 msgstr "先为自己创建一个本地账户，无需注册在线服务。"
@@ -3066,6 +3081,9 @@ msgstr "用户已创建。"
 
 msgid "User deleted."
 msgstr "用户已删除。"
+
+msgid "User guide"
+msgstr "使用指南"
 
 msgid "User updated."
 msgstr "用户已更新。"

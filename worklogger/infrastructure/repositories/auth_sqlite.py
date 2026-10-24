@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from worklogger.config.constants import GETTING_STARTED_PENDING_SETTING_KEY
 from dataclasses import replace
 from datetime import datetime, timezone
 
@@ -100,6 +101,7 @@ class SQLiteAuthRepository:
                     tuple(values.values()),
                 )
                 user_id = int(cursor.lastrowid)
+                self._initialize_account_preferences(connection, user_id)
         except sqlite3.IntegrityError as exc:
             if getattr(exc, "sqlite_errorname", "") == "SQLITE_CONSTRAINT_UNIQUE":
                 raise ValueError("username_exists") from exc
@@ -137,6 +139,7 @@ class SQLiteAuthRepository:
                     raise ValueError("username_exists") from exc
                 raise
             user_id = int(cursor.lastrowid)
+            self._initialize_account_preferences(connection, user_id)
             cursor = connection.execute(
                 "INSERT INTO external_identities(user_id,provider,subject,email,display_name,created_at,updated_at,broker,issuer) "
                 "VALUES(?,?,?,?,?,?,?,'direct_oidc',?)",
@@ -146,6 +149,11 @@ class SQLiteAuthRepository:
                                     profile.email, profile.display_name, profile.issuer or profile.provider)
             user = self._user_from_row(connection.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone())
         return user, linked
+
+    @staticmethod
+    def _initialize_account_preferences(connection, user_id):
+        connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,?,?)",
+                           (user_id, GETTING_STARTED_PENDING_SETTING_KEY, "1"))
 
     def set_display_name(self, user_id: int, display_name: str, *, expected_display_name: str) -> User:
         name = normalize_display_name(display_name)
