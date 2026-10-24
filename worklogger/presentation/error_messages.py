@@ -95,6 +95,7 @@ _MESSAGE_GROUPS = (
     (("worklog_summary_not_editable",), N_("Select an individual time record to edit this day.")),
     (("auto_record_restore_failed", "auto_record_state_save_failed"), N_("Unable to update automatic recording state. Your saved data has been retained.")),
     (("note_conflict",), N_("This note was changed in another editor. Reload it before trying again. Your changes have been retained.")),
+    (("note_content_too_long",), N_("This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained.")),
     (("note_save_failed",), N_("Unable to save the note. Your changes have been retained.")),
     (("note_load_failed",), N_("Unable to load daily notes. Your saved data has been retained.")),
     (("note_delete_failed",), N_("Unable to delete the note. Your saved data has been retained.")),

@@ -268,6 +268,8 @@ dot appears to its left on the same row.
 Drafts are retained after a typing pause. Closing edited text offers Keep draft,
 Discard, or Cancel. Conflicting saves preserve your input; reload and compare
 before replacing someone else's changes.
+Notes and retained drafts support up to 1 MiB of UTF-8 text. Oversized content is
+identified explicitly and is not written over the saved note or draft.
 If a draft cannot be read, the saved note is displayed without removing the
 draft. Reload explicitly discards it; saving edited content replaces it.
 
@@ -286,6 +288,9 @@ preference. Generate from records builds a draft from records, calendar events,
 and notes approved for reports. Edit and save it. Templates selects the language
 and report type; Save and apply saves the template and regenerates the draft.
 See [template variables](templates.md).
+Calendar titles, project labels, classification labels, and display names are
+inserted as literal Markdown text. User-written note and template formatting is
+preserved; review that content before sharing exported Markdown.
 
 Saved reports lists the current account's reports of the selected type. Daily
 reports support week, month, year, custom, and all-date ranges. Weekly reports

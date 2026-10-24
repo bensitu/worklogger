@@ -27,6 +27,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 - Background opacity changes no longer flash the settings controls or restart animations. Consecutive changes retain the latest selection while saving.
 - Updated setuptools to 84.1.0 to fix path traversal during legacy wheel installation on Windows.
 - Sensitive copies request exclusion from Windows clipboard history and cloud synchronization. Malformed stored password hashes and salts fail verification without interrupting sign-in.
+- Notes and drafts identify the 1 MiB text limit without replacing saved content. Generated reports escape literal calendar and project metadata while preserving intentional note and template Markdown.
 
 ## [4.0.0] - 2026.10.23
 

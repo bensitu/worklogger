@@ -6,6 +6,7 @@ from worklogger.app.use_cases._errors import infrastructure_failure
 
 import json
 import math
+import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
@@ -181,7 +182,7 @@ def _template_values(
         if not work_log.is_leave
     )
     return {
-        "display_name": display_name,
+        "display_name": _markdown_label(display_name),
         "date": start.isoformat(),
         "start": start.isoformat(),
         "end": end.isoformat(),
@@ -218,7 +219,7 @@ def _project_summary(work_logs, _):
                 key = ("project", entry.context.project_id) if entry.context.project_id else ("label", entry.context.project_label)
                 previous = totals.get(key, ("", 0))
                 totals[key] = (entry.context.project_label, previous[1] + hours)
-    return "\n".join(_list_item(f"{label or _('Unclassified')}: {hours:.1f}h")
+    return "\n".join(_list_item(f"{_markdown_label(label or _('Unclassified'))}: {hours:.1f}h")
                      for label, hours in sorted(totals.values()))
 
 
@@ -238,10 +239,10 @@ def _work_log_lines(work_logs: tuple[WorkLog, ...], standard_hours: float, _: Ca
         lines.append(_list_item(heading))
         for entry in record.entries or (record,):
             span = time_range_label(entry.start_time, entry.end_time) if entry.has_times else _("All day")
-            label = classification_label(entry.entry_type, entry.work_mode, _)
+            label = _markdown_label(classification_label(entry.entry_type, entry.work_mode, _))
             description = f"{span} [{label}]"
             if entry.context.label:
-                description += " [" + entry.context.label + "]"
+                description += " [" + _markdown_label(entry.context.label) + "]"
             if entry.is_overnight:
                 description += " " + _("Overnight")
             if entry.note:
@@ -268,12 +269,16 @@ def _event_lines(events: tuple[CalendarEvent, ...], _: Callable[[str], str]) -> 
     for event in sorted(events, key=lambda item: (item.day, item.start_time or "", item.summary)):
         time_text = _("All day") if event.all_day else time_range_label(event.start_time, event.end_time)
         prefix = f"{event.day.isoformat()} {time_text}".strip()
-        lines.append(_list_item(f"{prefix}: {event.summary}"))
+        lines.append(_list_item(f"{prefix}: {_markdown_label(event.summary)}"))
     return "\n".join(lines)
 
 
 def _list_item(content: str) -> str:
     return "- " + content.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\n  ")
+
+
+def _markdown_label(value: str) -> str:
+    return re.sub(r"([\\`*_{}\[\]()<>!#|~])", r"\\\1", " ".join(value.splitlines()))
 
 
 def _fallback_report(report_type: str, start: date, end: date, _: Callable[[str], str]) -> str:

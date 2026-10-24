@@ -9,7 +9,7 @@ import logging
 from worklogger.app.commands.note_commands import SaveDailyNoteCommand
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
 from worklogger.app.use_cases._errors import infrastructure_failure
-from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter, NoteHistoryPage
+from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES, DailyNote, NoteHistoryFilter, NoteHistoryPage
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.notes.repositories import DailyNoteRepository
 from worklogger.domain.quicklog.models import QuickLog
@@ -45,8 +45,8 @@ class SaveDailyNoteHandler:
             return Result.failure(
                 ValidationError("note_content_must_be_string", "note_content_must_be_string")
             )
-        if len(command.content.encode("utf-8")) > 1024 * 1024:
-            return Result.failure(ValidationError("note_save_failed", "note_save_failed"))
+        if len(command.content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES:
+            return Result.failure(ValidationError("note_content_too_long", "note_content_too_long"))
         note = DailyNote(
             user_id=command.user_id,
             day=command.day,
@@ -91,6 +91,8 @@ class DailyNotesService:
         except ValueError as exc:
             if str(exc) == "note_conflict":
                 return Result.failure(ConflictError("note_conflict", "note_conflict"))
+            if str(exc) == "note_content_too_long":
+                return Result.failure(ValidationError("note_content_too_long", "note_content_too_long"))
             return Result.failure(ValidationError(error_code, error_code))
         except Exception as error:
             return Result.failure(infrastructure_failure(error_code, error, logger_name=__name__))
@@ -126,8 +128,10 @@ class DailyNotesService:
     def save(self, day: date, content: str, expected_content: str, sharing: NoteSharing,
              expected_sharing: NoteSharing | None = None, *, previous_entries_to_remove: tuple[QuickLog, ...] = ()):
         def save():
-            if not isinstance(content, str) or len(content.encode("utf-8")) > 1024 * 1024:
+            if not isinstance(content, str):
                 raise ValueError("note_save_failed")
+            if len(content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES:
+                raise ValueError("note_content_too_long")
             entries = self.previous_entries.list_for_day(self.user_id, day)
             note = DailyNote(self.user_id, day, content)
             self.notes.save(note, expected_content=expected_content, sharing=sharing, clear_draft=True,
@@ -140,9 +144,11 @@ class DailyNotesService:
     def save_draft(self, day: date, content: str, expected_content: str, sharing: NoteSharing,
                    expected_sharing: NoteSharing = NoteSharing()):
         def save():
-            if (not isinstance(content, str) or not isinstance(expected_content, str)
-                    or len(content.encode("utf-8")) > 1024 * 1024 or len(expected_content.encode("utf-8")) > 1024 * 1024):
+            if not isinstance(content, str) or not isinstance(expected_content, str):
                 raise ValueError("note_save_failed")
+            if (len(content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES
+                    or len(expected_content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES):
+                raise ValueError("note_content_too_long")
             raw = json.dumps({"content": content, "expected_content": expected_content,
                               "sharing": {"reports": sharing.reports, "ai": sharing.ai},
                               "expected_sharing": {"reports": expected_sharing.reports, "ai": expected_sharing.ai}}, ensure_ascii=False)

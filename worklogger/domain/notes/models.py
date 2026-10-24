@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+MAX_NOTE_CONTENT_BYTES = 1024 * 1024
+
 
 @dataclass(frozen=True)
 class DailyNote:

@@ -2833,6 +2833,9 @@ msgstr "この項目は変更されています。保存前に再読み込みし
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "このモデルは他のユーザーが使用しているため削除できません。"
 
+msgid "This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained."
+msgstr "このノートは 1 MiB の上限を超えています。内容を短くしてから保存してください。変更内容は保持されています。"
+
 msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 msgstr "このノートは別のエディターで変更されました。再試行する前に再読み込みしてください。入力内容は保持されています。"
 

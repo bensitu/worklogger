@@ -2833,6 +2833,9 @@ msgstr "此項目已發生變更。儲存前請重新載入，輸入內容已保
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "此模型正被其他使用者使用，無法刪除。"
 
+msgid "This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained."
+msgstr "此筆記超過 1 MiB 上限。請縮短內容後再儲存。你的修改已保留。"
+
 msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 msgstr "此筆記已在其他編輯視窗中變更。請重新載入後再試。您的修改已保留。"
 

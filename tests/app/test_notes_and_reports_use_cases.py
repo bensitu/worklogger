@@ -203,6 +203,26 @@ class CancelledToken:
 
 
 class NotesReportsUseCaseTests(unittest.TestCase):
+    def test_report_metadata_is_literal_without_removing_note_or_template_markdown(self):
+        from worklogger.app.use_cases.report_generation import _template_values
+        from worklogger.domain.projects.models import WorkContext
+
+        day = date(2026, 10, 25)
+        title = '![image](https://example.test/image)\n# heading\n<img src="https://example.test/tracker">'
+        values = _template_values(report_type="daily", start=day, end=day,
+            work_logs=(WorkLog(1, day, "09:00", "10:00", context=WorkContext(project_label="[Project](https://example.test)")),
+                       WorkLog(1, day, note="**Intentional emphasis**\n- Follow up")),
+            quick_logs=(), events=(CalendarEvent(1, 1, day, title),), standard_hours=8,
+            translate=lambda value: value, display_name="**Display name**")
+        self.assertNotIn("![image]", values["calendar_events"])
+        self.assertNotIn("\n# heading", values["calendar_events"])
+        self.assertIn(r"\<img", values["calendar_events"])
+        self.assertIn(r"\!\[image\]", values["calendar_events"])
+        self.assertIn(r"\[Project\]", values["projects_summary"])
+        self.assertEqual(values["display_name"], r"\*\*Display name\*\*")
+        self.assertIn("**Intentional emphasis**", values["notes_section"])
+        self.assertTrue(render_template("# Report\n{calendar_events}", values).startswith("# Report\n"))
+
     def test_report_sections_separate_notes_from_work_and_omit_empty_optional_content(self):
         from worklogger.app.use_cases.report_generation import _template_values
         from worklogger.domain.worklog.rules import aggregate_days
@@ -327,7 +347,7 @@ class NotesReportsUseCaseTests(unittest.TestCase):
             translated = handler.handle(GenerateReportCommand(1, "weekly", date(2026, 5, 11), date(2026, 5, 17),
                                                               language="ja_JP"))
         self.assertTrue(translated.ok, translated.error)
-        self.assertIn("ja_JP:Normal \u00b7 ja_JP:Remote", translated.value.content)
+        self.assertIn("ja\\_JP:Normal \u00b7 ja\\_JP:Remote", translated.value.content)
         for repository, method in ((work_logs, "list_range"), (quick_logs, "list_for_range"), (calendar, "list_for_range")):
             with self.subTest(repository=type(repository).__name__), patch.object(repository, method, side_effect=OSError("unavailable")):
                 failed = handler.handle(GenerateReportCommand(1, "daily", date(2026, 5, 11), date(2026, 5, 11)))

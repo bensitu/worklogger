@@ -20,6 +20,25 @@ from worklogger.domain.shared.result import Result
 
 
 class StorageFailureTests(unittest.TestCase):
+    def test_note_size_errors_distinguish_content_limits_and_preserve_storage(self):
+        from worklogger.app.use_cases.notes import DailyNotesService
+        from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES
+        from worklogger.domain.notes.preferences import NoteSharing
+
+        notes, settings, previous = Mock(), Mock(), Mock()
+        previous.list_for_day.return_value = ()
+        service = DailyNotesService(user_id=1, notes=notes, settings=settings, previous_entries=previous)
+        day = date(2026, 10, 25)
+        for content in ("x" * (MAX_NOTE_CONTENT_BYTES + 1), "\u4e2d" * 350_000):
+            self.assertEqual(service.save(day, content, "", NoteSharing()).error.code, "note_content_too_long")
+            self.assertEqual(service.save_draft(day, content, "", NoteSharing()).error.code, "note_content_too_long")
+        self.assertEqual(service.save_draft(day, "edited", "x" * (MAX_NOTE_CONTENT_BYTES + 1), NoteSharing()).error.code,
+                         "note_content_too_long")
+        notes.save.assert_not_called()
+        settings.set.assert_not_called()
+        previous.list_for_day.assert_not_called()
+        self.assertTrue(service.save(day, "x" * MAX_NOTE_CONTENT_BYTES, "", NoteSharing()).ok)
+
     def test_content_size_limits_reject_input_before_writing(self):
         from worklogger.app.commands.note_commands import SaveDailyNoteCommand
         from worklogger.app.commands.report_commands import SaveReportTemplateCommand

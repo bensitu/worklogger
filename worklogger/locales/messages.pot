@@ -2831,6 +2831,9 @@ msgstr ""
 msgid "This model is in use by another user and cannot be deleted."
 msgstr ""
 
+msgid "This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained."
+msgstr ""
+
 msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 msgstr ""
 

@@ -2833,6 +2833,9 @@ msgstr "This item has changed. Reload it before saving; your input has been reta
 msgid "This model is in use by another user and cannot be deleted."
 msgstr "This model is in use by another user and cannot be deleted."
 
+msgid "This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained."
+msgstr "This note exceeds the 1 MiB limit. Shorten it before saving. Your changes have been retained."
+
 msgid "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 msgstr "This note was changed in another editor. Reload it before trying again. Your changes have been retained."
 
