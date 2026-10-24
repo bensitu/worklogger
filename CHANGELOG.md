@@ -25,6 +25,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 - Repeated AI polishing separates additional editing requests from source text and supports explicit formatting changes. Unchanged responses are explained without overwriting the previous result or manual edits.
 - AI connection checks propagate cancellation to the request. Settings ignore outdated model status results and remain usable if a background job cannot start.
 - Background opacity changes no longer flash the settings controls or restart animations. Consecutive changes retain the latest selection while saving.
+- Updated setuptools to 84.1.0 to fix path traversal during legacy wheel installation on Windows.
 
 ## [4.0.0] - 2026.10.23
 
