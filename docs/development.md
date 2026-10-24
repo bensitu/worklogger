@@ -70,6 +70,11 @@ from the review component. Cancelling the task also closes an open review and
 discards pending results. The dialog owns regeneration, progress, and comparison
 editing; view models retain prompt context and validation responsibilities.
 
+`RewriteTextHandler` uses the shared prompt builder to separate source data from
+editing requests in both local and external messages. Formatting preservation
+is a default, not a reason to ignore explicit editing requests; factual and
+completion-status constraints remain applicable.
+
 First-use guidance stores account state under `getting_started_pending` in the
 existing settings table. Account creation initializes it in the same transaction
 for local and external identities; an absent value means no automatic guidance.

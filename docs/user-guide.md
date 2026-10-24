@@ -420,14 +420,24 @@ text. The window remains open during processing; cancel the request to keep the
 previous result, or retry after a failure. Choose Use text to replace the source
 editor with the right-hand text. Cancel or close the window to keep the original
 editor unchanged. Polishing does not save records or change recorded hours.
+
+If the model returns the source unchanged, the window explains this and keeps
+any previous right-hand result, including manual edits. Polishing receives the
+source text and editing request, not additional records from the database.
+Generate the report from records or add the relevant facts on the left before
+asking for details that are absent from the source; an empty report cannot
+provide missing work times.
+
 The same review flow is used for time records, notes, and reports. Deployment
 settings that disable AI also prevent polishing and accepting AI text.
 See [local models](local-models.md) and
 [AI configuration](configuration.md#ai).
 
 Polishing keeps time records concise, preserves lists and checklists in notes,
-and retains Markdown structure in reports. Instructions require preserving facts
-and completion status without inventing achievements, risks, or plans. Local
+and retains Markdown structure in reports by default. Explicit requests can
+change formatting, such as converting work records into a numbered list or a
+table. Instructions require preserving facts and completion status without
+inventing achievements, risks, or plans. Local
 models receive compact instructions; external services receive more detailed
 instructions. These constraints do not guarantee factual accuracy, so compare
 the result with the original before saving. Generate from records uses templates,

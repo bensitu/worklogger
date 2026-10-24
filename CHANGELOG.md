@@ -29,6 +29,12 @@ Historical entries describe their respective releases; see the
 - Analytics PDF includes all eight dashboard areas, previous-period comparison
   boundaries, and complete paginated numeric tables in a print-friendly layout.
 
+### Fixed
+
+- Repeated AI polishing separates additional editing requests from source text
+  and supports explicit formatting changes. Unchanged responses are explained
+  without overwriting the previous result or manual edits.
+
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 
 **4.0.0: A more connected work history.** Time records, notes, reports, and
