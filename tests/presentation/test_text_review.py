@@ -116,6 +116,25 @@ class TextReviewTests(unittest.TestCase):
         dialog.cancel_button.click()
         self.assertEqual(completed[-1].error.code, "ai_rewrite_cancelled")
 
+    def test_unchanged_model_output_is_explained_without_replacing_the_previous_result(self):
+        completed = []
+        self.task.run_review("rewrite_note", "Original", lambda source, *_args: Result.success(source),
+                             available=lambda: True, on_complete=completed.append)
+        self.runner.complete(0)
+        dialog = self.task.review_dialog
+        self.assertTrue(dialog.status_label.text().strip())
+        dialog.result_edit.setPlainText("Previous result with manual edits")
+        dialog.instructions_edit.setPlainText("Make it more concise")
+        dialog.retry_button.click()
+        self.runner.complete(1)
+        self.assertEqual(dialog.result_edit.toPlainText(), "Previous result with manual edits")
+        self.assertTrue(dialog.status_label.text().strip())
+        self.assertTrue(dialog.retry_button.isEnabled())
+        self.assertTrue(dialog.use_button.isEnabled())
+        self.assertEqual(completed, [])
+        dialog.use_button.click()
+        self.assertEqual(completed[0].value, "Previous result with manual edits")
+
 
 if __name__ == "__main__":
     unittest.main()

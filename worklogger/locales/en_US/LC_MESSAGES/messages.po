@@ -2722,6 +2722,9 @@ msgstr "The model exceeds the supported download size limit."
 msgid "The model returned no content. Please try again."
 msgstr "The model returned no content. Please try again."
 
+msgid "The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."
+msgstr "The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."
+
 msgid "The operation could not be completed. Please try again."
 msgstr "The operation could not be completed. Please try again."
 

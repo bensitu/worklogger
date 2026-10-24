@@ -98,6 +98,11 @@ class TextReviewDialog(QDialog):
         screen = self.screen().availableGeometry()
         self.resize(min(1000, screen.width() - 40), min(680, screen.height() - 70))
         self._update_actions()
+        if source.strip() == result.strip():
+            self._show_unchanged()
+
+    def _show_unchanged(self):
+        self.status_label.setText(_("The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."))
 
     def _update_actions(self):
         ready = self._available()
@@ -118,16 +123,20 @@ class TextReviewDialog(QDialog):
         self.status_label.setText(" ")
         self.result_stack.setCurrentIndex(1)
         self.progress.start(_("Polishing text..."))
-        self._task.run("ai_review_text", lambda token: self._operation(source, instructions, token), on_complete=self._completed)
+        self._task.run("ai_review_text", lambda token: self._operation(source, instructions, token),
+                       on_complete=lambda result: self._completed(result, source))
         self._update_actions()
 
-    def _completed(self, result):
+    def _completed(self, result, source):
         if self._closed:
             return
         self.progress.finish()
         self.result_stack.setCurrentIndex(0)
         if result.ok and result.value is not None:
-            self.result_edit.setPlainText(result.value)
+            if result.value.strip() == source.strip():
+                self._show_unchanged()
+            else:
+                self.result_edit.setPlainText(result.value)
         elif not isinstance(result.error, CancellationError):
             self.status_label.setText(display_error_message(result.error))
         self._update_actions()

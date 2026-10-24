@@ -437,7 +437,8 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                         self.assertIn(constraint, system)
                     self.assertIn(source.strip(), messages[1]["content"])
                     self.assertNotIn("ja_JP", messages[1]["content"])
-                    self.assertIn("Use a professional tone.", system)
+                    self.assertIn("Use a professional tone.", messages[-1]["content"])
+                    self.assertNotIn("Use a professional tone.", system)
                 self.assertLess(len(request.local_messages[0]["content"]), len(request.messages[0]["content"]))
 
     def test_rewriting_uses_source_language_unless_output_language_is_explicit(self):
@@ -452,17 +453,17 @@ class NotesReportsUseCaseTests(unittest.TestCase):
                     for messages in (request.messages, request.local_messages):
                         self.assertIn("Do not translate unless", messages[0]["content"])
                         self.assertNotIn("Write in English", messages[0]["content"])
-                        self.assertEqual(source, messages[-1]["content"])
+                        self.assertIn(f"<source>\n{source}\n</source>", messages[-1]["content"])
                         self.assertNotIn("Language:", messages[-1]["content"])
         handler.handle(RewriteTextCommand(1, source, output_language="en_US"))
         for messages in (gateway.requests[-1].messages, gateway.requests[-1].local_messages):
             self.assertIn("Write in English, as explicitly requested", messages[0]["content"])
         handler.handle(RewriteTextCommand(1, source, instructions="Translate into English."))
-        self.assertIn("Translate into English.", gateway.requests[-1].messages[0]["content"])
+        self.assertIn("Translate into English.", gateway.requests[-1].messages[-1]["content"])
         self.assertIn("additional instructions explicitly request", gateway.requests[-1].messages[0]["content"])
         handler.handle(RewriteTextCommand(1, source, instructions="Use a professional tone."))
         for messages in (gateway.requests[-1].messages, gateway.requests[-1].local_messages):
-            self.assertEqual(source, messages[-1]["content"])
+            self.assertIn(f"<source>\n{source}\n</source>", messages[-1]["content"])
             self.assertIn("Keep the original language when preferences concern only tone or clarity", messages[0]["content"])
 
 

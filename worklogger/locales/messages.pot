@@ -2720,6 +2720,9 @@ msgstr ""
 msgid "The model returned no content. Please try again."
 msgstr ""
 
+msgid "The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."
+msgstr ""
+
 msgid "The operation could not be completed. Please try again."
 msgstr ""
 

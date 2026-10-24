@@ -2722,6 +2722,9 @@ msgstr "モデルがダウンロードサイズの上限を超えています。
 msgid "The model returned no content. Please try again."
 msgstr "モデルから内容が返されませんでした。もう一度お試しください。"
 
+msgid "The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."
+msgstr "モデルは元の文章をそのまま返しました。指示やモデルを変えてお試しください。元の文章にない情報は追加できません。"
+
 msgid "The operation could not be completed. Please try again."
 msgstr "操作を完了できませんでした。もう一度お試しください。"
 

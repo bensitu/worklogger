@@ -2722,6 +2722,9 @@ msgstr "模型超过支持的下载大小上限。"
 msgid "The model returned no content. Please try again."
 msgstr "模型未返回内容，请重试。"
 
+msgid "The model returned the source unchanged. Try different instructions or another model; missing details cannot be invented."
+msgstr "模型返回了未修改的原文。请尝试调整要求或更换模型；原文没有的信息无法凭空补充。"
+
 msgid "The operation could not be completed. Please try again."
 msgstr "无法完成操作，请重试。"
 
