@@ -190,6 +190,11 @@ selection without accessing Qt controls. Widgets retain responsibility for text
 translation, layout, and signal delivery. Backup and file-export adapters implement
 the shared contracts in `app/ports.py`, not parallel view-model definitions.
 
+`widgets/time_entry_editor.py` builds recording controls without a view model or
+business callbacks. `TimeEntryPanel` binds actions and renders editor state. Both
+window layouts reuse those controls; the calendar can relocate the mode selector
+and action row without changing their action bindings or public control names.
+
 The shared Classification control opens an anchored top-level Qt popup outside
 the editor's scroll area. Its selection is isolated from the immutable editor
 draft until Apply. Application services revalidate type and project availability
