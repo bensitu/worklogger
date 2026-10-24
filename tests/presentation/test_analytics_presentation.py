@@ -70,16 +70,15 @@ class MemoryWorkLogRepository:
 
 class AnalyticsPresentationTests(unittest.TestCase):
     def test_export_names_identify_the_selected_scope_and_period_and_menu_formats_have_icons(self):
-        from datetime import datetime
         from worklogger.presentation.analytics.export_names import analytics_export_filename
         from worklogger.presentation.widgets import ExportMenuButton
-        stamp = datetime(2026, 10, 24, 15, 30, 45, 123000)
         for scope, period in (("monthly", "2026Oct"), ("quarterly", "2026Q4"), ("annual", "2026")):
-            self.assertEqual(analytics_export_filename(scope, date(2026, 10, 24), "csv", exported_at=stamp),
-                             f"analytics-{scope}-{period}-20261024-153045-123.csv")
+            for kind in ("csv", "pdf"):
+                self.assertEqual(analytics_export_filename(scope, date(2026, 10, 24), kind),
+                                 f"analytics-{scope}-{period}.{kind}")
         button = ExportMenuButton("Export", (("csv", "CSV"), ("pdf", "PDF")))
-        self.assertEqual(analytics_export_filename("quarterly", date(2026, 10, 24), "csv", exported_at=stamp,
-            period=(date(2026, 1, 1), date(2026, 12, 31))), "analytics-quarterly-2026-20261024-153045-123.csv")
+        self.assertEqual(analytics_export_filename("quarterly", date(2026, 10, 24), "csv",
+            period=(date(2026, 1, 1), date(2026, 12, 31))), "analytics-quarterly-2026.csv")
         self.addCleanup(button.close)
         self.assertTrue(all(not action.icon().isNull() for action in button.menu().actions()))
 

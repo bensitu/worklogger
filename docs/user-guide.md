@@ -358,8 +358,11 @@ Project statistics separates work, rest, and leave by project and work item.
 Only work records can be linked to a project; break and leave remain unlinked.
 Distinct-day counts cannot be added across groups; overtime is a whole-day measure.
 
-Use Export to save the selected period. Suggested filenames include the month,
-quarter, or year and the export time, so repeated exports are easier to distinguish.
+Use Export to save the selected period. Suggested filenames identify the scope
+and month, quarter, or year without an export timestamp, for example
+`analytics-monthly-2026Oct.pdf` or `analytics-quarterly-2026Q4.csv`.
+The save dialog asks before replacing an existing file; choose a different name
+to keep more than one export of the same period.
 CSV contains individual work, break, and leave records with readable translated
 headings, project/work-item context, content, decimal hours, and overnight end
 dates. It also identifies dates without records and available original timestamps.

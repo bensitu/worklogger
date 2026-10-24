@@ -146,10 +146,9 @@ Its quarterly chart covers all four quarters, so that overview's filename
 identifies the full year instead of a single quarter.
 
 Suggested filenames identify the scope and period, for example
-`analytics-monthly-2026Oct-20261024-153045-123.csv`,
-`analytics-quarterly-2026Q4-20261024-153045-123.csv`, or
-`analytics-annual-2026-20261024-153045-123.pdf`. The final part is the local export
-date, time, and milliseconds; month abbreviations are consistently English.
+`analytics-monthly-2026Oct.csv`, `analytics-quarterly-2026Q4.csv`, or
+`analytics-annual-2026.pdf`. No export timestamp is appended; month abbreviations
+are consistently English. The save dialog asks before replacing an existing file.
 Analytics dashboard PDF starts with a landscape overview of all eight areas:
 period hours and goal progress, overtime and comparison, actual attendance and
 planned work, rest dates, work-hour trends, average work hours, the selected
