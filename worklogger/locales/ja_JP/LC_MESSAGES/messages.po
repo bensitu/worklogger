@@ -418,9 +418,6 @@ msgstr "記録を確認"
 msgid "Checking for updates..."
 msgstr "更新を確認中..."
 
-msgid "Choose Start recording to close this guide and begin."
-msgstr "「記録を始める」を選ぶと案内が閉じ、入力に進みます。"
-
 msgid "Choose a backup destination different from the active database."
 msgstr "使用中のデータベースとは異なるバックアップ先を選択してください。"
 
@@ -501,6 +498,9 @@ msgstr "ファイルを変更せずに WorkLogger を終了します。管理者
 
 msgid "Close the note editor before continuing."
 msgstr "続行する前にノートエディターを閉じてください。"
+
+msgid "Close this guide and enter your first record."
+msgstr "案内を閉じて、最初の記録を入力しましょう。"
 
 msgid "Close window"
 msgstr "ウィンドウを閉じる"
@@ -2550,6 +2550,9 @@ msgstr "標準の一日勤務時間：{hours:g}"
 
 msgid "Start"
 msgstr "開始"
+
+msgid "Start a record"
+msgstr "記録を入力"
 
 msgid "Start recording"
 msgstr "計時を開始"

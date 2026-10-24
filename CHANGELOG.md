@@ -13,9 +13,9 @@ Historical entries describe their respective releases; see the
 
 - A welcoming introduction before initial account setup, with clearer local
   account and password-recovery guidance in all supported interface languages.
-- Optional, account-specific first-use guidance for recording time, with a Help
-  entry to reopen it in the main window or compact view. Existing accounts are
-  not interrupted after upgrading.
+- Optional, account-specific first-use guidance highlights the recording area
+  without shrinking the workspace. Reopen it from Settings > About in either
+  window layout. Existing accounts are not interrupted after upgrading.
 
 ### Changed
 

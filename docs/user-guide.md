@@ -23,14 +23,22 @@ sign-in password. Saving creates an unencrypted text file, so choose a private
 location. WorkLogger does not require saving a file if the key has been stored
 safely elsewhere.
 
-Each new account receives a short, nonmodal introduction after the main window
-and recording editor are ready. Record a time period opens a new manual record;
-it does not save sample data. Maybe later dismisses the introduction for that
-account. Use Help in the main sidebar, or the Getting started information button
-in compact view, to open it again. The User guide action opens this guide in
-your browser. Existing accounts are not automatically shown the introduction
-after an upgrade. Administrator-created and external sign-in accounts receive
-the introduction on first use, after any required password change.
+Each new account receives a short introduction after the main window and
+recording editor are ready. It dims the window and highlights the recording
+area, without reducing the space available to the calendar or editor. Background
+controls cannot be used until the introduction closes. Compact windows show a
+centered introduction instead.
+
+Start a record closes the introduction and focuses the recording controls; it
+does not clear a draft, create sample data, or start a timer. Maybe later, the
+close button, or Esc dismisses the introduction for that account. Open
+**Settings > About > Getting started** to see it again, or choose **User guide**
+there to open this guide in your browser.
+
+Automatic guidance waits while you are editing a draft, recording time, saving,
+or using another dialog. Existing accounts are not automatically shown the
+introduction after an upgrade. Administrator-created and external sign-in
+accounts receive it on first use, after any required password change.
 
 Sign in with your login ID and password. **Remember me** retains a local session
 credential for up to 30 days. Repeated failed attempts cause temporary lockouts.

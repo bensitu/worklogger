@@ -79,6 +79,17 @@ backups. Presentation reads and writes it through `GettingStartedService` using
 background jobs; optional guidance must not prevent startup or replace pending
 record edits.
 
+`GettingStartedController` coordinates visibility, dismissal, and asynchronous
+account preferences. `GettingStartedDialog` is a window-modal presentation of
+the live recording area, with a painted translucent scrim and an adjacent
+instruction panel. It does not reparent or duplicate editor controls, and does
+not enter the page layout. Geometry follows the owner and target in logical
+coordinates; insufficient horizontal space uses a centered modal without a
+spotlight. Keep background input blocked, preserve keyboard focus within the
+dialog, and restore recording focus only after an explicit start action.
+Settings About exposes reopening and documentation through the shared section
+actions, without permanent help navigation in either window layout.
+
 Use shared theme tokens, controls, fonts, and Lucide icons. Apply QSS at the
 application boundary, not on individual widgets.
 

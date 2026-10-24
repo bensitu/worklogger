@@ -59,7 +59,7 @@ class GettingStartedDialog(QDialog):
             label = QLabel(message)
             label.setWordWrap(True)
             content.addWidget(label)
-        hint = QLabel(_("Choose Start recording to close this guide and begin."))
+        hint = QLabel(_("Close this guide and enter your first record."))
         hint.setProperty("role", "secondary")
         hint.setWordWrap(True)
         content.addWidget(hint)
@@ -72,7 +72,7 @@ class GettingStartedDialog(QDialog):
         root.addWidget(self.scroll, 1)
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        self.record_button = QPushButton(_("Start recording"))
+        self.record_button = QPushButton(_("Start a record"))
         self.record_button.setProperty("variant", "primary")
         self.dismiss_button = QPushButton(_("Maybe later"))
         for button, icon in ((self.record_button, "chevron-right"), (self.dismiss_button, "x")):

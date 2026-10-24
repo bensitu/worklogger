@@ -418,9 +418,6 @@ msgstr "Check records"
 msgid "Checking for updates..."
 msgstr "Checking for updates..."
 
-msgid "Choose Start recording to close this guide and begin."
-msgstr "Choose Start recording to close this guide and begin."
-
 msgid "Choose a backup destination different from the active database."
 msgstr "Choose a backup destination different from the active database."
 
@@ -501,6 +498,9 @@ msgstr "Close WorkLogger without changing any files. Use this if you need help f
 
 msgid "Close the note editor before continuing."
 msgstr "Close the note editor before continuing."
+
+msgid "Close this guide and enter your first record."
+msgstr "Close this guide and enter your first record."
 
 msgid "Close window"
 msgstr "Close window"
@@ -2550,6 +2550,9 @@ msgstr "Standard daily hours: {hours:g}"
 
 msgid "Start"
 msgstr "Start"
+
+msgid "Start a record"
+msgstr "Start a record"
 
 msgid "Start recording"
 msgstr "Start recording"

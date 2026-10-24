@@ -418,9 +418,6 @@ msgstr "檢查記錄"
 msgid "Checking for updates..."
 msgstr "正在檢查更新..."
 
-msgid "Choose Start recording to close this guide and begin."
-msgstr "按下「開始記錄」關閉引導，開始填寫。"
-
 msgid "Choose a backup destination different from the active database."
 msgstr "請選擇不同於目前資料庫的備份位置。"
 
@@ -501,6 +498,9 @@ msgstr "關閉 WorkLogger，不變更任何檔案。若需要管理員協助，�
 
 msgid "Close the note editor before continuing."
 msgstr "請先關閉筆記編輯器再繼續。"
+
+msgid "Close this guide and enter your first record."
+msgstr "關閉引導後，即可開始填寫第一筆記錄。"
 
 msgid "Close window"
 msgstr "關閉視窗"
@@ -2550,6 +2550,9 @@ msgstr "標準每日工時：{hours:g}"
 
 msgid "Start"
 msgstr "開始"
+
+msgid "Start a record"
+msgstr "開始填寫"
 
 msgid "Start recording"
 msgstr "開始計時"
