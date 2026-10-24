@@ -129,6 +129,8 @@ class ListLocalModelsHandler:
 
     @storage_boundary("local_model_list_failed")
     def handle(self, query: ListLocalModelsQuery) -> Result[LocalModelInventory]:
+        if query.cancellation is not None and query.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         entries = self._store.list_models()
         if not entries.ok or entries.value is None:
             return Result.failure(
@@ -136,8 +138,13 @@ class ListLocalModelsHandler:
             )
         active_model_id = _active_model_id(self._settings, query.user_id)
         items: list[LocalModelListItem] = []
+        options = {"is_cancelled": query.cancellation.is_cancelled} if query.cancellation is not None else {}
         for entry in entries.value:
-            status = self._store.verify_model(entry.id)
+            if query.cancellation is not None and query.cancellation.is_cancelled():
+                return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
+            status = self._store.verify_model(entry.id, **options)
+            if isinstance(status.error, CancellationError):
+                return Result.failure(status.error)
             if status.ok and status.value is not None:
                 file_status = status.value
             else:
@@ -236,9 +243,12 @@ class DownloadLocalModelHandler:
                     "local_model_download_failed",
                 )
             )
-        verified = self._store.verify_model(downloaded.value.id)
+        verification_options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
+        verified = self._store.verify_model(downloaded.value.id, **verification_options)
         if not verified.ok or verified.value is None or not verified.value.verified:
             return Result.failure(verified.error or ValidationError("local_model_not_ready", "local_model_not_ready"))
+        if command.cancellation is not None and command.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         self._settings.set(
             command.user_id,
             LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
@@ -259,7 +269,8 @@ class VerifyLocalModelHandler:
         model_id = _required_model_id(command.model_id)
         if not model_id.ok or model_id.value is None:
             return Result.failure(model_id.error or _model_id_required_error())
-        return self._store.verify_model(model_id.value)
+        options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
+        return self._store.verify_model(model_id.value, **options)
 
 
 class SelectLocalModelHandler:
@@ -274,11 +285,14 @@ class SelectLocalModelHandler:
 
     @storage_boundary("local_model_select_failed")
     def handle(self, command: SelectLocalModelCommand) -> Result[None]:
+        if command.cancellation is not None and command.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         model_id = str(command.model_id or "").strip()
         if not model_id:
             self._settings.delete(command.user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY)
             return Result.success(None)
-        status = self._store.verify_model(model_id)
+        options = {"is_cancelled": command.cancellation.is_cancelled} if command.cancellation is not None else {}
+        status = self._store.verify_model(model_id, **options)
         if not status.ok or status.value is None:
             return Result.failure(
                 status.error
@@ -292,6 +306,8 @@ class SelectLocalModelHandler:
             return Result.failure(
                 ValidationError(reason, reason)
             )
+        if command.cancellation is not None and command.cancellation.is_cancelled():
+            return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
         self._settings.set(command.user_id, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, model_id)
         return Result.success(None)
 

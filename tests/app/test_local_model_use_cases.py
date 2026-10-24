@@ -6,22 +6,28 @@ from unittest.mock import patch
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,
+    DownloadLocalModelCommand,
     ImportLocalModelCommand,
     SelectLocalModelCommand,
+    VerifyLocalModelCommand,
 )
+from worklogger.app.job_runner import CancellationToken
 from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
 from worklogger.app.use_cases.local_models import (
     DeleteLocalModelHandler,
+    DownloadLocalModelHandler,
     GetLocalModelRuntimeStatusHandler,
     ImportLocalModelHandler,
     ListLocalModelsHandler,
     SelectLocalModelHandler,
+    VerifyLocalModelHandler,
 )
 from worklogger.config.constants import (
     LOCAL_MODEL_ACTIVE_ID_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
 )
 from worklogger.domain.local_model.models import LocalModelEntry, LocalModelFileStatus
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
 
 
@@ -93,6 +99,32 @@ class MemoryStore:
 
 
 class LocalModelUseCaseTests(unittest.TestCase):
+    def test_cancelled_verification_stops_inventory_and_keeps_selection(self) -> None:
+        for operation in ("list", "download", "verify", "select"):
+            with self.subTest(operation=operation):
+                token = CancellationToken()
+                settings, store = MemorySettings(), MemoryStore()
+                settings.set(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY, "previous-model")
+
+                def verify(model_id, *, is_cancelled):
+                    token.cancel()
+                    self.assertTrue(is_cancelled())
+                    return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
+
+                with patch.object(store, "verify_model", side_effect=verify) as verification, \
+                     patch.object(store, "download_model", return_value=Result.success(store.entries[0])):
+                    if operation == "list":
+                        result = ListLocalModelsHandler(store=store, settings=settings).handle(ListLocalModelsQuery(1, token))
+                    elif operation == "download":
+                        result = DownloadLocalModelHandler(store=store, settings=settings).handle(DownloadLocalModelCommand(1, "model-a", token))
+                    elif operation == "verify":
+                        result = VerifyLocalModelHandler(store).handle(VerifyLocalModelCommand(1, "model-a", token))
+                    else:
+                        result = SelectLocalModelHandler(store=store, settings=settings).handle(SelectLocalModelCommand(1, "model-a", token))
+                self.assertIsInstance(result.error, CancellationError)
+                verification.assert_called_once()
+                self.assertEqual(settings.get(1, LOCAL_MODEL_ACTIVE_ID_SETTING_KEY), "previous-model")
+
     def test_import_selects_model_for_current_user(self) -> None:
         settings = MemorySettings()
         store = MemoryStore()

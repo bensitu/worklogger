@@ -141,9 +141,9 @@ class LocalModelsPresentationTests(unittest.TestCase):
         original = model.load
         threads = []
 
-        def load():
+        def load(*, cancellation=None):
             threads.append(threading.get_ident())
-            return original()
+            return original(cancellation=cancellation)
 
         model.load = load
         dialog = LocalModelsDialog(model, job_runner=QtJobRunner())

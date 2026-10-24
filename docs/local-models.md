@@ -44,6 +44,18 @@ Deletion asks for confirmation and checks selections made by other accounts.
 Models and their metadata are stored beside the database and are shared by its
 accounts. Database backups do not contain them. Copy this directory separately
 when moving an installation.
+All local accounts can refresh the catalog, import, download, and manage these
+shared files, except that a model selected by another account cannot be deleted.
+Local application accounts are not operating-system isolation boundaries. Use
+separate operating-system accounts or installations when model libraries must be
+managed independently.
+
+The first verification after each application start reads the complete file.
+Unchanged files reuse verification results within that process; no persistent
+verified flag bypasses checksum validation. Listing and selecting models, explicit
+verification, and verification after a download support cancellation at file
+chunk boundaries. A completed download can remain available after cancellation
+without changing the selected model.
 
 ## Runtime Context
 

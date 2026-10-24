@@ -37,9 +37,9 @@ class TextProcessingSettingsWorkflow:
             callback()
             return
 
-        def load(_token):
+        def load(token):
             settings = self._settings.load()
-            inventory = self._models.load() if self._models is not None else None
+            inventory = self._models.load(cancellation=token) if self._models is not None else None
             return settings, inventory
 
         def complete(result):
@@ -94,7 +94,7 @@ class TextProcessingSettingsWorkflow:
             self.sync(surface)
 
         try:
-            self._runner().submit("local_model_status", lambda _token: self._models.load(),
+            self._runner().submit("local_model_status", lambda token: self._models.load(cancellation=token),
                                   on_complete=complete)
         except Exception:
             complete(Result.failure(InfrastructureError("local_model_list_failed", "local_model_list_failed")))

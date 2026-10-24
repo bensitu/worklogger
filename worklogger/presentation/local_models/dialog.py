@@ -73,10 +73,12 @@ class LocalModelsDialog(QDialog):
         return self._state
 
     def refresh(self) -> bool:
-        return self._run_state_job("local_model_load", self._view_model.load, _("Loading models..."))
+        return self._run_state_job("local_model_load", lambda token: self._view_model.load(cancellation=token),
+                                   _("Loading models..."), cancellable=True)
 
     def refresh_catalog(self) -> bool:
-        return self._run_state_job("local_model_refresh", self._view_model.refresh_catalog, _("Refreshing catalog..."))
+        return self._run_state_job("local_model_refresh", lambda token: self._view_model.refresh_catalog(cancellation=token),
+                                   _("Refreshing catalog..."), cancellable=True)
 
     def import_model(self, source: Path | str | None = None) -> bool:
         source = source or self._choose_model_file()
@@ -106,16 +108,16 @@ class LocalModelsDialog(QDialog):
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
-        return self._run_result_job("local_model_verify", lambda: self._view_model.verify_model(model_id),
-                                    self._complete_verify, _("Verifying model..."))
+        return self._run_result_job("local_model_verify", lambda token: self._view_model.verify_model(model_id, cancellation=token),
+                                    self._complete_verify, _("Verifying model..."), cancellable=True)
 
     def select_current(self) -> bool:
         model_id = self._selected_model_id()
         if not model_id:
             self.status_label.setText(_("Select a model first."))
             return False
-        return self._run_state_job("local_model_select", lambda: self._view_model.select_model(model_id),
-                                   _("Please wait for the current operation."))
+        return self._run_state_job("local_model_select", lambda token: self._view_model.select_model(model_id, cancellation=token),
+                                   _("Please wait for the current operation."), cancellable=True)
 
     def delete_selected(self) -> bool:
         model_id = self._selected_model_id()

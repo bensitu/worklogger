@@ -33,12 +33,14 @@ class DownloadLocalModelCommand:
 class VerifyLocalModelCommand:
     user_id: int
     model_id: str
+    cancellation: CancellationToken | None = None
 
 
 @dataclass(frozen=True)
 class SelectLocalModelCommand:
     user_id: int
     model_id: str | None
+    cancellation: CancellationToken | None = None
 
 
 @dataclass(frozen=True)
