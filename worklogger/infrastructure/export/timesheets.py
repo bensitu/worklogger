@@ -18,7 +18,7 @@ def _headers():
             _("Worked hours"), _("Rest hours"), _("Leave hours"), _("Record status"))
 
 
-def _rows(sheet):
+def timesheet_rows(sheet):
     by_day = {}
     for entry in sheet.entries:
         by_day.setdefault(entry.day, []).append(entry)
@@ -70,7 +70,7 @@ class TimesheetXlsxExporter:
             widths = (13, 9, 9, 25, 22, 25, 60, 14, 14, 14, 15)
             row_index = 7
             metadata = []
-            for values, entry in _rows(sheet):
+            for values, entry in timesheet_rows(sheet):
                 for column, value in enumerate(values, 1):
                     cell = page.cell(row_index, column)
                     if isinstance(value, str):
@@ -157,7 +157,7 @@ class TimesheetPdfExporter:
             html.append('<table border="1" cellspacing="0" cellpadding="3" width="100%"><thead><tr bgcolor="#e8f0fe">')
             html.extend(f'<th width="{width}%">' + escape(value) + "</th>" for width, value in zip(widths, headings))
             html.append("</tr></thead><tbody>")
-            for values, entry in _rows(sheet):
+            for values, entry in timesheet_rows(sheet):
                 status = values[10]
                 content = values[6] + ("\n" + status if status == _("Scheduled") else "")
                 cells = (values[0], values[1] + " - " + values[2] if entry and entry.has_times else "", values[3],

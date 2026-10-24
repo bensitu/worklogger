@@ -69,6 +69,51 @@ class MemoryWorkLogRepository:
 
 
 class AnalyticsPresentationTests(unittest.TestCase):
+    def test_export_names_identify_the_selected_scope_and_period_and_menu_formats_have_icons(self):
+        from datetime import datetime
+        from worklogger.presentation.analytics.export_names import analytics_export_filename
+        from worklogger.presentation.widgets import ExportMenuButton
+        stamp = datetime(2026, 10, 24, 15, 30, 45, 123000)
+        for scope, period in (("monthly", "2026Oct"), ("quarterly", "2026Q4"), ("annual", "2026")):
+            self.assertEqual(analytics_export_filename(scope, date(2026, 10, 24), "csv", exported_at=stamp),
+                             f"analytics-{scope}-{period}-20261024-153045-123.csv")
+        button = ExportMenuButton("Export", (("csv", "CSV"), ("pdf", "PDF")))
+        self.addCleanup(button.close)
+        self.assertTrue(all(not action.icon().isNull() for action in button.menu().actions()))
+
+    def test_dashboard_csv_uses_the_loaded_record_snapshot_and_readable_details(self):
+        import csv
+        repository = MemoryWorkLogRepository()
+        records = (
+            WorkLog(1, date(2026, 10, 5), "09:00", "12:00", note="=SUM(1,2)", work_mode=WorkMode.REMOTE),
+            WorkLog(1, date(2026, 10, 5), "12:00", "13:00", entry_type=EntryType.BREAK),
+            WorkLog(1, date(2026, 10, 5), "13:00", "17:00"),
+            WorkLog(1, date(2026, 10, 31), "22:00", "06:00"),
+            WorkLog(2, date(2026, 10, 5), "09:00", "17:00", note="Other account"),
+        )
+        for record in aggregate_days(records):
+            repository.save(record)
+        model = AnalyticsViewModel(user_id=1, bundle_handler=GetAnalyticsBundleHandler(repository),
+            dashboard_handler=GetAnalyticsDashboardHandler(repository),
+            csv_exporter=AnalyticsCsvExporter(), pdf_exporter=AnalyticsPdfExporter())
+        page = AnalyticsPage(model, date(2026, 10, 5))
+        self.addCleanup(page.close)
+        self.assertTrue(page.refresh())
+        repository.save(WorkLog(1, date(2026, 10, 5), "09:00", "10:00", note="Changed after loading"))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "details.csv"
+            self.assertTrue(page.export_csv(path))
+            with path.open(encoding="utf-8-sig", newline="") as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+                self.assertIn("Worked hours (h)", reader.fieldnames)
+                self.assertNotIn("bar_value", reader.fieldnames)
+        self.assertEqual(sum(float(row["Worked hours (h)"]) for row in rows), 15)
+        self.assertEqual(sum(float(row["Rest hours (h)"]) for row in rows), 1)
+        self.assertEqual(next(row for row in rows if row["Content"])["Content"], "'=SUM(1,2)")
+        self.assertEqual(next(row for row in rows if row["Start"] == "22:00")["End date"], "2026-11-01")
+        self.assertFalse(any(row["Content"] in {"Other account", "Changed after loading"} for row in rows))
+
     def test_background_queries_ignore_superseded_periods_and_export_current_snapshot(self):
         from worklogger.app.job_runner import JobHandle, CancellationToken
         class Runner:
@@ -202,7 +247,7 @@ class AnalyticsPresentationTests(unittest.TestCase):
             pdf_path = Path(directory) / "analytics"
             self.assertTrue(dialog.export_csv(csv_path))
             self.assertTrue(dialog.export_pdf(pdf_path))
-            self.assertIn("label,bar_value", csv_path.with_suffix(".csv").read_text(encoding="utf-8-sig"))
+            self.assertIn("Period,Work hours (h),Leave hours (h)", csv_path.with_suffix(".csv").read_text(encoding="utf-8-sig"))
             self.assertTrue(pdf_path.with_suffix(".pdf").read_bytes().startswith(b"%PDF-"))
 
     def test_combo_chart_accepts_bar_and_line_modes(self) -> None:

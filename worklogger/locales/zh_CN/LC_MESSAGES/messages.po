@@ -838,6 +838,9 @@ msgstr "结束"
 msgid "End break early?"
 msgstr "提前结束休息？"
 
+msgid "End date"
+msgstr "结束日期"
+
 msgid "End recording"
 msgstr "结束计时"
 
@@ -1785,6 +1788,9 @@ msgstr "密码已重置。"
 
 msgid "Paste"
 msgstr "粘贴"
+
+msgid "Period"
+msgstr "统计期间"
 
 msgid "Period type"
 msgstr "时段类型"

@@ -23,6 +23,7 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.job_runner import owned_callback
+from worklogger.presentation.analytics.export_names import analytics_export_filename
 from worklogger.domain.shared.dates import add_months
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.domain.worklog.models import EntryType, WorkMode
@@ -118,7 +119,8 @@ class AnalyticsPage(QWidget):
             return False
         self._dashboard = result.value
         self._last_error = None
-        self._state = AnalyticsState(self._view_model.user_id, day.year, day.month, scope, "hours", "bar", True, result.value.trend)
+        self._state = AnalyticsState(self._view_model.user_id, day.year, day.month, scope, "hours", "bar", True,
+                                     result.value.trend, dashboard=result.value)
         self._set_state(result.value)
         self._set_status("")
         return True
@@ -366,6 +368,8 @@ class AnalyticsPage(QWidget):
         if state is None:
             return
         arrangement = self.breakdown_dimension_control.value == "work_mode"
+        if self._state is not None:
+            self._state = replace(self._state, breakdown_dimension="work_mode" if arrangement else "entry_type")
         if arrangement:
             order = {mode.value: index for index, mode in enumerate(WorkMode)}
             values = sorted(state.work_modes, key=lambda item: (order.get(getattr(item[0], "value", None), len(order)), work_mode_label(item[0])))
@@ -426,11 +430,14 @@ class AnalyticsPage(QWidget):
             self.refresh()
 
     def _choose_export_path(self, kind: str) -> None:
+        scope = self._state.scope if self._state is not None else self.scope_control.value or "monthly"
+        day = date(self._state.year, self._state.month, 1) if self._state is not None else self._selected_day
+        filename = analytics_export_filename(scope, day, kind)
         if kind == "csv":
             path, _selected = QFileDialog.getSaveFileName(
                 self,
                 _("Export CSV"),
-                "analytics.csv",
+                filename,
                 _("CSV files (*.csv)"),
             )
             if path:
@@ -439,7 +446,7 @@ class AnalyticsPage(QWidget):
         path, _selected = QFileDialog.getSaveFileName(
             self,
             _("Export PDF"),
-            "analytics.pdf",
+            filename,
             _("PDF files (*.pdf)"),
         )
         if path:

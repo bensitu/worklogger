@@ -131,14 +131,23 @@ failure. They are records of captured data, not payroll or legal certification.
 
 ## Analytics
 
-Analytics CSV has this header:
+Analytics dashboard CSV exports the loaded period's individual time records,
+including work, breaks, and leave. Column headings use the interface language
+and identify dates, clock boundaries, the end date for overnight records,
+classification, accounting category, work arrangement, project, work item,
+content, worked/rest/leave hours, record status, and available original
+timestamps. Dates without records have an explicit No records row with zero
+hours. Decimal hours retain six places, and files use UTF-8 with a byte-order
+mark. Spreadsheet-sensitive text is protected. This is an analysis export,
+not the work-log import format, and has no corresponding import operation.
+The separate chart dialog exports readable period/work-hour/leave-hour columns
+for its selected chart metric.
 
-```csv
-label,bar_value,line_value,leave_hours,leave_marker
-```
-
-Values use two decimal places; leave markers are 1 or 0. Files use UTF-8 with a
-byte-order mark. This is not the work-log import format.
+Suggested filenames identify the scope and period, for example
+`analytics-monthly-2026Oct-20261024-153045-123.csv`,
+`analytics-quarterly-2026Q4-20261024-153045-123.csv`, or
+`analytics-annual-2026-20261024-153045-123.pdf`. The final part is the local export
+date, time, and milliseconds; month abbreviations are consistently English.
 Analytics PDF is a paginated text summary rather than an image of the charts.
 
 ## Database Backups

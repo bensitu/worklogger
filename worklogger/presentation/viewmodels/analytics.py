@@ -23,8 +23,10 @@ class AnalyticsDashboardHandlerProtocol(Protocol):
 
 
 class AnalyticsCsvExporterProtocol(Protocol):
-    def export_bundle(self, destination: Path, bundle: ChartDataBundle) -> Result[Path]:
+    def export_bundle(self, destination: Path, bundle: ChartDataBundle, *, metric: str = "hours") -> Result[Path]:
         ...
+
+    def export_dashboard(self, destination: Path, dashboard: AnalyticsDashboard, *, scope: str) -> Result[Path]: ...
 
 
 class AnalyticsPdfExporterProtocol(Protocol):
@@ -48,6 +50,8 @@ class AnalyticsState:
     chart_mode: str
     include_leaves: bool
     bundle: ChartDataBundle
+    dashboard: AnalyticsDashboard | None = None
+    breakdown_dimension: str = "entry_type"
 
 
 class AnalyticsViewModel:
@@ -138,7 +142,9 @@ class AnalyticsViewModel:
         )
 
     def export_csv(self, destination: Path, state: AnalyticsState) -> Result[Path]:
-        return self._csv_exporter.export_bundle(destination, state.bundle)
+        if state.dashboard is not None:
+            return self._csv_exporter.export_dashboard(destination, state.dashboard, scope=state.scope)
+        return self._csv_exporter.export_bundle(destination, state.bundle, metric=state.metric)
 
     def export_pdf(self, destination: Path, state: AnalyticsState) -> Result[Path]:
         return self._pdf_exporter.export_bundle(

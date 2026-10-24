@@ -6,6 +6,7 @@ from collections.abc import Iterable
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QMenu, QToolButton, QWidget
+from worklogger.presentation.widgets.icons import ui_icon
 
 
 class ExportMenuButton(QToolButton):
@@ -26,6 +27,8 @@ class ExportMenuButton(QToolButton):
         menu = QMenu(self)
         for key, text in actions:
             action = menu.addAction(text)
+            if key in {"csv", "pdf"}:
+                action.setIcon(ui_icon("file-output", format_label=key.upper()))
             action.setData(key)
             action.triggered.connect(lambda _checked=False, item_key=key: self.export_requested.emit(item_key))
         self.setMenu(menu)

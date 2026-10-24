@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue
+from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue, WorkLog
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,7 @@ class ChartDataBundle:
     leave_indices: frozenset[int]
     leave_line_data: tuple[float | None, ...]
     leave_hours_data: tuple[tuple[str, float], ...]
+    periods: tuple[tuple[date, date], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -43,3 +44,5 @@ class AnalyticsDashboard:
     target_mode: str = "manual"
     planning_error: str = ""
     work_modes: tuple[tuple[WorkModeValue | None, float], ...] = ()
+    records: tuple[WorkLog, ...] = ()
+    standard_work_hours: float = 8.0

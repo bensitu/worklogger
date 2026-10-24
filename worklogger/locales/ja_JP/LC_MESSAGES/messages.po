@@ -838,6 +838,9 @@ msgstr "終了"
 msgid "End break early?"
 msgstr "休憩を早めに終了しますか？"
 
+msgid "End date"
+msgstr "終了日"
+
 msgid "End recording"
 msgstr "計時を終了"
 
@@ -1785,6 +1788,9 @@ msgstr "パスワードをリセットしました。"
 
 msgid "Paste"
 msgstr "貼り付け"
+
+msgid "Period"
+msgstr "集計期間"
 
 msgid "Period type"
 msgstr "時間帯の種類"

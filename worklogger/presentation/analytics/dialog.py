@@ -22,6 +22,7 @@ from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
 from worklogger.presentation.viewmodels import AnalyticsState, AnalyticsViewModel
+from worklogger.presentation.analytics.export_names import analytics_export_filename
 from worklogger.presentation.widgets import ComboChart
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 from worklogger.presentation.widgets.assets import apply_window_icon
@@ -163,7 +164,7 @@ class AnalyticsDialog(QDialog):
         path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export CSV"),
-            "analytics.csv",
+            analytics_export_filename(self.scope_combo.currentData(), date(self.year_input.value(), self.month_input.value(), 1), "csv"),
             _("CSV files (*.csv)"),
         )
         if path:
@@ -173,7 +174,7 @@ class AnalyticsDialog(QDialog):
         path, _selected_filter = QFileDialog.getSaveFileName(
             self,
             _("Export PDF"),
-            "analytics.pdf",
+            analytics_export_filename(self.scope_combo.currentData(), date(self.year_input.value(), self.month_input.value(), 1), "pdf"),
             _("PDF files (*.pdf)"),
         )
         if path:

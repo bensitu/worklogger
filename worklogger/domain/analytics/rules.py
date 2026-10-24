@@ -88,8 +88,10 @@ def dashboard_data(
             counts.append(summary.work_days)
             leaves.append(sum(row.leave_hours(standard_hours=standard_hours) for row in rows))
             leave_counts.append(summary.leave_days)
-        trend = _bundle(labels, totals, counts, leaves, leave_counts, "hours", True)
-        average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True)
+        periods = tuple((date(year, selected_month, 1), date(year, selected_month, monthrange(year, selected_month)[1]))
+                        for selected_month in range(start.month, end.month + 1))
+        trend = _bundle(labels, totals, counts, leaves, leave_counts, "hours", True, periods=periods)
+        average = _bundle(labels, totals, counts, leaves, leave_counts, "average", True, periods=periods)
 
     entry_types: dict[EntryType | CustomEntryType, float] = {}
     work_modes: dict[WorkModeValue | None, float] = {}
@@ -104,11 +106,13 @@ def dashboard_data(
             work_modes[mode] = work_modes.get(mode, 0.0) + worked
 
     daily = []
+    daily_periods = []
     if scope == "quarterly":
         year_rows = tuple(row for row in records if row.day.year == year)
         for quarter in range(1, 5):
             rows = tuple(row for row in year_rows if (row.day.month - 1) // 3 + 1 == quarter)
             daily.append((f"Q{quarter}", month_stats(rows, standard_hours).average_hours))
+            daily_periods.append(analytics_period(year, quarter * 3, "quarterly"))
     else:
         last_month_index = end.year * 12 + end.month - 1
         first_month_index = max(12, last_month_index - 5) if scope == "monthly" else year * 12
@@ -116,12 +120,14 @@ def dashboard_data(
             selected_year, selected_month = index // 12, index % 12 + 1
             rows = tuple(row for row in records if row.day.year == selected_year and row.day.month == selected_month)
             daily.append((f"{selected_month:02d}", month_stats(rows, standard_hours).average_hours))
+            daily_periods.append(analytics_period(selected_year, selected_month, "monthly"))
     return AnalyticsDashboard(
         start, end, stats, month_stats(previous, standard_hours), monthly_target * month_count,
         (end - start).days + 1, (start - previous_start).days if previous_start is not None else 0,
-        trend, average, tuple(entry_types.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), ()),
+        trend, average, tuple(entry_types.items()), ChartDataBundle(tuple(daily), tuple(daily), frozenset(), (), (), tuple(daily_periods)),
         work_schedule.planned_days(start, end),
         work_modes=tuple(work_modes.items()),
+        records=current, standard_work_hours=standard_hours,
     )
 
 
@@ -139,6 +145,7 @@ def _bundle(
     leave_unit_counts: Sequence[int],
     metric: str,
     include_leaves: bool,
+    *, periods: tuple[tuple[date, date], ...] = (),
 ) -> ChartDataBundle:
     values = tuple(
         _metric_value(total, units, metric)
@@ -164,6 +171,7 @@ def _bundle(
         leave_indices=leave_indices,
         leave_line_data=leave_line_data,
         leave_hours_data=tuple(zip(labels, leave_values)),
+        periods=periods,
     )
 
 
@@ -187,10 +195,12 @@ def monthly_chart_data(
     first = first_weekday if week_start_monday else (first_weekday + 1) % 7
     max_row = (days + first - 1) // 7
     labels = []
+    periods = []
     for row in range(max_row + 1):
         first_day = max(1, row * 7 - first + 1)
         last_day = min(days, (row + 1) * 7 - first)
         labels.append(f"W{row + 1}\n{start.month}/{first_day}-{last_day}")
+        periods.append((date(start.year, start.month, first_day), date(start.year, start.month, last_day)))
     totals = [0.0 for _label in labels]
     unit_counts = [0 for _label in labels]
     leave_hours = [0.0 for _label in labels]
@@ -222,6 +232,7 @@ def monthly_chart_data(
         leave_unit_counts,
         metric,
         include_leaves,
+        periods=tuple(periods),
     )
 
 
@@ -260,6 +271,7 @@ def quarterly_chart_data(
         [len(units) for units in leave_unit_sets],
         metric,
         include_leaves,
+        periods=tuple(analytics_period(year, quarter * 3, "quarterly") for quarter in range(1, 5)),
     )
 
 
@@ -300,4 +312,5 @@ def annual_chart_data(
         leave_unit_counts,
         metric,
         include_leaves,
+        periods=tuple(analytics_period(year, month, "monthly") for month in range(1, 13)),
     )

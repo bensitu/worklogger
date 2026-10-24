@@ -836,6 +836,9 @@ msgstr ""
 msgid "End break early?"
 msgstr ""
 
+msgid "End date"
+msgstr ""
+
 msgid "End recording"
 msgstr ""
 
@@ -1782,6 +1785,9 @@ msgid "Password reset."
 msgstr ""
 
 msgid "Paste"
+msgstr ""
+
+msgid "Period"
 msgstr ""
 
 msgid "Period type"

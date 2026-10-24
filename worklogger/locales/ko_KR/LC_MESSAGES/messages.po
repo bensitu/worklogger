@@ -838,6 +838,9 @@ msgstr "종료"
 msgid "End break early?"
 msgstr "휴식을 일찍 종료할까요?"
 
+msgid "End date"
+msgstr "종료일"
+
 msgid "End recording"
 msgstr "시간 기록 종료"
 
@@ -1785,6 +1788,9 @@ msgstr "비밀번호가 재설정되었습니다."
 
 msgid "Paste"
 msgstr "붙여넣기"
+
+msgid "Period"
+msgstr "집계 기간"
 
 msgid "Period type"
 msgstr "시간대 유형"
