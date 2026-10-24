@@ -109,6 +109,9 @@ msgstr "현재 모델이 업데이트되었습니다."
 msgid "Actual attendance"
 msgstr "실제 출근일"
 
+msgid "Add a classification and a short description."
+msgstr "필요에 따라 분류와 간단한 설명을 추가하세요."
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "이 연결을 해제하기 전에 다른 로그인 방법을 추가하세요."
 
@@ -414,6 +417,9 @@ msgstr "기록 검사"
 
 msgid "Checking for updates..."
 msgstr "업데이트 확인 중..."
+
+msgid "Choose Start recording to close this guide and begin."
+msgstr "‘기록 시작’을 선택하면 안내를 닫고 입력을 시작합니다."
 
 msgid "Choose a backup destination different from the active database."
 msgstr "현재 데이터베이스와 다른 백업 위치를 선택하세요."
@@ -901,9 +907,6 @@ msgstr "계속하기 전에 내용을 입력하세요."
 msgid "Enter leave in Manual Input."
 msgstr "휴가는 수동 입력에서 기록하세요."
 
-msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-msgstr "완료한 업무는 시작 및 종료 시간을 입력하고, 진행 중인 업무는 자동 기록으로 시간을 측정하세요. 세부 내용은 메모에 남기고 요약이 필요할 때 보고서를 여세요."
-
 msgid "Enter the text to polish."
 msgstr "다듬을 텍스트를 입력하세요."
 
@@ -1053,6 +1056,9 @@ msgstr "파일"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "겹치는 기록을 대체하기 전에 실행 중인 타이머를 종료하거나 취소하세요."
+
+msgid "Finished work? Enter a start and end time."
+msgstr "완료한 작업은 시작 및 종료 시간을 입력하세요."
 
 msgid "First saved: newest first"
 msgstr "최초 저장: 최신순"
@@ -1968,9 +1974,6 @@ msgstr "최근 사용한 프로젝트 및 항목"
 
 msgid "Record ID"
 msgstr "기록 ID"
-
-msgid "Record a time period"
-msgstr "시간 기록"
 
 msgid "Record actions"
 msgstr "기록 작업"
@@ -3306,6 +3309,9 @@ msgstr "워크플로 검증에 실패했습니다."
 
 msgid "Workflow verification passed."
 msgstr "워크플로 검증에 성공했습니다."
+
+msgid "Working now? Use Auto Record."
+msgstr "진행 중인 작업은 ‘자동 기록’으로 시간을 측정하세요."
 
 msgid "Write a note for this date..."
 msgstr "이 날짜의 메모를 입력하세요..."

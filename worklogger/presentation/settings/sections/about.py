@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QSizePolicy,
@@ -33,6 +34,8 @@ class AboutSection(_SettingsScrollPage):
         "about_version_label",
         "check_updates_button",
         "update_status_label",
+        "getting_started_button",
+        "user_guide_button",
     )
 
     def __init__(self, actions: SectionActions):
@@ -122,6 +125,19 @@ class AboutSection(_SettingsScrollPage):
         size_policy.setRetainSizeWhenHidden(True)
         self.update_status_label.setSizePolicy(size_policy)
         card.content_layout.addWidget(self.update_status_label)
+        help_actions = QHBoxLayout()
+        self.getting_started_button = QPushButton(_("Getting started"))
+        self.user_guide_button = QPushButton(_("User guide"))
+        for button, icon, callback in (
+            (self.getting_started_button, "info", actions.getting_started_requested),
+            (self.user_guide_button, "file-text", actions.user_guide_requested),
+        ):
+            button.setProperty("variant", "outline")
+            button.setAutoDefault(False)
+            set_button_icon(button, icon)
+            button.clicked.connect(callback)
+            help_actions.addWidget(button)
+        card.content_layout.addLayout(help_actions)
         page.layout().addStretch(1)
         page.layout().addWidget(card)
         page.layout().addStretch(1)

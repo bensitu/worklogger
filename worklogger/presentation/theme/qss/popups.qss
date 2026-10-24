@@ -1,10 +1,22 @@
 /* Shared popup surfaces and menu interaction states. */
 
 QWidget#date_picker_popup_frame,
-QFrame#classification_popup_frame {
+QFrame#classification_popup_frame,
+QFrame#getting_started_card_frame {
   background: {{ surface }};
   border: 1px solid {{ border_strong }};
   border-radius: {{ panel_radius }};
+}
+
+QDialog#getting_started_dialog,
+QWidget#getting_started_content_widget,
+QScrollArea#getting_started_scroll_area,
+QScrollArea#getting_started_scroll_area > QWidget {
+  background: transparent;
+}
+
+QScrollArea#getting_started_scroll_area {
+  border: none;
 }
 
 QMenu {

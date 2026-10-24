@@ -7,10 +7,10 @@ from dataclasses import replace
 from typing import Protocol
 from pathlib import Path
 from weakref import WeakKeyDictionary
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QDialog, QWidget
 from shiboken6 import isValid
 
 from worklogger.app.job_runner import JobRunner
@@ -24,6 +24,7 @@ from worklogger.presentation.auth.controller import (
     RememberSessionStore,
 )
 from worklogger.presentation.settings.dialog import SettingsDialog
+from worklogger.presentation.help import open_user_guide
 from worklogger.presentation.settings.page import SettingsPage
 from worklogger.presentation.settings.workflows.contracts import (
     ConfirmationProvider,
@@ -168,6 +169,7 @@ class SettingsWorkflowController:
         self._ai_connection_test_timeout_seconds = ai_connection_test_timeout_seconds
         self._profile_service = profile_service
         self._profile_revision = 0
+        self._getting_started_handler = None
         self._cloud_workflow = None
         if self._capabilities.cloud_backup_enabled and cloud_backup_service is not None:
             from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
@@ -234,6 +236,19 @@ class SettingsWorkflowController:
         if self._cloud_workflow is not None:
             self._cloud_workflow.start(owner)
 
+    def set_getting_started_handler(self, handler):
+        self._getting_started_handler = handler
+
+    def _open_getting_started(self, surface):
+        if self._getting_started_handler is None or surface.is_busy or not surface.confirm_profile_leave():
+            return
+        dialog = surface.window()
+        if isinstance(dialog, QDialog):
+            dialog.accept()
+            if dialog.isVisible():
+                return
+        QTimer.singleShot(0, self._getting_started_handler)
+
     def create_page(self, parent: QWidget | None = None) -> SettingsPage:
         page = self._page_factory(self._settings_view_model, parent)
         self._bind_surface(page)
@@ -243,6 +258,9 @@ class SettingsWorkflowController:
 
     def _bind_surface(self, surface: SettingsPage) -> None:
         surface.set_job_runner(self._job_runner)
+        surface.getting_started_button.setEnabled(self._getting_started_handler is not None)
+        surface.getting_started_requested.connect(lambda: self._open_getting_started(surface))
+        surface.user_guide_requested.connect(open_user_guide)
         if self._cloud_workflow is not None:
             self._cloud_workflow.bind(surface.cloud_backup_panel)
         surface.set_data_directory(self._data_directory)

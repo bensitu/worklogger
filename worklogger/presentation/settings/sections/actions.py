@@ -37,3 +37,5 @@ class SectionActions:
     theme_changed: Callable
     toggle_proxy_password: Callable
     update_check_requested: Callable
+    getting_started_requested: Callable
+    user_guide_requested: Callable

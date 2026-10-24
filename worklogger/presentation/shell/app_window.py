@@ -156,8 +156,6 @@ class AppWindow(QMainWindow):
         self.setWindowTitle(_("WorkLogger"))
         apply_window_icon(self)
         self._build_ui()
-        self.getting_started_layout = self.calendar_page.layout()
-        self.help_button = self.sidebar.help_button
         self.appearance_controller = WindowAppearanceController(
             self, self._background_surface, theme_engine=theme_engine, background_service=background_service,
             background_images_available=self._config.background_images_available, job_runner=self._job_runner,

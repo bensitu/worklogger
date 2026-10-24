@@ -358,6 +358,10 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._submit(lambda model: model.project_inventory(), refresh=False, on_complete=completed)
 
     @property
+    def is_processing_text(self):
+        return self._polish_task.is_running
+
+    @property
     def is_dirty(self):
         return self.view_model.manual_dirty or self.view_model.auto_dirty
 

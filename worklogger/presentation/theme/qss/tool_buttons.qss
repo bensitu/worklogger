@@ -61,11 +61,13 @@ QToolButton#polish_time_entry_button {
 
 QToolButton#configure_identity_button,
 QToolButton#recent_work_context_button,
+QToolButton#getting_started_close_button,
 QToolButton#cancel_processing_button {
   padding: 0;
 }
 
-QToolButton#cancel_processing_button {
+QToolButton#cancel_processing_button,
+QToolButton#getting_started_close_button {
   min-height: 0;
 }
 

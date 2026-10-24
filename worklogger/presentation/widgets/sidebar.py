@@ -92,10 +92,6 @@ class SidebarWidget(QFrame):
             layout.addWidget(button)
 
         layout.addStretch(1)
-        self.help_button = QPushButton(_("Help"))
-        self.help_button.setProperty("nav_item", True)
-        set_button_icon(self.help_button, "info")
-        layout.addWidget(self.help_button)
         self.settings_button = self._nav_button("settings", _("Settings"))
         layout.addWidget(self.settings_button)
 

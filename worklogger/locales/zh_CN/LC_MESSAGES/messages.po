@@ -109,6 +109,9 @@ msgstr "当前模型已更新。"
 msgid "Actual attendance"
 msgstr "实际出勤"
 
+msgid "Add a classification and a short description."
+msgstr "按需要补充分类和简短说明。"
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身份关联前，请添加其他登录方式。"
 
@@ -414,6 +417,9 @@ msgstr "检查记录"
 
 msgid "Checking for updates..."
 msgstr "正在检查更新..."
+
+msgid "Choose Start recording to close this guide and begin."
+msgstr "点击“开始记录”关闭引导，进入填写。"
 
 msgid "Choose a backup destination different from the active database."
 msgstr "请选择不同于当前数据库的备份位置。"
@@ -901,9 +907,6 @@ msgstr "请先输入内容。"
 msgid "Enter leave in Manual Input."
 msgstr "休假请在“手动输入”中录入。"
 
-msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-msgstr "已完成的工作可填写开始和结束时间；正在进行的工作可使用“自动记录”计时。日常细节记在“笔记”中，需要总结时再打开“报表”。"
-
 msgid "Enter the text to polish."
 msgstr "输入需要润色的文本。"
 
@@ -1053,6 +1056,9 @@ msgstr "文件"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "请先结束或放弃正在运行的计时，再替换重叠记录。"
+
+msgid "Finished work? Enter a start and end time."
+msgstr "已完成的工作，填写开始和结束时间。"
 
 msgid "First saved: newest first"
 msgstr "首次保存：从新到旧"
@@ -1968,9 +1974,6 @@ msgstr "最近使用的项目与事项"
 
 msgid "Record ID"
 msgstr "记录 ID"
-
-msgid "Record a time period"
-msgstr "记录一段时间"
 
 msgid "Record actions"
 msgstr "记录操作"
@@ -3306,6 +3309,9 @@ msgstr "工作流验证失败。"
 
 msgid "Workflow verification passed."
 msgstr "工作流验证通过。"
+
+msgid "Working now? Use Auto Record."
+msgstr "正在进行的工作，使用“自动记录”计时。"
 
 msgid "Write a note for this date..."
 msgstr "输入这一天的笔记..."

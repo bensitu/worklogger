@@ -1,13 +1,13 @@
 """First-use guidance lifecycle and account preference coordination."""
 
-from PySide6.QtCore import QEvent, QObject, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import QEvent, QObject, QTimer, Qt
+from PySide6.QtWidgets import QApplication, QDialog
 
-from worklogger.__about__ import GITHUB_URL
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.job_runner import owned_callback, shared_job_runner
-from worklogger.presentation.widgets.getting_started import GettingStartedPanel
+from worklogger.presentation.help import open_user_guide
+from worklogger.presentation.widgets.getting_started import GettingStartedDialog
 
 
 class GettingStartedController(QObject):
@@ -19,35 +19,33 @@ class GettingStartedController(QObject):
         self._loaded = False
         self._dismissed = False
         self._pending = False
-        self.panel = GettingStartedPanel(window)
-        self.panel.hide()
-        window.getting_started_layout.insertWidget(0, self.panel)
-        window.help_button.clicked.connect(self.open)
-        self.panel.record_requested.connect(self._record)
-        self.panel.dismiss_requested.connect(self.dismiss)
-        self.panel.guide_requested.connect(self._open_guide)
+        self.dialog = None
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(750)
-        self._timer.timeout.connect(self._load)
+        self._timer.timeout.connect(self._check)
         window.installEventFilter(self)
         window.entry_panel.busy_changed.connect(self._ready)
-        window.entry_panel.busy_changed.connect(self.panel.record_button.setDisabled)
-        self.panel.record_button.setEnabled(not window.entry_panel.is_busy)
+        window.entry_panel.dirty_changed.connect(self._ready)
+
+    def _check(self):
+        self._ready() if self._loaded else self._load()
 
     def eventFilter(self, watched, event):
         if watched is self._window:
-            if event.type() == QEvent.Type.Show:
+            if event.type() in (QEvent.Type.Show, QEvent.Type.WindowStateChange) and not self._window.isMinimized():
                 if not self._loaded:
                     self._timer.start()
                 else:
                     QTimer.singleShot(0, self, self._ready)
-            elif event.type() in (QEvent.Type.Hide, QEvent.Type.Close):
+            elif event.type() == QEvent.Type.Hide:
                 self._timer.stop()
+                if self.dialog is not None:
+                    self.dialog.hide()
         return False
 
     def _load(self):
-        if self._loaded or not self._window.isVisible():
+        if self._loaded or not self._window.isVisible() or self._window.isMinimized():
             return
         self._loaded = True
         def complete(result):
@@ -56,42 +54,72 @@ class GettingStartedController(QObject):
         self._submit("load_getting_started", self._service.pending, complete, error_code="settings_load_failed")
 
     def _ready(self, _busy=False):
-        if (self._pending and not self._dismissed and self._window.isVisible()
-                and not self._window.entry_panel.is_busy):
-            self.panel.show()
-            self._ensure_visible()
-            self._pending = False
+        if not self._window.isVisible() or self._window.isMinimized():
+            return
+        if self.dialog is not None:
+            if not self.dialog.isVisible() and QApplication.activeModalWidget() is None:
+                self.dialog.show()
+            return
+        if not self._pending or self._dismissed:
+            return
+        panel = self._window.entry_panel
+        model = panel.view_model
+        calendar = getattr(self._window, "calendar_page", None)
+        if (panel.is_busy or panel.is_dirty or model.timer is not None or model.restore_failed
+                or panel.is_processing_text or QApplication.activeModalWidget() is not None
+                or calendar is not None and self._window.page_stack.currentWidget() is not calendar):
+            self._timer.start()
+            return
+        self._show()
 
     def open(self):
+        if (not self._window.isVisible() or self._window.isMinimized()
+                or self._window.entry_panel.is_busy or self._window.entry_panel.is_processing_text):
+            return
+        if self.dialog is not None:
+            self.dialog.show()
+            self.dialog.raise_()
+            self.dialog.activateWindow()
+            return
+        if QApplication.activeModalWidget() is not None:
+            return
         if hasattr(self._window, "calendar_page") and not self._window._switch_route("calendar"):
             return
-        self._dismissed = False
-        self.panel.show()
-        self._ensure_visible()
+        self._show()
 
-    def _ensure_visible(self):
-        scroll = getattr(self._window, "records_scroll", None)
-        if scroll is not None:
-            QTimer.singleShot(0, self, lambda: scroll.ensureWidgetVisible(self.panel))
+    def _show(self):
+        self._timer.stop()
+        target = getattr(getattr(self._window, "calendar_page", None), "right_panel", self._window.entry_panel)
+        dialog = GettingStartedDialog(target, self._window)
+        self.dialog = dialog
+        dialog.guide_requested.connect(open_user_guide)
+        dialog.finished.connect(self._finished)
+        dialog.open()
 
-    def dismiss(self):
+    def _finished(self, code):
+        dialog, self.dialog = self.dialog, None
+        dialog.deleteLater()
         self._dismissed = True
         self._pending = False
-        self.panel.hide()
         def complete(result):
             if not result.ok and self._window.isVisible():
                 self._window._set_error(result.error)
         self._submit("dismiss_getting_started", self._service.dismiss, complete, error_code="settings_save_failed")
+        if code == QDialog.DialogCode.Accepted:
+            QTimer.singleShot(0, self, self._focus_recording)
+
+    def _focus_recording(self):
+        if not self._window.isVisible() or QApplication.activeModalWidget() is not None:
+            return
+        panel = self._window.entry_panel
+        target = panel.start_input if panel.time_tabs.currentIndex() == 0 else panel.clock_in_button
+        if not target.isEnabled():
+            target = panel.content_input
+        self._window.activateWindow()
+        target.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def _submit(self, name, operation, complete, *, error_code):
         try:
             self._runner.submit(name, lambda _token: operation(), on_complete=owned_callback(self, complete))
         except Exception:
             complete(Result.failure(InfrastructureError(error_code, error_code)))
-
-    def _record(self):
-        if self._window.new_record():
-            self.dismiss()
-
-    def _open_guide(self):
-        QDesktopServices.openUrl(QUrl(GITHUB_URL + "/blob/main/docs/user-guide.md"))

@@ -345,6 +345,7 @@ def _runtime_result(
     window.getting_started = GettingStartedController(window,
         GettingStartedService(SQLiteSettingsRepository(connection_factory), user_id=user.id), job_runner=job_runner)
     if settings_workflow is not None:
+        settings_workflow.set_getting_started_handler(window.getting_started.open)
         settings_workflow.set_restore_handler(window.logout_requested.emit)
         settings_workflow.start_cloud_backups(window)
         if isinstance(window, MinimalView):

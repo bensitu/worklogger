@@ -109,6 +109,9 @@ msgstr "目前模型已更新。"
 msgid "Actual attendance"
 msgstr "實際出勤"
 
+msgid "Add a classification and a short description."
+msgstr "依需要補充分類與簡短說明。"
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "解除此身分連結前，請新增其他登入方式。"
 
@@ -414,6 +417,9 @@ msgstr "檢查記錄"
 
 msgid "Checking for updates..."
 msgstr "正在檢查更新..."
+
+msgid "Choose Start recording to close this guide and begin."
+msgstr "按下「開始記錄」關閉引導，開始填寫。"
 
 msgid "Choose a backup destination different from the active database."
 msgstr "請選擇不同於目前資料庫的備份位置。"
@@ -901,9 +907,6 @@ msgstr "請先輸入內容。"
 msgid "Enter leave in Manual Input."
 msgstr "休假請在「手動輸入」中錄入。"
 
-msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-msgstr "已完成的工作可填寫開始和結束時間；進行中的工作可使用「自動記錄」計時。日常細節記在「筆記」中，需要總結時再開啟「報表」。"
-
 msgid "Enter the text to polish."
 msgstr "輸入需要潤飾的文字。"
 
@@ -1053,6 +1056,9 @@ msgstr "檔案"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "請先結束或捨棄正在執行的計時，再取代重疊記錄。"
+
+msgid "Finished work? Enter a start and end time."
+msgstr "已完成的工作，填寫開始與結束時間。"
 
 msgid "First saved: newest first"
 msgstr "首次儲存：從新到舊"
@@ -1968,9 +1974,6 @@ msgstr "最近使用的專案與事項"
 
 msgid "Record ID"
 msgstr "紀錄 ID"
-
-msgid "Record a time period"
-msgstr "記錄一段時間"
 
 msgid "Record actions"
 msgstr "紀錄操作"
@@ -3306,6 +3309,9 @@ msgstr "工作流程驗證失敗。"
 
 msgid "Workflow verification passed."
 msgstr "工作流程驗證通過。"
+
+msgid "Working now? Use Auto Record."
+msgstr "正在進行的工作，使用「自動記錄」計時。"
 
 msgid "Write a note for this date..."
 msgstr "輸入這一天的筆記..."

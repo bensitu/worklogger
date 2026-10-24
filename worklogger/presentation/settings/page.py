@@ -83,6 +83,8 @@ class SettingsPage(QWidget, SettingsSectionState):
     profile_save_requested = Signal(str, str)
     profile_refresh_requested = Signal()
     profile_changed = Signal(object)
+    getting_started_requested = Signal()
+    user_guide_requested = Signal()
 
     def __init__(
         self,
@@ -348,6 +350,8 @@ class SettingsPage(QWidget, SettingsSectionState):
             theme_changed=self._theme_changed,
             toggle_proxy_password=self._toggle_proxy_password,
             update_check_requested=self.update_check_requested.emit,
+            getting_started_requested=self.getting_started_requested.emit,
+            user_guide_requested=self.user_guide_requested.emit,
         )
 
     def _build_appearance_page(self) -> QWidget:

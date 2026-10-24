@@ -109,6 +109,9 @@ msgstr "Active model updated."
 msgid "Actual attendance"
 msgstr "Actual attendance"
 
+msgid "Add a classification and a short description."
+msgstr "Add a classification and a short description."
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr "Add another sign-in method before unlinking this identity."
 
@@ -414,6 +417,9 @@ msgstr "Check records"
 
 msgid "Checking for updates..."
 msgstr "Checking for updates..."
+
+msgid "Choose Start recording to close this guide and begin."
+msgstr "Choose Start recording to close this guide and begin."
 
 msgid "Choose a backup destination different from the active database."
 msgstr "Choose a backup destination different from the active database."
@@ -901,9 +907,6 @@ msgstr "Enter content before continuing."
 msgid "Enter leave in Manual Input."
 msgstr "Enter leave in Manual Input."
 
-msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-msgstr "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-
 msgid "Enter the text to polish."
 msgstr "Enter the text to polish."
 
@@ -1053,6 +1056,9 @@ msgstr "File"
 
 msgid "Finish or discard the active timer before replacing overlapping records."
 msgstr "Finish or discard the active timer before replacing overlapping records."
+
+msgid "Finished work? Enter a start and end time."
+msgstr "Finished work? Enter a start and end time."
 
 msgid "First saved: newest first"
 msgstr "First saved: newest first"
@@ -1968,9 +1974,6 @@ msgstr "Recent context"
 
 msgid "Record ID"
 msgstr "Record ID"
-
-msgid "Record a time period"
-msgstr "Record a time period"
 
 msgid "Record actions"
 msgstr "Record actions"
@@ -3306,6 +3309,9 @@ msgstr "Workflow verification failed."
 
 msgid "Workflow verification passed."
 msgstr "Workflow verification passed."
+
+msgid "Working now? Use Auto Record."
+msgstr "Working now? Use Auto Record."
 
 msgid "Write a note for this date..."
 msgstr "Write a note for this date..."

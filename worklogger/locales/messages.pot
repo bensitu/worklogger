@@ -107,6 +107,9 @@ msgstr ""
 msgid "Actual attendance"
 msgstr ""
 
+msgid "Add a classification and a short description."
+msgstr ""
+
 msgid "Add another sign-in method before unlinking this identity."
 msgstr ""
 
@@ -411,6 +414,9 @@ msgid "Check records"
 msgstr ""
 
 msgid "Checking for updates..."
+msgstr ""
+
+msgid "Choose Start recording to close this guide and begin."
 msgstr ""
 
 msgid "Choose a backup destination different from the active database."
@@ -899,9 +905,6 @@ msgstr ""
 msgid "Enter leave in Manual Input."
 msgstr ""
 
-msgid "Enter start and end times for completed work, or use Auto Record to time work in progress. Keep details in Notes and use Reports when you need a summary."
-msgstr ""
-
 msgid "Enter the text to polish."
 msgstr ""
 
@@ -1050,6 +1053,9 @@ msgid "File"
 msgstr ""
 
 msgid "Finish or discard the active timer before replacing overlapping records."
+msgstr ""
+
+msgid "Finished work? Enter a start and end time."
 msgstr ""
 
 msgid "First saved: newest first"
@@ -1965,9 +1971,6 @@ msgid "Recent context"
 msgstr ""
 
 msgid "Record ID"
-msgstr ""
-
-msgid "Record a time period"
 msgstr ""
 
 msgid "Record actions"
@@ -3303,6 +3306,9 @@ msgid "Workflow verification failed."
 msgstr ""
 
 msgid "Workflow verification passed."
+msgstr ""
+
+msgid "Working now? Use Auto Record."
 msgstr ""
 
 msgid "Write a note for this date..."

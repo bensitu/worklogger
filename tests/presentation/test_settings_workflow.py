@@ -206,6 +206,34 @@ def _settings_view_model(repository: MemorySettingsRepository) -> SettingsViewMo
 
 
 class SettingsWorkflowTests(unittest.TestCase):
+    def test_about_help_reopens_guidance_after_settings_can_close(self):
+        calls = []
+        controller = SettingsWorkflowController(
+            settings_view_model=_settings_view_model(MemorySettingsRepository()),
+            auth_view_model=FakeAuthViewModel(), user=User(1, "alice"),
+            data_management_view_model=FakeDataManagementViewModel(), job_runner=ImmediateJobRunner(),
+        )
+        controller.set_getting_started_handler(lambda: calls.append("guidance"))
+        with patch("worklogger.presentation.settings.controller.open_user_guide") as guide:
+            page = controller.create_page()
+            self.addCleanup(page.deleteLater)
+            page.user_guide_button.click()
+            guide.assert_called_once_with()
+            page.getting_started_button.click()
+            _app().processEvents()
+            self.assertEqual(calls, ["guidance"])
+        dialog = controller.create_dialog()
+        self.addCleanup(dialog.deleteLater)
+        dialog.show()
+        with patch.object(dialog.page, "confirm_profile_leave", return_value=False):
+            dialog.page.getting_started_button.click()
+        self.assertTrue(dialog.isVisible())
+        self.assertEqual(calls, ["guidance"])
+        dialog.page.getting_started_button.click()
+        self.assertFalse(dialog.isVisible())
+        _app().processEvents()
+        self.assertEqual(calls, ["guidance", "guidance"])
+
     def test_data_submission_failure_releases_controls_and_allows_retry(self):
         model = _settings_view_model(MemorySettingsRepository())
         controller = SettingsWorkflowController(
