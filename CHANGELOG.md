@@ -11,121 +11,67 @@ Historical entries describe their respective releases; see the
 
 ### Added
 
-- A welcoming introduction before initial account setup, with clearer local
-  account and password-recovery guidance in all supported interface languages.
-- Optional, account-specific first-use guidance highlights the recording area
-  without shrinking the workspace. Reopen it from Settings > About in either
-  window layout. Existing accounts are not interrupted after upgrading.
+- A welcoming introduction before initial account setup, with clearer local account and password-recovery guidance in all supported interface languages.
+- Optional, account-specific first-use guidance highlights the recording area without shrinking the workspace. Reopen it from Settings > About in either window layout. Existing accounts are not interrupted after upgrading.
 
 ### Changed
 
-- AI text polishing now opens an editable, side-by-side review before replacing
-  time-record, note, or report text. Additional instructions support repeated
-  polishing; cancelling or a failed request preserves the existing text.
-- Analytics export filenames identify the selected month, quarter, or year.
-  Export menu actions include file-format icons.
-- Analytics CSV provides localized, per-record details with project context,
-  explicit hour units, and overnight end dates for further analysis.
-- Analytics PDF includes all eight dashboard areas, previous-period comparison
-  boundaries, and complete paginated numeric tables in a print-friendly layout.
+- AI text polishing now opens an editable, side-by-side review before replacing time-record, note, or report text. Additional instructions support repeated polishing; cancelling or a failed request preserves the existing text.
+- Analytics export filenames identify the selected month, quarter, or year. Export menu actions include file-format icons.
+- Analytics CSV provides localized, per-record details with project context, explicit hour units, and overnight end dates for further analysis.
+- Analytics PDF includes all eight dashboard areas, previous-period comparison boundaries, and complete paginated numeric tables in a print-friendly layout.
 
 ### Fixed
 
-- Repeated AI polishing separates additional editing requests from source text
-  and supports explicit formatting changes. Unchanged responses are explained
-  without overwriting the previous result or manual edits.
-- AI connection checks propagate cancellation to the request. Settings ignore
-  outdated model status results and remain usable if a background job cannot start.
-- Background opacity changes no longer flash the settings controls or restart
-  animations. Consecutive changes retain the latest selection while saving.
+- Repeated AI polishing separates additional editing requests from source text and supports explicit formatting changes. Unchanged responses are explained without overwriting the previous result or manual edits.
+- AI connection checks propagate cancellation to the request. Settings ignore outdated model status results and remain usable if a background job cannot start.
+- Background opacity changes no longer flash the settings controls or restart animations. Consecutive changes retain the latest selection while saving.
 
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 
-**4.0.0: A more connected work history.** Time records, notes, reports, and
-analytics come together in a unified desktop workspace, with flexible
-classification, recoverable editing, and personal cloud backups.
+**4.0.0: A more connected work history.** Time records, notes, reports, and analytics come together in a unified desktop workspace, with flexible classification, recoverable editing, and personal cloud backups.
 
 ### Added
 
-- **Flexible classification:** account-specific activity, break, leave, and work
-  arrangement types, plus projects and work items. Historical names remain
-  available in records and exports after classifications change.
-- **Recoverable record editing:** split at a chosen time, merge adjacent records,
-  preview overlap replacements, and undo eligible changes, including overnight
-  records. Record search supports date ranges and classification filters.
-- **Report history and exports:** saved versions and recovery, generation-source
-  references, date-range search, selectable sorting, and paginated history.
-  Export daily or monthly timesheets as XLSX or PDF.
-- **Personal cloud backups:** WebDAV and S3-compatible storage, client-side
-  encryption enabled by default, configurable schedules and retention, version
-  conflict confirmations, failure notifications, and local recovery archives.
-- **Work plans and goals:** weekly schedules with half days, regional holiday
-  handling, and schedule-based or custom hours targets. Analytics distinguishes
-  actual attendance from planned work and shows weekly date ranges.
-- **Guided startup recovery:** actionable storage and configuration errors,
-  safe retries, directory access, and copyable diagnostics. Database recovery
-  validates backups or preserves existing files before creating a new database.
-- Microsoft browser sign-in and in-application provider registration settings,
-  separate display names and login IDs, account avatars, and configurable static
-  or animated backgrounds.
-- Public `worklogger.config.json` deployment settings for AI, cloud backup,
-  registration, and OIDC policies, along with backup timing, network deadlines,
-  and list page sizes. Disabled features remain visible but unavailable.
+- **Flexible classification:** account-specific activity, break, leave, and work arrangement types, plus projects and work items. Historical names remain available in records and exports after classifications change.
+- **Recoverable record editing:** split at a chosen time, merge adjacent records, preview overlap replacements, and undo eligible changes, including overnight records. Record search supports date ranges and classification filters.
+- **Report history and exports:** saved versions and recovery, generation-source references, date-range search, selectable sorting, and paginated history. Export daily or monthly timesheets as XLSX or PDF.
+- **Personal cloud backups:** WebDAV and S3-compatible storage, client-side encryption enabled by default, configurable schedules and retention, version conflict confirmations, failure notifications, and local recovery archives.
+- **Work plans and goals:** weekly schedules with half days, regional holiday handling, and schedule-based or custom hours targets. Analytics distinguishes actual attendance from planned work and shows weekly date ranges.
+- **Guided startup recovery:** actionable storage and configuration errors, safe retries, directory access, and copyable diagnostics. Database recovery validates backups or preserves existing files before creating a new database.
+- Microsoft browser sign-in and in-application provider registration settings, separate display names and login IDs, account avatars, and configurable static or animated backgrounds.
+- Public `worklogger.config.json` deployment settings for AI, cloud backup, registration, and OIDC policies, along with backup timing, network deadlines, and list page sizes. Disabled features remain visible but unavailable.
 
 ### Changed
 
-- Unified Calendar, Analytics, Reports, and Settings navigation, with shared
-  theme controls, clearer hover and disabled states, and distinct work, leave,
-  and break colors across supported languages and light/dark themes.
-- Manual input and persistent timers share record content and classification.
-  Daily notes are independent, with recoverable drafts and explicit report/AI
-  sharing choices. Report templates use localized content.
-- External AI requires an explicit account choice. Supported requests use the
-  account proxy without silent provider or proxy fallback; local AI runtime
-  context is adjustable.
-- Separated domain, application, infrastructure, and presentation responsibilities
-  to improve maintainability and reuse without coupling business rules to Qt.
-- Updated native inference to llama-cpp-python 0.3.36 and expanded cross-platform
-  build coverage to Python 3.11 through 3.14.
+- Unified Calendar, Analytics, Reports, and Settings navigation, with shared theme controls, clearer hover and disabled states, and distinct work, leave, and break colors across supported languages and light/dark themes.
+- Manual input and persistent timers share record content and classification. Daily notes are independent, with recoverable drafts and explicit report/AI sharing choices. Report templates use localized content.
+- External AI requires an explicit account choice. Supported requests use the account proxy without silent provider or proxy fallback; local AI runtime context is adjustable.
+- Separated domain, application, infrastructure, and presentation responsibilities to improve maintainability and reuse without coupling business rules to Qt.
+- Updated native inference to llama-cpp-python 0.3.36 and expanded cross-platform build coverage to Python 3.11 through 3.14.
 
 ### Fixed
 
-- UI freezes, repeated report refreshes, and stale background results during
-  authentication, analytics, text processing, and data operations.
-- Lost pending edits after failed or conflicting saves, stalled timer displays,
-  and unreadable drafts preventing access to saved notes.
-- CSV break deductions, duplicated note content, inconsistent rest-day totals,
-  and database read/write contention. Invalid stored data is reported rather
-  than silently omitted from totals.
+- UI freezes, repeated report refreshes, and stale background results during authentication, analytics, text processing, and data operations.
+- Lost pending edits after failed or conflicting saves, stalled timer displays, and unreadable drafts preventing access to saved notes.
+- CSV break deductions, duplicated note content, inconsistent rest-day totals, and database read/write contention. Invalid stored data is reported rather than silently omitted from totals.
 
 ### Security
 
-- Direct browser OIDC authorization with request-bound token validation and
-  current-account verification before linking or unlinking identities. Credential
-  changes are rechecked within database transactions.
-- Strengthened credential storage, logout revocation, per-database remembered
-  sessions, log redaction, and sensitive clipboard cleanup.
-- Bounded calendar recurrence and event-content processing, validated public
-  connection destinations, and verified native dependency checksums.
+- Direct browser OIDC authorization with request-bound token validation and current-account verification before linking or unlinking identities. Credential changes are rechecked within database transactions.
+- Strengthened credential storage, logout revocation, per-database remembered sessions, log redaction, and sensitive clipboard cleanup.
+- Bounded calendar recurrence and event-content processing, validated public connection destinations, and verified native dependency checksums.
 
 ### Removed
 
-- Automatic conversion of unsupported development database layouts. Released
-  v3.3.3 imports and supported database upgrades remain available.
-- Credential decryption based on predictable host/network identifiers. Affected
-  stored credentials require re-entry; their ciphertext is retained.
+- Automatic conversion of unsupported development database layouts. Released v3.3.3 imports and supported database upgrades remain available.
+- Credential decryption based on predictable host/network identifiers. Affected stored credentials require re-entry; their ciphertext is retained.
 
 ### Upgrade Notes
 
-- **Back up before upgrading.** Database upgrades retain a pre-upgrade snapshot
-  and apply ownership constraints transactionally. Unsupported or conflicting
-  data is not discarded; upgraded databases cannot be downgraded.
-- Google bindings imported from v3.3.3 use their stored federated subject when
-  available. Unresolved bindings require local account recovery and relinking,
-  rather than silently creating an empty account.
-- Existing personal backups remain readable after schema upgrades. Local
-  databases and SQLite backups remain unencrypted; personal cloud encryption
-  is a separate feature. See the [user guide](docs/user-guide.md) for details.
+- **Back up before upgrading.** Database upgrades retain a pre-upgrade snapshot and apply ownership constraints transactionally. Unsupported or conflicting data is not discarded; upgraded databases cannot be downgraded.
+- Google bindings imported from v3.3.3 use their stored federated subject when available. Unresolved bindings require local account recovery and relinking, rather than silently creating an empty account.
+- Existing personal backups remain readable after schema upgrades. Local databases and SQLite backups remain unencrypted; personal cloud encryption is a separate feature. See the [user guide](docs/user-guide.md) for details.
 
 ## [3.3.3] - 2026-05-11
 
