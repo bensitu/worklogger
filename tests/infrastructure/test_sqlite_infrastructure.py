@@ -82,6 +82,16 @@ class MemoryKeyringBackend:
 
 
 class SQLiteInfrastructureTests(unittest.TestCase):
+    def test_password_verification_rejects_malformed_stored_values(self):
+        hasher = PBKDF2PasswordHasher(iterations=1000)
+        password = hasher.hash_password("synthetic-password")
+        for stored_hash, salt in ((password.hash_hex, "not-hex"), (password.hash_hex, ""),
+                                  (password.hash_hex, None), ("not-a-hash", password.salt_hex),
+                                  ("\u4e2d" * 64, password.salt_hex)):
+            with self.subTest(stored_hash=stored_hash, salt=salt):
+                self.assertFalse(hasher.verify("synthetic-password", stored_hash, salt).matched)
+        self.assertTrue(hasher.verify("synthetic-password", password.hash_hex, password.salt_hex).matched)
+
     def test_encrypted_fallback_remains_authoritative_after_keyring_recovers(self):
         from unittest.mock import patch
         user = self.auth_repository().create_user("fallback-owner", "example-password", recovery_key=None, is_admin=False)

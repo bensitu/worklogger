@@ -1,8 +1,9 @@
 """Timed removal of application-owned sensitive clipboard text."""
 
 from hashlib import sha256
+import sys
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QMimeData, QTimer
 from PySide6.QtWidgets import QApplication
 
 
@@ -23,6 +24,11 @@ def copy_sensitive_text(text: str, *, timeout_ms: int = 60_000) -> None:
 
         timer.timeout.connect(clear_owned_text)
         application.aboutToQuit.connect(clear_owned_text)
-    clipboard.setText(text)
+    content = QMimeData()
+    if sys.platform == "win32":
+        for name in ("ExcludeClipboardContentFromMonitorProcessing", "CanIncludeInClipboardHistory", "CanUploadToCloudClipboard"):
+            content.setData(f'application/x-qt-windows-mime;value="{name}"', b"\0\0\0\0")
+    content.setText(text)
+    clipboard.setMimeData(content)
     timer.setProperty("content_digest", sha256(text.encode("utf-8")).hexdigest())
     timer.start(timeout_ms)

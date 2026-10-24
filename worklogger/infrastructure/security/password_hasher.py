@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import hashlib
 import hmac
 import secrets
+from string import hexdigits
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,13 @@ class PBKDF2PasswordHasher:
         stored_hash: str,
         salt_hex: str,
     ) -> PasswordVerification:
+        if not isinstance(stored_hash, str) or len(stored_hash) != 64 or any(value not in hexdigits for value in stored_hash):
+            return PasswordVerification(matched=False)
+        try:
+            if not bytes.fromhex(salt_hex):
+                return PasswordVerification(matched=False)
+        except (TypeError, ValueError):
+            return PasswordVerification(matched=False)
         current = self.hash_with_salt(password, salt_hex)
         if hmac.compare_digest(current, stored_hash):
             return PasswordVerification(matched=True, needs_upgrade=False)

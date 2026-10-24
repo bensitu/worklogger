@@ -90,7 +90,9 @@ Password changes replace recovery keys. Save or copy a displayed key privately.
 Clipboard contents and exported key/temporary-password files are not encrypted.
 Copied recovery keys and temporary passwords are cleared after 60 seconds if
 the clipboard still contains the copied text. Other copied content is not cleared.
-Clipboard history or synchronization services may retain their own copies.
+On Windows, sensitive copies request exclusion from clipboard history and cloud
+synchronization. These flags do not remove existing history or prevent independent
+clipboard managers from retaining copies.
 An administrator reset invalidates recovery and remembered credentials and requires
 the user to change the temporary password. Successful password workflows clear
 the account's local lockout state.

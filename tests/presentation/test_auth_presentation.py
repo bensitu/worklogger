@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 import os
+import sys
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -195,6 +196,9 @@ class AuthPresentationTests(unittest.TestCase):
         previous = clipboard.text()
         self.addCleanup(clipboard.setText, previous)
         copy_sensitive_text("synthetic recovery key", timeout_ms=1)
+        if sys.platform == "win32":
+            for name in ("ExcludeClipboardContentFromMonitorProcessing", "CanIncludeInClipboardHistory", "CanUploadToCloudClipboard"):
+                self.assertEqual(bytes(clipboard.mimeData().data(f'application/x-qt-windows-mime;value="{name}"')), b"\0\0\0\0")
         timer = self._app.findChild(QTimer, "credential_clipboard_timer")
         expired = QSignalSpy(timer.timeout)
         self.assertTrue(expired.wait(1000), "Clipboard expiration timer did not fire")
