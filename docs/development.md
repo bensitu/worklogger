@@ -61,6 +61,15 @@ authentication and validation failures.
 
 ## Interface Conventions
 
+Use `TextReviewTask` for AI-assisted replacements of editable text. It runs the
+initial request through the shared job runner and opens `TextReviewDialog` only
+after a result is available. Supply source text, an operation accepting source,
+instructions, and a cancellation token, and a callable availability check.
+Apply successful completion to the originating editor only; do not save records
+from the review component. Cancelling the task also closes an open review and
+discards pending results. The dialog owns regeneration, progress, and comparison
+editing; view models retain prompt context and validation responsibilities.
+
 First-use guidance stores account state under `getting_started_pending` in the
 existing settings table. Account creation initializes it in the same transaction
 for local and external identities; an absent value means no automatic guidance.

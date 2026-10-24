@@ -19,6 +19,9 @@ Historical entries describe their respective releases; see the
 
 ### Changed
 
+- AI text polishing now opens an editable, side-by-side review before replacing
+  time-record, note, or report text. Additional instructions support repeated
+  polishing; cancelling or a failed request preserves the existing text.
 - Analytics export filenames identify the selected month, quarter, or year and
   export time. Export menu actions include file-format icons.
 - Analytics CSV provides localized, per-record details with project context,

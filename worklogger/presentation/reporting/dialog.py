@@ -388,6 +388,7 @@ class ReportDialog(QDialog):
             for field in (self.rewrite_button, self.save_button, self.save_template_button,
                           self.reset_template_button, self.close_button):
                 field.setEnabled(True)
+            self.rewrite_button.setEnabled(bool(self._view_model.rewrite_available))
             if not result.ok or result.value is None:
                 self._set_error(result.error)
                 return

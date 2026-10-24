@@ -405,8 +405,16 @@ See [configuration](configuration.md) for formats and deployment controls.
 
 Enable AI Assist and configure either a selected local model or an external
 service before polishing text. Requests show progress and can be cancelled.
-Review the proposed text before using it; polishing does not save records or
-change recorded hours. See [local models](local-models.md) and
+When the first result is ready, a comparison window shows the source on the left
+and the revised text on the right. Both can be edited. Add optional instructions
+and choose Polish again to generate another version from the current left-hand
+text. The window remains open during processing; cancel the request to keep the
+previous result, or retry after a failure. Choose Use text to replace the source
+editor with the right-hand text. Cancel or close the window to keep the original
+editor unchanged. Polishing does not save records or change recorded hours.
+The same review flow is used for time records, notes, and reports. Deployment
+settings that disable AI also prevent polishing and accepting AI text.
+See [local models](local-models.md) and
 [AI configuration](configuration.md#ai).
 
 Polishing keeps time records concise, preserves lists and checklists in notes,
