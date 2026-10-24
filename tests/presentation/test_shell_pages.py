@@ -13,7 +13,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 
 from worklogger.domain.shared.result import Result
 from worklogger.domain.reporting.history import ReportHistoryPage

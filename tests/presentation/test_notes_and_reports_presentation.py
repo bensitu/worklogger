@@ -38,7 +38,7 @@ from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.presentation.notes import NoteEditorDialog
 from worklogger.presentation.reporting import ReportDialog
 from worklogger.presentation.viewmodels import NoteEditorViewModel, ReportEditorViewModel
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher

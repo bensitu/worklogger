@@ -21,7 +21,7 @@ from worklogger.domain.auth.models import LinkedIdentity
 from worklogger.domain.identity.models import IdentityProviderStatus
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.identity import IdentityDialog
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.viewmodels import IdentityManagementViewModel
 
 

@@ -26,7 +26,7 @@ from worklogger.domain.worklog.rules import aggregate_days, entries_overlap, nor
 from dataclasses import replace
 from worklogger.app.use_cases.time_entries import TimeEntryService
 from worklogger.presentation.viewmodels.time_entries import TimeEntryViewModel
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from tests.presentation.qt_support import dispose_test_windows
 from worklogger.presentation.shell import (
     AppWindow,

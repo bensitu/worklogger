@@ -59,7 +59,7 @@ class ShellLayoutChecks(unittest.TestCase):
         from worklogger.domain.calendar.models import Holiday
         from worklogger.domain.shared.result import Result
         from worklogger.infrastructure.images.background import validate_background_data
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.settings import SettingsDialog
         from worklogger.presentation.settings_capabilities import SettingsCapabilities
         from worklogger.presentation.shell import MinimalView, MinimalViewConfig

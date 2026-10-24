@@ -27,7 +27,7 @@ from worklogger.infrastructure.images.background import (
     prepare_background,
     validate_background_data,
 )
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.shell.background_controller import BackgroundController
 from worklogger.presentation.shell.appearance_controller import WindowAppearanceController
 from worklogger.presentation.theme.background import MainBackgroundWidget

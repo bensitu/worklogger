@@ -241,7 +241,8 @@ Once an atomic database write or file replacement begins, it completes or rolls
 back through its storage contract; completion is not relabelled as cancellation
 after data has been committed. SQLite backup, integrity validation, and bounded
 third-party calendar expansion must return before shutdown can finish waiting.
-`ImmediateJobRunner` supplies deterministic behavior for isolated tests.
+The synchronous runner in `tests/job_runner.py` supplies deterministic behavior
+for isolated tests and is not part of the packaged application.
 
 SQLite connections are short-lived. The connection factory serializes writes;
 repositories enforce optimistic updates and atomic operations.

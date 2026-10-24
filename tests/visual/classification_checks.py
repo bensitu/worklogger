@@ -16,7 +16,7 @@ from worklogger.domain.projects.models import Project, WorkContext, WorkItem
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import CustomEntryType, CustomWorkMode, EntryType, WorkLog, WorkMode
 from worklogger.infrastructure.i18n import available_languages, get_language, set_language
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.shell.minimal_view import MinimalView, MinimalViewConfig
 from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
 from tests.presentation.test_app_window import MemoryWorkLogRepository, _entry_model, _window

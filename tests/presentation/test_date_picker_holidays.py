@@ -7,7 +7,7 @@ from worklogger.app.job_runner import CancellationToken, JobHandle
 from worklogger.domain.calendar.models import Holiday
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.widgets.date_picker_holidays import DatePickerHolidaysController
 
 

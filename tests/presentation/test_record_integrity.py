@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from tests.presentation.qt_support import dispose_test_windows
 from worklogger.app.use_cases.record_integrity import InvalidRecord, RecordInspection
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.widgets.record_integrity import RecordIntegrityDialog
 
 

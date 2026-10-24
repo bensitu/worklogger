@@ -123,7 +123,7 @@ class ReportingLayoutChecks(unittest.TestCase):
         from worklogger.domain.projects.models import Project, WorkContext, WorkItem
         from worklogger.domain.worklog.search import EntryFilter, EntryPage
         from worklogger.presentation.date_labels import duration_label
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
         from worklogger.presentation.widgets.project_analytics import ProjectAnalyticsDialog
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
@@ -194,7 +194,7 @@ class ReportingLayoutChecks(unittest.TestCase):
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QSpinBox, QToolButton
         from worklogger.domain.worklog.search import EntryPage
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
         from worklogger.presentation.widgets.date_picker import MonthCalendar
         from worklogger.presentation.widgets.end_timer import EndTimerDialog
@@ -255,7 +255,7 @@ class ReportingLayoutChecks(unittest.TestCase):
     def test_report_versions_preview_fits_localized_dialogs(self):
         from worklogger.presentation.widgets.report_revisions import ReportRevisionsDialog
         from worklogger.domain.reporting.models import ReportRevision
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine
         configure_application_style()
         install_bundled_fonts()

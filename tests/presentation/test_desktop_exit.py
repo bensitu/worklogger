@@ -92,7 +92,7 @@ class DesktopExitTests(unittest.TestCase):
         from shiboken6 import isValid
         from tests.presentation.test_app_window import _app, _entry_model, MemoryWorkLogRepository
         from worklogger.presentation.shell import MinimalView
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
 
         _app()
         residency = Mock()

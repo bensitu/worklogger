@@ -37,7 +37,8 @@ from worklogger.presentation.reporting.dialog import ReportDialog
 from worklogger.presentation.shell.pages import ReportsPage
 from worklogger.presentation.theme import install_bundled_fonts
 from worklogger.presentation.viewmodels.reports import ReportEditorViewModel
-from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from tests.job_runner import ImmediateJobRunner
+from worklogger.presentation.job_runner import QtJobRunner
 
 
 class ReportHistoryTests(unittest.TestCase):

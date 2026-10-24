@@ -20,7 +20,8 @@ from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalenda
 from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.worklog.models import WorkMode
 from worklogger.presentation.shell.app_window import AppWindowConfig
-from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from tests.job_runner import ImmediateJobRunner
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.app.use_cases.ai import RewriteTextResult
 from worklogger.domain.shared.result import Result
 from tests.presentation.qt_support import wait_for_condition

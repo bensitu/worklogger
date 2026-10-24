@@ -12,7 +12,8 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from tests.job_runner import ImmediateJobRunner
+from worklogger.presentation.job_runner import QtJobRunner
 
 
 def _app() -> QApplication:

@@ -16,7 +16,7 @@ from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QWidget, QFileDialog, QMessageBox
 
 from worklogger.__about__ import APP_NAME
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.app.use_cases.auth import (
     ChangePasswordHandler,
     GetAuthBootstrapStateHandler,

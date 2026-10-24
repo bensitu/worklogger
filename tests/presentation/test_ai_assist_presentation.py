@@ -14,7 +14,7 @@ from worklogger.app.use_cases.ai import AiChatHandler, AiChatResult, AiContextRe
 from worklogger.app.job_runner import JobHandle
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.ai import AiAssistDialog
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.viewmodels import AiAssistViewModel
 
 

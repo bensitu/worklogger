@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLineEdit, QPu
 
 from tests.presentation.qt_support import dispose_test_windows
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.shell.getting_started import GettingStartedController
 
 

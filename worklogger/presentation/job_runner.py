@@ -171,18 +171,3 @@ def _run_job(job: JobCallable[object], token: CancellationToken) -> Result[objec
     return Result.success(value)
 
 
-class ImmediateJobRunner:
-    """Synchronous JobRunner implementation for tests and non-interactive diagnostics."""
-
-    def submit(
-        self,
-        name: str,
-        job: JobCallable[object],
-        *,
-        on_complete: JobCallback[object] | None = None,
-    ) -> JobHandle[object]:
-        token = CancellationToken()
-        result = _run_job(job, token)
-        if on_complete is not None:
-            on_complete(result)
-        return JobHandle(job_id=f"{name}-immediate", cancel=token.cancel)

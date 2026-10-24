@@ -20,7 +20,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.repositories import SQLiteAuthRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from tests.presentation.qt_support import dispose_test_windows
 
 

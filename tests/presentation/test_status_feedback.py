@@ -21,7 +21,7 @@ from worklogger.presentation.local_models.dialog import LocalModelsDialog
 from worklogger.presentation.reporting.dialog import ReportDialog, ReportTemplateDialog
 from worklogger.presentation.user_management.dialog import UserManagementDialog
 from worklogger.presentation.widgets.status_label import StatusLabel
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 
 
 class StatusFeedbackTests(unittest.TestCase):
@@ -121,7 +121,7 @@ class StatusFeedbackTests(unittest.TestCase):
                 self.complete = on_complete
                 return JobHandle(job_id=name, cancel=lambda: None)
 
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         for runner in (ImmediateJobRunner(), DeferredRunner()):
             state = SimpleNamespace(history=())
             model = Mock(available=True)

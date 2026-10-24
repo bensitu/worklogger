@@ -29,7 +29,8 @@ from worklogger.domain.local_model.models import (
 )
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import set_language
-from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from tests.job_runner import ImmediateJobRunner
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.local_models import LocalModelsDialog
 from worklogger.presentation.local_models.controller import LocalModelsWorkflowController
 from worklogger.app.job_runner import JobHandle

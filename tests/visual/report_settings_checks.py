@@ -15,7 +15,7 @@ from worklogger.infrastructure.i18n import get_language, available_languages, se
 from worklogger.presentation.settings import SettingsPage
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.shell.reports_page import ReportsPage
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts, ThemeEngine, THEME_KEYS
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.viewmodels.reports import ReportEditorState

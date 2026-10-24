@@ -21,7 +21,7 @@ from worklogger.infrastructure.export import MarkdownExporter
 from worklogger.infrastructure.i18n import available_languages, get_language, set_language
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.notes import NoteEditorDialog
 from worklogger.presentation.theme import configure_application_style, install_bundled_fonts
 from worklogger.presentation.theme.theme_engine import ThemeEngine

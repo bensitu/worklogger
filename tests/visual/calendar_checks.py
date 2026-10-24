@@ -393,7 +393,7 @@ class CalendarLayoutChecks(unittest.TestCase):
     def test_project_management_fits_supported_languages_and_window_sizes(self):
         from worklogger.presentation.viewmodels.projects import ProjectManagerViewModel
         from worklogger.presentation.widgets.project_manager import ProjectManagerDialog
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
         configure_application_style()
         install_bundled_fonts()
@@ -493,7 +493,7 @@ class CalendarLayoutChecks(unittest.TestCase):
         from worklogger.domain.worklog.search import EntryPage
         from worklogger.domain.shared.result import Result
         from worklogger.presentation.widgets.record_search import RecordSearchDialog
-        from worklogger.presentation.job_runner import ImmediateJobRunner
+        from tests.job_runner import ImmediateJobRunner
         from worklogger.presentation.theme import ThemeEngine, configure_application_style, install_bundled_fonts
         configure_application_style()
         install_bundled_fonts()

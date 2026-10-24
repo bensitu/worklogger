@@ -21,7 +21,8 @@ from worklogger.app.use_cases.auth import (
     SetPasswordChangeRequiredHandler,
 )
 from worklogger.presentation.user_management import UserManagementDialog
-from worklogger.presentation.job_runner import ImmediateJobRunner, QtJobRunner
+from tests.job_runner import ImmediateJobRunner
+from worklogger.presentation.job_runner import QtJobRunner
 from worklogger.presentation.viewmodels import UserManagementViewModel
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import InfrastructureError

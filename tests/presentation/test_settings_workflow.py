@@ -16,7 +16,7 @@ from worklogger.domain.auth.models import User
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.config.constants import LAST_BACKUP_AT_SETTING_KEY
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.auth import ChangePasswordDialog
 from worklogger.presentation.settings import SettingsDialog, SettingsWorkflowController
 from worklogger.presentation.viewmodels import (

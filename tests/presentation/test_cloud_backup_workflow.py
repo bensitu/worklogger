@@ -13,7 +13,7 @@ from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredential
 from worklogger.app.use_cases.cloud_backups import BackupTransfer
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
-from worklogger.presentation.job_runner import ImmediateJobRunner
+from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.settings.sections.cloud_backup import CloudBackupPanel
 from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
 
