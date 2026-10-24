@@ -4,8 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Version numbers use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Historical entries describe their respective releases; see the
-[user guide](docs/user-guide.md) for operating instructions.
+Historical entries describe their respective releases; see the [user guide](docs/user-guide.md) for operating instructions.
 
 ## [4.1.0]
 
@@ -27,7 +26,7 @@ Historical entries describe their respective releases; see the
 - AI connection checks propagate cancellation to the request. Settings ignore outdated model status results and remain usable if a background job cannot start.
 - Background opacity changes no longer flash the settings controls or restart animations. Consecutive changes retain the latest selection while saving.
 
-## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
+## [4.0.0] - 2026.10.23
 
 **4.0.0: A more connected work history.** Time records, notes, reports, and analytics come together in a unified desktop workspace, with flexible classification, recoverable editing, and personal cloud backups.
 
