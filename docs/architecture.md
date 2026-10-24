@@ -267,6 +267,11 @@ are appended after component styles to preserve their selector priority.
 Ancestor-property changes refresh only the affected widget tree, not the global
 application stylesheet.
 
+Segmented tabs share the `tab_style="segmented"` role. Compact recording controls
+use the `density="compact"` and `selection_style="subtle"` modifiers rather than
+duplicating rules by widget ID. Theme metrics define their corner radii without
+changing application-wide colors.
+
 The resource manifest owns assets, QSS, catalogs, and public configuration.
 Add new resources there and verify their packaged paths.
 `widgets/file_location.py` groups a copyable, read-only path with directory access

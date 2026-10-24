@@ -8,6 +8,8 @@ from worklogger.presentation.theme.models import ColorPalette
 CONTROL_METRICS = MappingProxyType({
     "control_radius": "8px",
     "panel_radius": "8px",
+    "editor_panel_radius": "6px",
+    "segmented_tab_radius": "5px",
     "item_radius": "4px",
     "control_min_height": "28px",
     "control_padding_vertical": "5px",

@@ -31,7 +31,6 @@ QTabWidget#classification_section_tab_widget::pane {
   border: none;
 }
 
-QTabBar#worklog_mode_selector_widget,
 QTabBar[tab_style="segmented"] {
   qproperty-drawBase: 0;
   background: {{ surface_alt }};
@@ -39,62 +38,59 @@ QTabBar[tab_style="segmented"] {
   border-radius: {{ control_radius }};
 }
 
-QTabBar#worklog_mode_selector_widget::tab,
 QTabBar[tab_style="segmented"]::tab {
   background: transparent;
   color: {{ muted_text }};
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: {{ segmented_tab_radius }};
   margin: 3px;
-  min-height: 20px;
-  padding: 4px;
-  font-size: 12px;
+  min-height: 24px;
+  padding: 4px 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
-QTabBar#worklog_mode_selector_widget::tab:hover:enabled,
 QTabBar[tab_style="segmented"]::tab:hover:enabled {
   color: {{ text }};
   background: {{ card_hover }};
 }
 
-QTabBar#worklog_mode_selector_widget::tab:selected,
-QTabBar[tab_style="segmented"]::tab:selected {
-  background: {{ button_fill }};
-  color: {{ accent }};
-  border-color: {{ button_border }};
-  font-weight: 600;
-}
-
-QTabBar#worklog_mode_selector_widget::tab:selected:hover:enabled,
-QTabBar[tab_style="segmented"]::tab:selected:hover:enabled {
-  color: {{ accent }};
-}
-
-QTabBar[tab_style="segmented"]::tab {
-  min-height: 24px;
-  padding: 4px 14px;
-  font-size: 13px;
-}
-
 QTabBar[tab_style="segmented"]::tab:selected,
 QTabBar[tab_style="segmented"]::tab:selected:hover:enabled {
   background: {{ accent_dim }};
+  color: {{ accent }};
   border-color: {{ accent }};
+  font-weight: 600;
+}
+
+QTabBar[tab_style="segmented"][density="compact"]::tab {
+  min-height: 20px;
+  padding: 4px;
+  font-size: 12px;
+}
+
+QTabBar[tab_style="segmented"][selection_style="subtle"]::tab:selected,
+QTabBar[tab_style="segmented"][selection_style="subtle"]::tab:selected:hover:enabled {
+  background: {{ button_fill }};
+  border-color: {{ button_border }};
+}
+
+QTabBar[tab_style="segmented"][selection_style="subtle"]::tab:selected:hover:enabled {
+  background: {{ card_hover }};
 }
 
 QTabWidget#project_editor_tab_widget::pane,
 QTabWidget#report_revision_tab_widget::pane {
   background: {{ editor_pane_fill }};
   border: 1px solid {{ panel_border }};
-  border-radius: 6px;
+  border-radius: {{ editor_panel_radius }};
   top: 8px;
 }
 
 QWidget[editor_page="true"] {
   background: {{ editor_fill }};
   border-color: {{ panel_border }};
-  border-radius: 6px;
+  border-radius: {{ editor_panel_radius }};
 }
 
 QTabBar[tab_style="underline"] {
