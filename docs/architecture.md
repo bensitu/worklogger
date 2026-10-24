@@ -230,6 +230,9 @@ exception payloads. Follow each adapter's documented return/exception contract.
 Long-running I/O, authorization, exports, and inference use `JobRunner`.
 `QtJobRunner` runs workers and delivers completion on the UI thread.
 Qt widgets must only be read or changed on that thread.
+Business operations, long-running service requests, and glass rendering use
+separate owned thread pools. Glass rendering is limited to two workers; shutdown
+cancels and drains all pools.
 
 Cancellation is cooperative. Controllers reject stale results and completions
 for disposed owners; cancellation does not forcibly stop a native call.
@@ -282,6 +285,10 @@ Background option saves reuse validated image frames and coalesce consecutive
 changes without blocking the controls. Image imports and removal remain serialized
 with pending option saves. Opacity updates retain the current animation frame and
 playback source instead of restarting the decoder.
+Animated backgrounds pause when hidden or when the application is inactive and
+resume on activation. Opening another window within the active application does
+not pause playback. Visibility behind other applications depends on platform
+activation events; complete occlusion is not a portable Qt visibility signal.
 
 Segmented tabs share the `tab_style="segmented"` role. Compact recording controls
 use the `density="compact"` and `selection_style="subtle"` modifiers rather than

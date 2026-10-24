@@ -29,7 +29,7 @@ from worklogger.app.job_runner import JobHandle, JobRunner
 from worklogger.domain.shared.errors import AppError, CancellationError, InfrastructureError
 from worklogger.infrastructure.i18n import _, get_language
 from worklogger.presentation.errors import display_error_code, display_error_message
-from worklogger.presentation.job_runner import shared_job_runner
+from worklogger.presentation.job_runner import owned_callback, shared_job_runner
 from worklogger.presentation.viewmodels import (
     LocalModelManagerState,
     LocalModelManagerViewModel,
@@ -353,7 +353,7 @@ class LocalModelsDialog(QDialog):
             handle = self._job_runner.submit(
                 name,
                 lambda token: job(token) if cancellable else job(),
-                on_complete=callback,
+                on_complete=owned_callback(self, callback),
             )
         except Exception:
             self._pending_handle = None

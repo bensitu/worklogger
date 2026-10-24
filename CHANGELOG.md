@@ -28,6 +28,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 - Updated setuptools to 84.1.0 to fix path traversal during legacy wheel installation on Windows.
 - Sensitive copies request exclusion from Windows clipboard history and cloud synchronization. Malformed stored password hashes and salts fail verification without interrupting sign-in.
 - Notes and drafts identify the 1 MiB text limit without replacing saved content. Generated reports escape literal calendar and project metadata while preserving intentional note and template Markdown.
+- Local model listing and verification support cancellation. Animated backgrounds pause while the application is inactive, and glass rendering no longer competes with ordinary background operations for worker threads.
 
 ## [4.0.0] - 2026.10.23
 

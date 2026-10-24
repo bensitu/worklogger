@@ -417,6 +417,8 @@ controls. Until an image is uploaded, the normal theme background remains.
 Disabling keeps the image; removing it keeps the enabled preference and opacity.
 Images cover the four main pages or the minimal recording window, not the sidebar
 or separate dialogs.
+Animated images pause while the application is inactive or the background is
+hidden, retaining the last frame until playback resumes.
 See [configuration](configuration.md) for formats and deployment controls.
 
 Enable AI Assist and configure either a selected local model or an external

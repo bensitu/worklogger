@@ -61,17 +61,22 @@ class BackgroundJobTests(unittest.TestCase):
             stop_background_tasks(runner, force_exit=terminate)
         self.assertEqual(exits, [1])
 
-    def test_slow_tasks_do_not_block_short_work_or_shutdown_events(self):
+    def test_render_and_long_tasks_do_not_block_short_work_or_shutdown_events(self):
         from PySide6.QtCore import QTimer
         runner = QtJobRunner()
         started, release = threading.Event(), threading.Event()
         completed, responsive = [], []
+        runner._pool.setMaxThreadCount(1)
         runner._long_pool.setMaxThreadCount(1)
+        runner._render_pool.setMaxThreadCount(1)
+        render_started = threading.Event()
         def slow(_token):
             started.set()
             release.wait(3)
         runner.submit("local_model_download", slow)
+        runner.submit("glass_background", lambda _token: (render_started.set(), release.wait(3)))
         self.assertTrue(started.wait(3))
+        self.assertTrue(render_started.wait(3))
         try:
             runner.submit("load_calendar_overview", lambda _token: 42, on_complete=completed.append)
             deadline = time.monotonic() + 3

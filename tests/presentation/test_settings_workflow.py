@@ -388,7 +388,12 @@ class SettingsWorkflowTests(unittest.TestCase):
         self.assertFalse(page.is_busy)
         self.assertTrue(page.check_updates_button.isEnabled())
         self.assertEqual(page.update_status_label.text(), "Update available: 4.0.1")
-        page.deleteLater()
+        from shiboken6 import delete
+        self.assertTrue(controller._check_updates(page))
+        operation, complete = runner.requests[1]
+        delete(page)
+        complete(operation(CancellationToken()))
+        self.assertIsNone(controller._updates_workflow._update_check_handle)
 
     def test_user_management_entry_requires_an_administrator_and_configured_workflow(self):
         for is_admin, configured in ((False, True), (True, False)):

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from shiboken6 import isValid
+
 from worklogger.presentation.settings.page import SettingsPage
 
 from worklogger.__about__ import APP_VERSION
 from worklogger.app.job_runner import JobHandle
 from worklogger.app.queries.update_queries import CheckForUpdatesQuery
-from worklogger.domain.shared.errors import CancellationError
+from worklogger.domain.shared.errors import CancellationError, InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.workflows.common import (
     _error_message,
@@ -45,13 +48,18 @@ class UpdatesSettingsWorkflow:
                 job_id="check_updates_pending",
                 cancel=lambda: None,
             )
-            handle = self._job_runner.submit(
-                "check_updates",
-                lambda _token: self._update_check_handler.handle(
-                    CheckForUpdatesQuery(APP_VERSION)
-                ),
-                on_complete=lambda result: self._complete_update_check(dialog, result),
-            )
+            try:
+                handle = self._job_runner.submit(
+                    "check_updates",
+                    lambda _token: self._update_check_handler.handle(
+                        CheckForUpdatesQuery(APP_VERSION)
+                    ),
+                    on_complete=lambda result: self._complete_update_check(dialog, result),
+                )
+            except Exception:
+                self._complete_update_check(dialog, Result.failure(
+                    InfrastructureError("background_job_failed", "background_job_failed")))
+                return False
             if self._update_check_handle is not None:
                 self._update_check_handle = handle
             return True
@@ -60,6 +68,8 @@ class UpdatesSettingsWorkflow:
 
     def _complete_update_check(self, dialog: SettingsPage, result: object) -> None:
         self._update_check_handle = None
+        if not isValid(dialog):
+            return
         _set_busy(dialog, "update", False)
         self._handle_update_result(dialog, result)
 

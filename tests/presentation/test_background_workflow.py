@@ -10,7 +10,7 @@ from unittest.mock import Mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QCoreApplication, QEvent, QTimer
+from PySide6.QtCore import QCoreApplication, QEvent, QTimer, Qt
 from PySide6.QtTest import QSignalSpy, QTest
 from PySide6.QtWidgets import QApplication, QWidget
 
@@ -211,6 +211,14 @@ class BackgroundWorkflowTests(unittest.TestCase):
         QTest.qWait(200)
         self.assertEqual(frames.count(), count)
         surface.show()
+        self.wait_until(lambda: frames.count() > count)
+        self.app.applicationStateChanged.emit(Qt.ApplicationState.ApplicationInactive)
+        QTest.qWait(100)
+        count = frames.count()
+        QTest.qWait(200)
+        self.assertEqual(frames.count(), count)
+        self.assertTrue(surface.background_active)
+        self.app.applicationStateChanged.emit(Qt.ApplicationState.ApplicationActive)
         self.wait_until(lambda: frames.count() > count)
         version = frames.at(frames.count() - 1)[0]
         surface._player.failed.emit(version)

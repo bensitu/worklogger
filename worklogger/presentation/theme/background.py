@@ -1,7 +1,7 @@
 """Full-cover background surface that leaves foreground controls opaque."""
 
-from PySide6.QtCore import QPointF, QRectF, Signal
-from PySide6.QtGui import QColor, QImage, QLinearGradient, QPainter
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QGuiApplication, QImage, QLinearGradient, QPainter
 from PySide6.QtWidgets import QWidget
 
 from worklogger.domain.settings.background import BackgroundState
@@ -22,6 +22,9 @@ class MainBackgroundWidget(QWidget):
         self._version = 0
         self._player = None
         self._material_colors = None
+        application = QGuiApplication.instance()
+        self._application_active = application.applicationState() == Qt.ApplicationState.ApplicationActive
+        application.applicationStateChanged.connect(self._application_state_changed)
         self.setProperty("background_image", False)
 
     @property
@@ -104,7 +107,11 @@ class MainBackgroundWidget(QWidget):
 
     def _update_playback(self):
         if self._player is not None:
-            self._player.set_playing(self.isVisible() and self.background_active)
+            self._player.set_playing(self._application_active and self.isVisible() and self.background_active)
+
+    def _application_state_changed(self, state):
+        self._application_active = state == Qt.ApplicationState.ApplicationActive
+        self._update_playback()
 
     def showEvent(self, event):
         super().showEvent(event)
