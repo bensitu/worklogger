@@ -106,6 +106,8 @@ not security.
 
 CI runs tests, native runtime verification, packaging, and extracted-archive
 verification on Windows x64, Linux x64, and macOS ARM64 with Python 3.11 through 3.14.
+Dependency vulnerability checks also run for each of these four Python versions
+on Linux, including the native inference requirements.
 Linux tests exercise the approved wheel; Linux distribution builds compile a
 portable CPU backend without AVX, FMA, F16C, SSE4.2, or BMI2 requirements.
 Artifact names include the Python version to distinguish build environments.
