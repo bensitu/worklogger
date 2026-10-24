@@ -4,6 +4,7 @@ import os
 import threading
 import time
 import unittest
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -194,6 +195,12 @@ class BackgroundWorkflowTests(unittest.TestCase):
         self.wait_until(lambda: frames.count() >= 3)
         colors = {frames.at(index)[1].pixelColor(0, 0).name() for index in range(frames.count())}
         self.assertEqual(colors, {"#e84376", "#36b5a1"})
+        version, current_frame = surface._version, surface._frame
+        source_changes = QSignalSpy(surface._player.source_requested)
+        surface.set_background(replace(state, opacity=35), frame)
+        self.assertEqual(surface._version, version)
+        self.assertEqual(surface._frame, current_frame)
+        self.assertEqual(source_changes.count(), 0)
         surface.hide()
         count = frames.count()
         player = surface._player

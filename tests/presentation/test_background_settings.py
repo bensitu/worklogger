@@ -20,6 +20,8 @@ from tests.presentation.test_settings_presentation import (
 )
 from worklogger.app.job_runner import CancellationToken, JobHandle
 from worklogger.app.use_cases.backgrounds import BackgroundService
+from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
 from worklogger.infrastructure.images.background import QtBackgroundImageLoader
 from worklogger.infrastructure.repositories.background_sqlite import (
@@ -146,3 +148,78 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.assertTrue(self.controls.upload_button.isEnabled())
         self.assertTrue(self.controls.enabled_switch.isEnabled())
         self.assertTrue(self.controls.status_label.isHidden())
+
+        self.controls.opacity_slider.setValue(60)
+        self.controls.opacity_slider.setValue(70)
+        self.assertTrue(self.window.background_controller.clear())
+        self.assertFalse(self.window.background_controller.reload())
+        self.assertFalse(self.controls.upload_button.isEnabled())
+        self.assertFalse(self.controls.status_label.isHidden())
+        runner.complete(runner.operation(CancellationToken()))
+        runner.complete(runner.operation(CancellationToken()))
+        self.assertEqual(self.service.load().value.opacity, 70)
+        self.assertIsNotNone(self.service.load().value.image)
+        runner.complete(runner.operation(CancellationToken()))
+        self.assertIsNone(self.service.load().value.image)
+        self.assertEqual(self.service.load().value.opacity, 70)
+        self.assertFalse(self.window.background_controller.is_busy)
+        self.assertTrue(self.controls.upload_button.isEnabled())
+        self.assertTrue(self.controls.status_label.isHidden())
+
+    def test_opacity_saves_keep_controls_stable_and_preserve_the_latest_selection(self):
+        class DeferredRunner:
+            def __init__(self):
+                self.requests = []
+
+            def submit(self, name, operation, *, on_complete):
+                self.requests.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+
+            def finish(self, index):
+                operation, complete = self.requests[index]
+                complete(operation(CancellationToken()))
+
+        self.upload(still_background_bytes())
+        runner = DeferredRunner()
+        controller = self.window.background_controller
+        controller._runner = runner
+        self.window.open_settings()
+        self.window.show()
+        self.app.processEvents()
+        controls = self.controls
+        previous_geometry = controls.geometry()
+        with patch("worklogger.presentation.shell.background_controller.prepare_background") as decode:
+            controls.opacity_slider.setSliderDown(True)
+            controls.opacity_slider.setSliderPosition(43)
+            self.assertEqual(len(runner.requests), 0)
+            controls.opacity_slider.setSliderDown(False)
+            self.assertTrue(controller.is_busy)
+            for button in (controls.upload_button, controls.remove_button, controls.enabled_switch, controls.opacity_slider):
+                self.assertTrue(button.isEnabled())
+            self.assertTrue(controls.status_label.isHidden())
+            self.app.processEvents()
+            self.assertEqual(controls.geometry(), previous_geometry)
+            controls.opacity_slider.setValue(65)
+            controls.opacity_slider.setValue(70)
+            self.assertEqual(len(runner.requests), 1)
+            runner.finish(0)
+            self.assertEqual(len(runner.requests), 2)
+            self.assertEqual(controls.opacity_slider.value(), 70)
+            controls.opacity_slider.setSliderDown(True)
+            controls.opacity_slider.setSliderPosition(83)
+            runner.finish(1)
+            self.assertEqual(controls.opacity_slider.sliderPosition(), 83)
+            controls.opacity_slider.setSliderDown(False)
+            runner.finish(2)
+            self.assertEqual(self.service.load().value.opacity, 83)
+            self.assertEqual(controls.opacity_label.text(), "83%")
+            self.assertFalse(controller.is_busy)
+            self.assertTrue(controls.status_label.isHidden())
+            self.app.processEvents()
+            self.assertEqual(controls.geometry(), previous_geometry)
+            decode.assert_not_called()
+        controls.opacity_slider.setValue(60)
+        runner.requests[3][1](Result.failure(InfrastructureError("background_storage_failed", "background_storage_failed")))
+        self.assertEqual(controls.opacity_slider.value(), 83)
+        self.assertTrue(controls.opacity_slider.isEnabled())
+        self.assertFalse(controls.status_label.isHidden())

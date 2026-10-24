@@ -36,6 +36,8 @@ Historical entries describe their respective releases; see the
   without overwriting the previous result or manual edits.
 - AI connection checks propagate cancellation to the request. Settings ignore
   outdated model status results and remain usable if a background job cannot start.
+- Background opacity changes no longer flash the settings controls or restart
+  animations. Consecutive changes retain the latest selection while saving.
 
 ## [4.0.0](https://github.com/bensitu/worklogger/compare/v3.3.3...v4.0.0) - 2026.10.23
 

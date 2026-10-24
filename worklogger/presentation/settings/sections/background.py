@@ -1,6 +1,6 @@
 """Account background controls bound to the asynchronous shell workflow."""
 
-from PySide6.QtCore import QSignalBlocker, Qt, QTimer
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -76,10 +76,6 @@ class BackgroundSettings(CardFrame):
         self.status_label = _secondary_label("")
         self.status_label.hide()
         self.content_layout.addWidget(self.status_label)
-        self._save_timer = QTimer(self)
-        self._save_timer.setSingleShot(True)
-        self._save_timer.setInterval(250)
-        self._save_timer.timeout.connect(self._save_options)
         self.enabled_switch.toggled.connect(self._save_options)
         self.opacity_slider.valueChanged.connect(self._opacity_changed)
         self.upload_button.clicked.connect(self._upload)
@@ -96,8 +92,9 @@ class BackgroundSettings(CardFrame):
         self._set_busy(controller.is_busy)
 
     def _set_busy(self, busy):
+        if busy and self._controller is not None and self._controller.is_saving_options:
+            return
         if busy:
-            self._save_timer.stop()
             self.status_label.setText(_("Processing"))
             self.status_label.show()
         available = self._controller is not None and self._controller.available and not busy
@@ -111,8 +108,9 @@ class BackgroundSettings(CardFrame):
         self.options_widget.setVisible(self._state.enabled)
         with QSignalBlocker(self.enabled_switch), QSignalBlocker(self.opacity_slider):
             self.enabled_switch.setChecked(self._state.enabled)
-            self.opacity_slider.setValue(self._state.opacity)
-        self.opacity_label.setText(f"{self._state.opacity}%")
+            if not self.opacity_slider.isSliderDown():
+                self.opacity_slider.setValue(self._state.opacity)
+        self.opacity_label.setText(f"{self.opacity_slider.sliderPosition()}%")
         image = self._state.image
         self.image_label.setText(
             f"{image.format.upper()} | {image.width} x {image.height}" if image else _("No background image")
@@ -131,10 +129,9 @@ class BackgroundSettings(CardFrame):
 
     def _opacity_changed(self, value):
         self.opacity_label.setText(f"{value}%")
-        self._save_timer.start()
+        self._save_options()
 
     def _save_options(self):
-        self._save_timer.stop()
         if self._controller is not None and self._loaded:
             self._controller.set_options(enabled=self.enabled_switch.isChecked(), opacity=self.opacity_slider.value())
 

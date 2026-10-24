@@ -278,6 +278,11 @@ are appended after component styles to preserve their selector priority.
 Ancestor-property changes refresh only the affected widget tree, not the global
 application stylesheet.
 
+Background option saves reuse validated image frames and coalesce consecutive
+changes without blocking the controls. Image imports and removal remain serialized
+with pending option saves. Opacity updates retain the current animation frame and
+playback source instead of restarting the decoder.
+
 Segmented tabs share the `tab_style="segmented"` role. Compact recording controls
 use the `density="compact"` and `selection_style="subtle"` modifiers rather than
 duplicating rules by widget ID. Theme metrics define their corner radii without

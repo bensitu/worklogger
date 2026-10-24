@@ -59,6 +59,13 @@ class MainBackgroundWidget(QWidget):
         return image
 
     def set_background(self, state, frame):
+        if state.image == self._state.image and state.enabled == self._state.enabled and not self._frame.isNull():
+            self._state = state
+            self._update_playback()
+            self._update_active()
+            self.frame_changed.emit()
+            self.update()
+            return
         self._version += 1
         self._state, self._frame = state, frame
         if state.enabled and state.image is not None and state.image.animated:

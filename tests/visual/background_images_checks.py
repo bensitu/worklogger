@@ -13,6 +13,7 @@ from PySide6.QtGui import QColor, QImage, QPainter
 from PySide6.QtWidgets import QApplication
 
 from tests.background_samples import still_background_bytes
+from tests.presentation.qt_support import dispose_test_windows
 from tests.presentation.test_app_window import MemoryWorkLogRepository, _window
 from tests.presentation.test_settings_presentation import (
     MemorySettingsRepository,
@@ -44,6 +45,9 @@ class BackgroundImagesLayoutChecks(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
         configure_application_style()
         install_bundled_fonts()
+
+    def tearDown(self):
+        dispose_test_windows()
 
     def test_center_cover_and_opacity_preserve_theme_color_without_letterboxing(self):
         image = QImage(1280, 720, QImage.Format.Format_RGB32)
