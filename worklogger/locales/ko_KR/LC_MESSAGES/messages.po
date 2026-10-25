@@ -631,6 +631,9 @@ msgstr "외부 계정으로 로그인하기 전에 최초 로컬 관리자 계�
 msgid "Create user"
 msgstr "사용자 만들기"
 
+msgid "Current model"
+msgstr "현재 모델"
+
 msgid "Current password"
 msgstr "현재 비밀번호"
 
@@ -834,9 +837,6 @@ msgstr "기록 편집"
 
 msgid "Editing record: {date} {start} - {end}"
 msgstr "기록 편집 중: {date} {start} - {end}"
-
-msgid "Effective context: {count} tokens."
-msgstr "실제 컨텍스트: {count} 토큰."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "텍스트 처리를 사용하려면 AI 지원을 켜세요."
@@ -1420,9 +1420,6 @@ msgstr "로컬 데이터 위치"
 msgid "Local model is disabled."
 msgstr "로컬 모델이 꺼져 있습니다."
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr "로컬 모델이 준비되었습니다. 텍스트 처리를 시작할 때 불러옵니다."
-
 msgid "Local model management is not configured."
 msgstr "로컬 모델 관리가 설정되지 않았습니다."
 
@@ -1477,9 +1474,6 @@ msgstr "장시간 타이머 알림(h)"
 msgid "Manage all user accounts in this database."
 msgstr "이 데이터베이스의 모든 사용자 계정을 관리합니다."
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr "다운로드하거나 가져온 GGUF 모델을 관리합니다."
-
 msgid "Manage entry types"
 msgstr "기록 유형 관리"
 
@@ -1509,6 +1503,9 @@ msgstr "같은 시간대만 바꾸면 다른 기록은 유지됩니다. 시간�
 
 msgid "Maximum retained backups"
 msgstr "최대 백업 보관 수"
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
+msgstr "요청, 관련 기록 및 생성되는 텍스트를 포함하여 한 번에 처리할 수 있는 텍스트의 총량입니다. 토큰은 텍스트 조각이며 문자 수와는 다릅니다."
 
 msgid "May"
 msgstr "5월"
@@ -1563,6 +1560,9 @@ msgstr "모델 식별자"
 
 msgid "Model imported."
 msgstr "모델을 가져왔습니다."
+
+msgid "Model maximum: {count} tokens."
+msgstr "모델 한도: {count}토큰."
 
 msgid "Model output limit"
 msgstr "모델 출력 한도"
@@ -1692,9 +1692,6 @@ msgstr "선택한 기간에 저장된 일간 보고서가 없습니다."
 
 msgid "No saved reports"
 msgstr "저장된 보고서 없음"
-
-msgid "No verified model file selected."
-msgstr "검증된 모델 파일이 선택되지 않았습니다."
 
 msgid "No work item"
 msgstr "작업 항목 없음"
@@ -1978,6 +1975,9 @@ msgstr "런타임 스모크 테스트 실패"
 msgid "RUNTIME SMOKE OK"
 msgstr "런타임 스모크 테스트 성공"
 
+msgid "Ready. Loaded when needed."
+msgstr "준비되었습니다. 필요할 때 불러옵니다."
+
 msgid "Recent context"
 msgstr "최근 사용한 프로젝트 및 항목"
 
@@ -2230,9 +2230,6 @@ msgstr "역할"
 msgid "Roll back to previous database"
 msgstr "이전 데이터베이스로 되돌리기"
 
-msgid "Runtime context"
-msgstr "실행 컨텍스트"
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "실행 컨텍스트는 512토큰 이상의 정수여야 합니다."
 
@@ -2341,9 +2338,6 @@ msgstr "이번 달에 저장된 일일 보고서 (Markdown)"
 msgid "Saved monthly reports"
 msgstr "저장된 월간 보고서"
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr "저장된 설정: {requested} 토큰. 실제 컨텍스트: {effective} 토큰."
-
 msgid "Saved report #{report_id}"
 msgstr "저장된 보고서 #{report_id}"
 
@@ -2430,9 +2424,6 @@ msgstr "선택한 날짜(PDF)"
 
 msgid "Selected day: {day}"
 msgstr "선택한 날짜: {day}"
-
-msgid "Selected model file: {name}"
-msgstr "선택한 모델 파일: {name}"
 
 msgid "Selected month (Excel)"
 msgstr "선택한 월(Excel)"
@@ -2661,6 +2652,9 @@ msgstr "예제 텍스트로 연결을 테스트하며 작업 기록은 포함하
 
 msgid "Testing connection..."
 msgstr "연결 테스트 중…"
+
+msgid "Text capacity per request (tokens)"
+msgstr "요청당 텍스트 처리량(토큰)"
 
 msgid "Text files (*.txt)"
 msgstr "텍스트 파일 (*.txt)"
@@ -3201,6 +3195,9 @@ msgstr "사용자 이름"
 
 msgid "Username / access key ID"
 msgstr "사용자 이름 / 액세스 키 ID"
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
+msgstr "이 모델에서는 {effective}토큰을 사용하며 설정값 {requested}토큰은 유지됩니다."
 
 msgid "Validating backup..."
 msgstr "백업 검증 중..."

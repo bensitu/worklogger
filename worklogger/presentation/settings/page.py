@@ -113,6 +113,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._rendered_swatch_color = ""
         self._local_model_ready = False
         self._local_model_name = ""
+        self._local_model_error = None
         self._local_runtime_reason = None
         self._local_runtime_ready = False
         self._local_context_limit = None
@@ -246,7 +247,8 @@ class SettingsPage(QWidget, SettingsSectionState):
         self.display_name_editor.set_busy(busy)
 
     def set_local_model_error(self, error: AppError | None) -> None:
-        self.local_model_status_label.setText(display_error_message(error))
+        self._local_model_error = error
+        self._update_configuration_status()
 
     def set_external_test_status(self, message: str) -> None:
         self.external_model_status_label.setText(message)

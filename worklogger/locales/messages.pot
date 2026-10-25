@@ -629,6 +629,9 @@ msgstr ""
 msgid "Create user"
 msgstr ""
 
+msgid "Current model"
+msgstr ""
+
 msgid "Current password"
 msgstr ""
 
@@ -831,9 +834,6 @@ msgid "Edit record"
 msgstr ""
 
 msgid "Editing record: {date} {start} - {end}"
-msgstr ""
-
-msgid "Effective context: {count} tokens."
 msgstr ""
 
 msgid "Enable AI Assist to use text processing."
@@ -1418,9 +1418,6 @@ msgstr ""
 msgid "Local model is disabled."
 msgstr ""
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr ""
-
 msgid "Local model management is not configured."
 msgstr ""
 
@@ -1475,9 +1472,6 @@ msgstr ""
 msgid "Manage all user accounts in this database."
 msgstr ""
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr ""
-
 msgid "Manage entry types"
 msgstr ""
 
@@ -1506,6 +1500,9 @@ msgid "Matching periods preserves other records; different overlapping periods c
 msgstr ""
 
 msgid "Maximum retained backups"
+msgstr ""
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
 msgstr ""
 
 msgid "May"
@@ -1560,6 +1557,9 @@ msgid "Model identifier"
 msgstr ""
 
 msgid "Model imported."
+msgstr ""
+
+msgid "Model maximum: {count} tokens."
 msgstr ""
 
 msgid "Model output limit"
@@ -1689,9 +1689,6 @@ msgid "No saved daily reports exist in the selected date range."
 msgstr ""
 
 msgid "No saved reports"
-msgstr ""
-
-msgid "No verified model file selected."
 msgstr ""
 
 msgid "No work item"
@@ -1976,6 +1973,9 @@ msgstr ""
 msgid "RUNTIME SMOKE OK"
 msgstr ""
 
+msgid "Ready. Loaded when needed."
+msgstr ""
+
 msgid "Recent context"
 msgstr ""
 
@@ -2228,9 +2228,6 @@ msgstr ""
 msgid "Roll back to previous database"
 msgstr ""
 
-msgid "Runtime context"
-msgstr ""
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr ""
 
@@ -2339,9 +2336,6 @@ msgstr ""
 msgid "Saved monthly reports"
 msgstr ""
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr ""
-
 msgid "Saved report #{report_id}"
 msgstr ""
 
@@ -2427,9 +2421,6 @@ msgid "Selected day (PDF)"
 msgstr ""
 
 msgid "Selected day: {day}"
-msgstr ""
-
-msgid "Selected model file: {name}"
 msgstr ""
 
 msgid "Selected month (Excel)"
@@ -2658,6 +2649,9 @@ msgid "Test connection using sample text; no work records are included."
 msgstr ""
 
 msgid "Testing connection..."
+msgstr ""
+
+msgid "Text capacity per request (tokens)"
 msgstr ""
 
 msgid "Text files (*.txt)"
@@ -3198,6 +3192,9 @@ msgid "Username"
 msgstr ""
 
 msgid "Username / access key ID"
+msgstr ""
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
 msgstr ""
 
 msgid "Validating backup..."

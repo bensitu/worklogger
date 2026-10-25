@@ -5,8 +5,10 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLineEdit,
+    QLabel,
     QPushButton,
     QSpinBox,
+    QVBoxLayout,
 )
 
 from worklogger.config.constants import (
@@ -36,7 +38,7 @@ from worklogger.presentation.settings.sections.common import (
 )
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
 from worklogger.presentation.widgets import SwitchButton
-from worklogger.presentation.settings.sections.layouts import SettingsScrollPage
+from worklogger.presentation.settings.sections.layouts import FIELD_SPACING, SettingsContainer, SettingsScrollPage
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
@@ -54,11 +56,11 @@ class AISection(SettingsScrollPage):
         "external_runtime_status_label",
         "external_model_enabled_switch",
         "local_model_enabled_switch",
-        "local_model_status_label",
+        "local_model_name_label",
         "local_runtime_status_label",
         "manage_local_models_button",
         "test_external_model_button",
-        "local_context_limit_label",
+        "local_context_model_limit_label",
         "local_context_spin_box",
         "local_context_status_label",
     )
@@ -133,23 +135,26 @@ class AISection(SettingsScrollPage):
             lambda enabled: actions.set_bool(LOCAL_MODEL_ENABLED_SETTING_KEY, enabled)
         )
         local.content_layout.addWidget(_switch_line(_("Enable local model"), self.local_model_enabled_switch))
-        local.content_layout.addWidget(
-            _secondary_label(
-                _("Local text processing does not send content to an external service.")
-            )
-        )
-        self.local_model_status_label = _secondary_label(
-            _("Manage downloaded and imported GGUF models.")
-        )
-        self.local_model_status_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.local_model_status_label.setObjectName("local_model_status_label")
-        local.content_layout.addWidget(self.local_model_status_label)
+        self.local_model_enabled_switch.setToolTip(
+            _("Local text processing does not send content to an external service."))
+        model_summary = SettingsContainer("local_model_summary_widget")
+        summary_layout = QVBoxLayout(model_summary)
+        summary_layout.setContentsMargins(0, 0, 0, 0)
+        summary_layout.setSpacing(FIELD_SPACING // 2)
+        summary_layout.addWidget(_secondary_label(_("Current model")))
+        self.local_model_name_label = QLabel(_("No model selected."))
+        self.local_model_name_label.setWordWrap(True)
+        self.local_model_name_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.local_model_name_label.setObjectName("local_model_name_label")
+        summary_layout.addWidget(self.local_model_name_label)
         self.local_runtime_status_label = _secondary_label("")
-        local.content_layout.addWidget(self.local_runtime_status_label)
+        summary_layout.addWidget(self.local_runtime_status_label)
+        local.content_layout.addWidget(model_summary)
+        context = SettingsContainer("local_model_context_widget")
+        context_layout = QVBoxLayout(context)
+        context_layout.setContentsMargins(0, 0, 0, 0)
+        context_layout.setSpacing(FIELD_SPACING)
         context_form = _settings_form()
-        self.local_context_limit_label = _secondary_label(_("Unknown"))
-        self.local_context_limit_label.setObjectName("local_context_limit_label")
-        context_form.addRow(_("Model context limit"), self.local_context_limit_label)
         self.local_context_spin_box = QSpinBox()
         apply_numeric_input_padding(self.local_context_spin_box)
         self.local_context_spin_box.setObjectName("local_context_spin_box")
@@ -158,14 +163,20 @@ class AISection(SettingsScrollPage):
         self.local_context_spin_box.setValue(DEFAULT_RUNTIME_CONTEXT_TOKENS)
         self.local_context_spin_box.setGroupSeparatorShown(True)
         self.local_context_spin_box.setKeyboardTracking(False)
-        self.local_context_spin_box.setAccessibleName(_("Runtime context"))
-        self.local_context_spin_box.setToolTip(_("Larger context windows increase memory use and may prevent the model from loading."))
+        self.local_context_spin_box.setAccessibleName(_("Text capacity per request (tokens)"))
+        self.local_context_spin_box.setToolTip(
+            _("Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters.")
+            + "\n" + _("Larger context windows increase memory use and may prevent the model from loading."))
         self.local_context_spin_box.valueChanged.connect(lambda value: actions.set_number(LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, value))
-        _add_half_width_row(context_form, _("Runtime context"), self.local_context_spin_box)
-        local.content_layout.addLayout(context_form)
+        _add_half_width_row(context_form, _("Text capacity per request (tokens)"), self.local_context_spin_box)
+        context_layout.addLayout(context_form)
+        self.local_context_model_limit_label = _secondary_label("")
+        self.local_context_model_limit_label.setObjectName("local_context_model_limit_label")
+        context_layout.addWidget(self.local_context_model_limit_label)
         self.local_context_status_label = _secondary_label("")
         self.local_context_status_label.setObjectName("local_context_status_label")
-        local.content_layout.addWidget(self.local_context_status_label)
+        context_layout.addWidget(self.local_context_status_label)
+        local.content_layout.addWidget(context)
         self.manage_local_models_button = QPushButton(_("Manage models"))
         self.manage_local_models_button.setObjectName("manage_local_models_button")
         self.manage_local_models_button.clicked.connect(

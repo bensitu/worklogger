@@ -631,6 +631,9 @@ msgstr "Create the initial local administrator account before using provider sig
 msgid "Create user"
 msgstr "Create user"
 
+msgid "Current model"
+msgstr "Current model"
+
 msgid "Current password"
 msgstr "Current password"
 
@@ -834,9 +837,6 @@ msgstr "Edit record"
 
 msgid "Editing record: {date} {start} - {end}"
 msgstr "Editing record: {date} {start} - {end}"
-
-msgid "Effective context: {count} tokens."
-msgstr "Effective context: {count} tokens."
 
 msgid "Enable AI Assist to use text processing."
 msgstr "Enable AI Assist to use text processing."
@@ -1420,9 +1420,6 @@ msgstr "Local data location"
 msgid "Local model is disabled."
 msgstr "Local model is disabled."
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr "Local model is ready. It loads when text processing starts."
-
 msgid "Local model management is not configured."
 msgstr "Local model management is not configured."
 
@@ -1477,9 +1474,6 @@ msgstr "Long timer reminder (h)"
 msgid "Manage all user accounts in this database."
 msgstr "Manage all user accounts in this database."
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr "Manage downloaded and imported GGUF models."
-
 msgid "Manage entry types"
 msgstr "Manage entry types"
 
@@ -1509,6 +1503,9 @@ msgstr "Matching periods preserves other records; different overlapping periods 
 
 msgid "Maximum retained backups"
 msgstr "Maximum retained backups"
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
+msgstr "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
 
 msgid "May"
 msgstr "May"
@@ -1563,6 +1560,9 @@ msgstr "Model identifier"
 
 msgid "Model imported."
 msgstr "Model imported."
+
+msgid "Model maximum: {count} tokens."
+msgstr "Model maximum: {count} tokens."
 
 msgid "Model output limit"
 msgstr "Model output limit"
@@ -1692,9 +1692,6 @@ msgstr "No saved daily reports exist in the selected date range."
 
 msgid "No saved reports"
 msgstr "No saved reports"
-
-msgid "No verified model file selected."
-msgstr "No verified model file selected."
 
 msgid "No work item"
 msgstr "No work item"
@@ -1978,6 +1975,9 @@ msgstr "RUNTIME SMOKE FAILED"
 msgid "RUNTIME SMOKE OK"
 msgstr "RUNTIME SMOKE OK"
 
+msgid "Ready. Loaded when needed."
+msgstr "Ready. Loaded when needed."
+
 msgid "Recent context"
 msgstr "Recent context"
 
@@ -2230,9 +2230,6 @@ msgstr "Role"
 msgid "Roll back to previous database"
 msgstr "Roll back to previous database"
 
-msgid "Runtime context"
-msgstr "Runtime context"
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "Runtime context must be a whole number of at least 512 tokens."
 
@@ -2341,9 +2338,6 @@ msgstr "Saved daily reports for this month (Markdown)"
 msgid "Saved monthly reports"
 msgstr "Saved monthly reports"
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr "Saved preference: {requested} tokens; effective context: {effective} tokens."
-
 msgid "Saved report #{report_id}"
 msgstr "Saved report #{report_id}"
 
@@ -2430,9 +2424,6 @@ msgstr "Selected day (PDF)"
 
 msgid "Selected day: {day}"
 msgstr "Selected day: {day}"
-
-msgid "Selected model file: {name}"
-msgstr "Selected model file: {name}"
 
 msgid "Selected month (Excel)"
 msgstr "Selected month (Excel)"
@@ -2661,6 +2652,9 @@ msgstr "Test connection using sample text; no work records are included."
 
 msgid "Testing connection..."
 msgstr "Testing connection..."
+
+msgid "Text capacity per request (tokens)"
+msgstr "Text capacity per request (tokens)"
 
 msgid "Text files (*.txt)"
 msgstr "Text files (*.txt)"
@@ -3201,6 +3195,9 @@ msgstr "Username"
 
 msgid "Username / access key ID"
 msgstr "Username / access key ID"
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
+msgstr "Using {effective} tokens for this model; your {requested}-token preference is retained."
 
 msgid "Validating backup..."
 msgstr "Validating backup..."

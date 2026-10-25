@@ -15,7 +15,7 @@ from worklogger.domain.local_model.preferences import (
     MIN_RUNTIME_CONTEXT_TOKENS,
 )
 from worklogger.infrastructure.i18n import _
-from worklogger.presentation.errors import display_error_code
+from worklogger.presentation.errors import display_error_code, display_error_message
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import SettingsState
 from worklogger.presentation.widgets.avatar import avatar_pixmap
@@ -238,9 +238,13 @@ class SettingsSectionState:
         )
         if self._local_runtime_reason is not None and state.local_model_enabled:
             self.local_runtime_status_label.setText(
-                _("Local model is ready. It loads when text processing starts.") if self._local_runtime_ready
+                _("Ready. Loaded when needed.") if self._local_runtime_ready
                 else display_error_code(self._local_runtime_reason)
             )
+        elif state.local_model_enabled and self._capabilities.local_generation and not self._local_model_ready:
+            self.local_runtime_status_label.setText(display_error_code("local_model_not_selected"))
+        if self._local_model_error is not None:
+            self.local_runtime_status_label.setText(display_error_message(self._local_model_error))
         if not self._capabilities.ai_enabled:
             message = display_error_code("ai_service_disabled")
             self.external_runtime_status_label.setText(message)
@@ -266,7 +270,9 @@ class SettingsSectionState:
     def set_local_model_status(self, *, ready: bool, name: str = "") -> None:
         self._local_model_ready = ready
         self._local_model_name = name
+        self._local_model_error = None
         self._update_local_model_status()
+        self._update_configuration_status()
 
     def set_local_model_context_limit(self, limit: int | None):
         self._local_context_limit = limit
@@ -281,22 +287,23 @@ class SettingsSectionState:
         maximum = min(limit, MAX_RUNTIME_CONTEXT_TOKENS) if valid_limit else MAX_RUNTIME_CONTEXT_TOKENS
         effective = min(requested, maximum)
         with QSignalBlocker(self.local_context_spin_box):
-            self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, maximum)
-            self.local_context_spin_box.setValue(effective)
+            self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS)
+            self.local_context_spin_box.setValue(requested)
         self.local_context_spin_box.setEnabled(valid_limit)
-        self.local_context_limit_label.setText(_("{count} tokens").format(count=limit) if limit is not None else _("Unknown"))
+        self.local_context_model_limit_label.setText(
+            _("Model maximum: {count} tokens.").format(count=format(limit, ",")) if valid_limit else "")
+        self.local_context_model_limit_label.setVisible(valid_limit)
         if valid_limit and requested > maximum:
-            status = _("Saved preference: {requested} tokens; effective context: {effective} tokens.").format(
-                requested=requested, effective=effective)
+            status = _("Using {effective} tokens for this model; your {requested}-token preference is retained.").format(
+                requested=format(requested, ","), effective=format(effective, ","))
         elif valid_limit:
-            status = _("Effective context: {count} tokens.").format(count=effective)
+            status = ""
         elif limit is not None:
             status = display_error_code("local_model_context_limit_invalid")
         else:
-            status = _("No model selected.")
-        if valid_limit and effective > DEFAULT_RUNTIME_CONTEXT_TOKENS:
-            status += "\n" + _("Larger context windows increase memory use and may prevent the model from loading.")
+            status = ""
         self.local_context_status_label.setText(status)
+        self.local_context_status_label.setVisible(bool(status))
 
     def set_local_runtime_status(self, *, ready: bool, reason: str):
         self._local_runtime_ready = ready
@@ -304,14 +311,7 @@ class SettingsSectionState:
         self._update_configuration_status()
 
     def _update_local_model_status(self) -> None:
-        text = (
-            _("Selected model file: {name}").format(
-                name=self._local_model_name or _("Local Model")
-            )
-            if self._local_model_ready
-            else _("No verified model file selected.")
-        )
-        self.local_model_status_label.setText(text)
+        self.local_model_name_label.setText(self._local_model_name or _("No model selected."))
 
     def set_backup_time(self, value: str) -> None:
         try:

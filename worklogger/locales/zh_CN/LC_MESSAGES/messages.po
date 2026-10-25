@@ -631,6 +631,9 @@ msgstr "请先创建本地管理员账户，再使用外部账户登录。"
 msgid "Create user"
 msgstr "创建用户"
 
+msgid "Current model"
+msgstr "当前模型"
+
 msgid "Current password"
 msgstr "当前密码"
 
@@ -834,9 +837,6 @@ msgstr "编辑记录"
 
 msgid "Editing record: {date} {start} - {end}"
 msgstr "正在编辑：{date} {start} - {end}"
-
-msgid "Effective context: {count} tokens."
-msgstr "实际上下文：{count} tokens。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "请启用 AI 助手以使用文字处理。"
@@ -1420,9 +1420,6 @@ msgstr "本地数据位置"
 msgid "Local model is disabled."
 msgstr "本地模型已关闭。"
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr "本地模型已就绪，将在开始文字处理时加载。"
-
 msgid "Local model management is not configured."
 msgstr "本地模型管理尚未配置。"
 
@@ -1477,9 +1474,6 @@ msgstr "长时间计时提醒（h）"
 msgid "Manage all user accounts in this database."
 msgstr "管理当前数据库中的所有用户账户。"
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr "管理已下载和导入的 GGUF 模型。"
-
 msgid "Manage entry types"
 msgstr "管理记录类型"
 
@@ -1509,6 +1503,9 @@ msgstr "仅替换相同时段会保留其他记录；重叠但起止不同则取
 
 msgid "Maximum retained backups"
 msgstr "最多保留备份数"
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
+msgstr "一次可处理的文本总量，包括请求、相关记录和生成的文本。Token 是文本片段，并不等同于字符。"
 
 msgid "May"
 msgstr "5月"
@@ -1563,6 +1560,9 @@ msgstr "模型标识"
 
 msgid "Model imported."
 msgstr "模型已导入。"
+
+msgid "Model maximum: {count} tokens."
+msgstr "模型上限：{count} 个 token。"
 
 msgid "Model output limit"
 msgstr "模型输出上限"
@@ -1692,9 +1692,6 @@ msgstr "所选日期范围内没有已保存的日报。"
 
 msgid "No saved reports"
 msgstr "尚无已保存的报表"
-
-msgid "No verified model file selected."
-msgstr "未选择已验证的模型文件。"
 
 msgid "No work item"
 msgstr "未指定工作项"
@@ -1978,6 +1975,9 @@ msgstr "运行时检查失败"
 msgid "RUNTIME SMOKE OK"
 msgstr "运行时检查通过"
 
+msgid "Ready. Loaded when needed."
+msgstr "已就绪，使用时加载。"
+
 msgid "Recent context"
 msgstr "最近使用的项目与事项"
 
@@ -2230,9 +2230,6 @@ msgstr "角色"
 msgid "Roll back to previous database"
 msgstr "回滚至原数据库"
 
-msgid "Runtime context"
-msgstr "运行上下文"
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "运行上下文必须是至少512 tokens的整数。"
 
@@ -2341,9 +2338,6 @@ msgstr "本月已保存的日报（Markdown）"
 msgid "Saved monthly reports"
 msgstr "已保存月报"
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr "已保存的偏好：{requested} tokens；实际上下文：{effective} tokens。"
-
 msgid "Saved report #{report_id}"
 msgstr "已保存报表 #{report_id}"
 
@@ -2430,9 +2424,6 @@ msgstr "所选日期（PDF）"
 
 msgid "Selected day: {day}"
 msgstr "所选日期：{day}"
-
-msgid "Selected model file: {name}"
-msgstr "已选择模型文件：{name}"
 
 msgid "Selected month (Excel)"
 msgstr "所选月份（Excel）"
@@ -2661,6 +2652,9 @@ msgstr "使用示例文本测试连接，不包含任何工作记录。"
 
 msgid "Testing connection..."
 msgstr "正在测试连接…"
+
+msgid "Text capacity per request (tokens)"
+msgstr "单次处理文本量（token）"
 
 msgid "Text files (*.txt)"
 msgstr "文本文件 (*.txt)"
@@ -3201,6 +3195,9 @@ msgstr "用户名"
 
 msgid "Username / access key ID"
 msgstr "用户名／访问密钥 ID"
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
+msgstr "当前模型实际使用 {effective} 个 token；已保留 {requested} 个 token 的设定值。"
 
 msgid "Validating backup..."
 msgstr "正在验证备份..."

@@ -631,6 +631,9 @@ msgstr "請先建立本機管理員帳戶，再使用外部帳戶登入。"
 msgid "Create user"
 msgstr "建立使用者"
 
+msgid "Current model"
+msgstr "目前模型"
+
 msgid "Current password"
 msgstr "目前密碼"
 
@@ -834,9 +837,6 @@ msgstr "編輯記錄"
 
 msgid "Editing record: {date} {start} - {end}"
 msgstr "正在編輯：{date} {start} - {end}"
-
-msgid "Effective context: {count} tokens."
-msgstr "實際上下文：{count} tokens。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "請啟用 AI 助手以使用文字處理。"
@@ -1420,9 +1420,6 @@ msgstr "本機資料位置"
 msgid "Local model is disabled."
 msgstr "本機模型已關閉。"
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr "本機模型已就緒，將在開始文字處理時載入。"
-
 msgid "Local model management is not configured."
 msgstr "本機模型管理尚未設定。"
 
@@ -1477,9 +1474,6 @@ msgstr "長時間計時提醒（h）"
 msgid "Manage all user accounts in this database."
 msgstr "管理目前資料庫中的所有使用者帳戶。"
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr "管理已下載和匯入的 GGUF 模型。"
-
 msgid "Manage entry types"
 msgstr "管理記錄類型"
 
@@ -1509,6 +1503,9 @@ msgstr "僅取代相同時段會保留其他記錄；重疊但起訖不同則取
 
 msgid "Maximum retained backups"
 msgstr "最多保留備份數"
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
+msgstr "一次可處理的文字總量，包括請求、相關記錄和產生的文字。Token 是文字片段，並不等同於字元。"
 
 msgid "May"
 msgstr "5月"
@@ -1563,6 +1560,9 @@ msgstr "模型識別碼"
 
 msgid "Model imported."
 msgstr "模型已匯入。"
+
+msgid "Model maximum: {count} tokens."
+msgstr "模型上限：{count} 個 token。"
 
 msgid "Model output limit"
 msgstr "模型輸出上限"
@@ -1692,9 +1692,6 @@ msgstr "所選日期範圍內沒有已儲存的日報。"
 
 msgid "No saved reports"
 msgstr "尚無已儲存的報表"
-
-msgid "No verified model file selected."
-msgstr "未選擇已驗證的模型檔案。"
 
 msgid "No work item"
 msgstr "未指定工作項目"
@@ -1978,6 +1975,9 @@ msgstr "執行階段檢查失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "執行階段檢查通過"
 
+msgid "Ready. Loaded when needed."
+msgstr "已就緒，使用時載入。"
+
 msgid "Recent context"
 msgstr "最近使用的專案與事項"
 
@@ -2230,9 +2230,6 @@ msgstr "角色"
 msgid "Roll back to previous database"
 msgstr "回復到原資料庫"
 
-msgid "Runtime context"
-msgstr "執行上下文"
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "執行上下文必須是至少512 tokens的整數。"
 
@@ -2341,9 +2338,6 @@ msgstr "本月已儲存的日報（Markdown）"
 msgid "Saved monthly reports"
 msgstr "已儲存月報"
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr "已儲存的偏好：{requested} tokens；實際上下文：{effective} tokens。"
-
 msgid "Saved report #{report_id}"
 msgstr "已儲存報表 #{report_id}"
 
@@ -2430,9 +2424,6 @@ msgstr "所選日期（PDF）"
 
 msgid "Selected day: {day}"
 msgstr "所選日期：{day}"
-
-msgid "Selected model file: {name}"
-msgstr "已選擇模型檔案：{name}"
 
 msgid "Selected month (Excel)"
 msgstr "所選月份（Excel）"
@@ -2661,6 +2652,9 @@ msgstr "使用範例文字測試連線，不包含任何工作記錄。"
 
 msgid "Testing connection..."
 msgstr "正在測試連線…"
+
+msgid "Text capacity per request (tokens)"
+msgstr "單次處理文字量（token）"
 
 msgid "Text files (*.txt)"
 msgstr "文字檔案 (*.txt)"
@@ -3201,6 +3195,9 @@ msgstr "使用者名稱"
 
 msgid "Username / access key ID"
 msgstr "使用者名稱／存取金鑰 ID"
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
+msgstr "目前模型實際使用 {effective} 個 token；已保留 {requested} 個 token 的設定值。"
 
 msgid "Validating backup..."
 msgstr "正在驗證備份..."

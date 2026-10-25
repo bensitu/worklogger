@@ -631,6 +631,9 @@ msgstr "外部アカウントでサインインする前に、最初のローカ
 msgid "Create user"
 msgstr "ユーザーを作成"
 
+msgid "Current model"
+msgstr "使用中のモデル"
+
 msgid "Current password"
 msgstr "現在のパスワード"
 
@@ -834,9 +837,6 @@ msgstr "記録を編集"
 
 msgid "Editing record: {date} {start} - {end}"
 msgstr "編集中の記録：{date} {start} - {end}"
-
-msgid "Effective context: {count} tokens."
-msgstr "実効コンテキスト: {count} トークン。"
 
 msgid "Enable AI Assist to use text processing."
 msgstr "テキスト処理を使うにはAI支援を有効にしてください。"
@@ -1420,9 +1420,6 @@ msgstr "ローカルデータの保存先"
 msgid "Local model is disabled."
 msgstr "ローカルモデルは無効です。"
 
-msgid "Local model is ready. It loads when text processing starts."
-msgstr "ローカルモデルは準備完了です。テキスト処理の開始時に読み込まれます。"
-
 msgid "Local model management is not configured."
 msgstr "ローカルモデルの管理は未設定です。"
 
@@ -1477,9 +1474,6 @@ msgstr "長時間タイマーの通知（h）"
 msgid "Manage all user accounts in this database."
 msgstr "このデータベース内のすべてのユーザーアカウントを管理します。"
 
-msgid "Manage downloaded and imported GGUF models."
-msgstr "ダウンロード・インポートしたGGUFモデルを管理します。"
-
 msgid "Manage entry types"
 msgstr "記録タイプを管理"
 
@@ -1509,6 +1503,9 @@ msgstr "同じ時間帯のみを置換すると他の記録は保持されます
 
 msgid "Maximum retained backups"
 msgstr "バックアップ保持数の上限"
+
+msgid "Maximum text processed at once, including the request, related records, and generated text. Tokens are pieces of text, not characters."
+msgstr "リクエスト、関連する記録、生成される文章を含む、一度に処理できるテキストの総量です。トークンはテキストの断片であり、文字数とは異なります。"
 
 msgid "May"
 msgstr "5月"
@@ -1563,6 +1560,9 @@ msgstr "モデル識別子"
 
 msgid "Model imported."
 msgstr "モデルをインポートしました。"
+
+msgid "Model maximum: {count} tokens."
+msgstr "モデルの上限：{count} トークン。"
 
 msgid "Model output limit"
 msgstr "モデルの出力上限"
@@ -1692,9 +1692,6 @@ msgstr "選択した期間に保存済みの日報はありません。"
 
 msgid "No saved reports"
 msgstr "保存済みレポートはありません"
-
-msgid "No verified model file selected."
-msgstr "検証済みモデルファイルが選択されていません。"
 
 msgid "No work item"
 msgstr "作業項目なし"
@@ -1978,6 +1975,9 @@ msgstr "ランタイムのスモークテストに失敗"
 msgid "RUNTIME SMOKE OK"
 msgstr "ランタイムのスモークテスト成功"
 
+msgid "Ready. Loaded when needed."
+msgstr "準備完了。必要なときに読み込みます。"
+
 msgid "Recent context"
 msgstr "最近使用したプロジェクトと項目"
 
@@ -2230,9 +2230,6 @@ msgstr "権限"
 msgid "Roll back to previous database"
 msgstr "元のデータベースに戻す"
 
-msgid "Runtime context"
-msgstr "実行コンテキスト"
-
 msgid "Runtime context must be a whole number of at least 512 tokens."
 msgstr "実行コンテキストは512トークン以上の整数にしてください。"
 
@@ -2341,9 +2338,6 @@ msgstr "今月の保存済み日報（Markdown）"
 msgid "Saved monthly reports"
 msgstr "保存済みの月報"
 
-msgid "Saved preference: {requested} tokens; effective context: {effective} tokens."
-msgstr "保存された設定: {requested} トークン。実効コンテキスト: {effective} トークン。"
-
 msgid "Saved report #{report_id}"
 msgstr "保存済みレポート #{report_id}"
 
@@ -2430,9 +2424,6 @@ msgstr "選択日（PDF）"
 
 msgid "Selected day: {day}"
 msgstr "選択日：{day}"
-
-msgid "Selected model file: {name}"
-msgstr "選択したモデルファイル: {name}"
 
 msgid "Selected month (Excel)"
 msgstr "選択月（Excel）"
@@ -2661,6 +2652,9 @@ msgstr "サンプルテキストで接続をテストします。作業記録は
 
 msgid "Testing connection..."
 msgstr "接続をテストしています…"
+
+msgid "Text capacity per request (tokens)"
+msgstr "1回に処理するテキスト量（トークン）"
 
 msgid "Text files (*.txt)"
 msgstr "テキストファイル (*.txt)"
@@ -3201,6 +3195,9 @@ msgstr "ユーザー名"
 
 msgid "Username / access key ID"
 msgstr "ユーザー名／アクセスキー ID"
+
+msgid "Using {effective} tokens for this model; your {requested}-token preference is retained."
+msgstr "このモデルでは {effective} トークンを使用します。設定値 {requested} トークンは保持されます。"
 
 msgid "Validating backup..."
 msgstr "バックアップを検証中..."

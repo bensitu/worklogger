@@ -57,12 +57,17 @@ verification, and verification after a download support cancellation at file
 chunk boundaries. A completed download can remain available after cancellation
 without changing the selected model.
 
-## Runtime Context
+## Text Capacity
 
-Model context limit is the catalog's declared model capacity. Runtime context
-is your account's chosen inference window; it defaults to 8,192 tokens with a
+Settings shows the current model and its availability together. **Text capacity
+per request (tokens)** is your account's chosen inference window; it defaults to 8,192 tokens with a
 minimum of 512. The effective window is the smaller of the preference and the
-selected model's declared limit.
+selected model's declared limit. It includes the request, related records, and
+generated text. Tokens are pieces of text, not a character count.
+
+The input always shows the saved preference. The model's maximum appears below
+it; when this is lower than the preference, a separate notice identifies the
+effective capacity without changing the saved value.
 
 Changing models preserves the preference. Changing effective context reloads the
 engine on the next request, not during an active request. Larger windows use more

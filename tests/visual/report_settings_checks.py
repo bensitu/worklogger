@@ -626,8 +626,8 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertEqual(control.height(), page.default_break_input.sizeHint().height())
                         self.assertTrue(control.parentWidget().rect().contains(control.geometry()))
                         self.assertGreaterEqual(control.width(), control.fontMetrics().horizontalAdvance(control.text()) + 36)
-                        self.assertEqual(control.value(), 32768)
-                        self.assertIn("131072", page.local_context_status_label.text())
+                        self.assertEqual(control.value(), 131072)
+                        self.assertIn("131,072", page.local_context_status_label.text())
                         self.capture(page, f"{language}-context-{'dark' if dark else 'light'}")
                     finally:
                         page.hide()
