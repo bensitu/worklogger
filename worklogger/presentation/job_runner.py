@@ -84,7 +84,9 @@ class QtJobRunner(QObject):
         self._long_pool.setMaxThreadCount(2)
         self._render_pool = QThreadPool(self)
         self._render_pool.setMaxThreadCount(2)
-        self._pools = (self._pool, self._long_pool, self._render_pool)
+        self._transfer_pool = QThreadPool(self)
+        self._transfer_pool.setMaxThreadCount(2)
+        self._pools = (self._pool, self._long_pool, self._render_pool, self._transfer_pool)
         self._closed = False
         self._callbacks: dict[str, JobCallback[object] | None] = {}
         self._tokens: dict[str, CancellationToken] = {}
@@ -132,7 +134,12 @@ class QtJobRunner(QObject):
         long_running = name.startswith(("ai_", "local_model_")) or name in {
             "cloud_backup", "generate_report", "check_updates", "identity_authorization", "initialize_text_processing",
         }
-        pool = self._render_pool if name == "glass_background" else self._long_pool if long_running else self._pool
+        if name == "glass_background":
+            pool = self._render_pool
+        elif name.startswith("local_model_") or name == "identity_authorization":
+            pool = self._transfer_pool
+        else:
+            pool = self._long_pool if long_running else self._pool
         pool.start(
             _JobRunnable(
                 job_id=job_id,

@@ -94,6 +94,7 @@ class MonthCalendar(QCalendarWidget):
 
     def visible_range(self):
         first = QDate(self.yearShown(), self.monthShown(), 1)
+        # Qt shows the preceding week when the month starts on the first weekday.
         offset = (first.dayOfWeek() - self.firstDayOfWeek().value) % 7 or 7
         start = max(first.addDays(-offset), self.minimumDate())
         end = min(first.addDays(41 - offset), self.maximumDate())

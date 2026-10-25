@@ -56,6 +56,7 @@ class LoginDialog(AuthDialog):
         install_bundled_fonts()
         self._apply_default_theme()
         self._build_ui()
+        self.accepted.connect(self.password_input.clear)
         screen = self.screen()
         bounds = screen.availableGeometry() if screen is not None else None
         self.resize(min(880, max(420, bounds.width() - 48)) if bounds is not None else 880,

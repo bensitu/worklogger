@@ -50,17 +50,20 @@ class DatePickerTests(unittest.TestCase):
             self.app.setPalette(old_palette)
             self.app.setProperty("worklogger_theme_context", old_context)
 
-    def test_adjacent_cells_at_supported_year_limits_remain_renderable(self):
+    def test_visible_range_matches_painted_cells_and_supported_year_limits(self):
         calendar = MonthCalendar()
         try:
             calendar.setDateRange(QDate(1, 1, 1), QDate(9999, 12, 31))
+            calendar.setFirstDayOfWeek(Qt.DayOfWeek.Monday)
             calendar.show()
-            for chosen, endpoint in ((QDate(1, 1, 1), date.min), (QDate(9999, 12, 31), date.max)):
+            for chosen, endpoint in ((QDate(2026, 6, 1), date(2026, 5, 25)),
+                                     (QDate(1, 1, 1), date.min), (QDate(9999, 12, 31), date.max)):
                 calendar.setSelectedDate(chosen)
                 calendar.setCurrentPage(chosen.year(), chosen.month())
                 self.app.processEvents()
                 self.assertIn(endpoint, calendar.visible_range())
                 self.assertFalse(calendar.grab().isNull())
+                self.assertEqual(calendar.visible_range(), (min(calendar._cell_rects), max(calendar._cell_rects)))
         finally:
             calendar.close()
             calendar.deleteLater()

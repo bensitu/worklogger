@@ -232,7 +232,7 @@ Long-running I/O, authorization, exports, and inference use `JobRunner`.
 Qt widgets must only be read or changed on that thread.
 Business operations, long-running service requests, and glass rendering use
 separate owned thread pools. Glass rendering is limited to two workers; shutdown
-cancels and drains all pools.
+cancels and drains all pools. Browser authorization and local model transfers use a separate two-worker pool so waiting for a browser or downloading a model does not occupy interactive AI workers.
 
 Cancellation is cooperative. Controllers reject stale results and completions
 for disposed owners; cancellation does not forcibly stop a native call.

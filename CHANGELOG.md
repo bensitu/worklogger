@@ -22,6 +22,8 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Daily summaries preserve timed work when standalone notes are present. Invalid analytics periods and unusable record boundaries produce actionable errors rather than uncaught exceptions.
+- Browser authorization and local model transfers no longer occupy interactive AI workers. History pagination retains queued requests, sign-in clears the password field on success, and analytics exports retain the last successfully loaded data after a refresh failure.
 - Cloud credentials can be removed explicitly, turning off automatic backup without deleting remote files. Restore completion reloads application data even if its settings panel was closed.
 - Background display failures release their busy state. Numeric preferences save completed input, and asynchronous settings refresh preserves text being edited.
 - Database backup sanitization and restore preparation avoid holding the live write lock during expensive processing. Temporary upgrade snapshots are removed after restoration.

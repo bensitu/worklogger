@@ -42,7 +42,10 @@ def month_stats(month_rows: Iterable[WorkLog], standard_work_hours: float) -> Mo
 
 
 def analytics_period(year: int, month: int, scope: str) -> tuple[date, date]:
-    date(year, month, 1)
+    try:
+        date(year, month, 1)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("analytics_scope_invalid") from None
     if scope == "monthly":
         start_month, end_month = month, month
     elif scope == "quarterly":

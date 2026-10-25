@@ -5,6 +5,8 @@ from worklogger.infrastructure.i18n import _
 from worklogger.presentation.date_labels import day_label
 from worklogger.presentation.widgets.icons import ui_icon
 from worklogger.presentation.widgets.record_edit_dialogs import RecordBoundaryDialog, OverlapReplacementDialog
+from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.result import Result
 
 
 class TimeEntryRecordActions:
@@ -37,7 +39,11 @@ class TimeEntryRecordActions:
     def _open_boundary_dialog(self, record, *, historical_break=False):
         if not self._changes_confirmed() or self._record_boundary_dialog is not None:
             return
-        dialog = RecordBoundaryDialog(record, self, zone=self.view_model.now().tzinfo, historical_break=historical_break)
+        try:
+            dialog = RecordBoundaryDialog(record, self, zone=self.view_model.now().tzinfo, historical_break=historical_break)
+        except ValueError:
+            self._apply_result(Result.failure(ValidationError("record_split_invalid", "record_split_invalid")), refresh=False)
+            return
         self._record_boundary_dialog = dialog
         def accepted():
             if historical_break:
@@ -55,7 +61,11 @@ class TimeEntryRecordActions:
         if self._replacement_dialog is not None:
             self._replacement_dialog.raise_()
             return
-        dialog = OverlapReplacementDialog(plan, self)
+        try:
+            dialog = OverlapReplacementDialog(plan, self)
+        except ValueError:
+            self._apply_result(Result.failure(ValidationError("time_range_invalid", "time_range_invalid")), refresh=False)
+            return
         self._replacement_dialog = dialog
         def accepted():
             keep_outside = dialog.keep_outside

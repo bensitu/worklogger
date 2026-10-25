@@ -27,6 +27,7 @@ class NoteHistoryBrowser(QWidget):
         self._active_day = day
         self._revision = 0
         self._busy = False
+        self._pending_append = None
         self._closed = False
         self._next_before = None
         self._loaded_filter = None
@@ -139,7 +140,8 @@ class NoteHistoryBrowser(QWidget):
             return
         self._timer.stop()
         if self._busy:
-            self._timer.start()
+            pending = self._pending_append
+            self._pending_append = append if pending is None else pending and append
             return
         filters = self._filters()
         if filters is None:
@@ -158,10 +160,15 @@ class NoteHistoryBrowser(QWidget):
 
         def done(result):
             self._busy = False
+            pending = self._pending_append
+            self._pending_append = None
             if self._closed:
                 return
             if revision != self._revision:
                 self._timer.start()
+                return
+            if pending is False:
+                self._load()
                 return
             self._set_loading(False)
             if not result.ok:
@@ -186,6 +193,8 @@ class NoteHistoryBrowser(QWidget):
             self.set_active_day(self._active_day)
             if append:
                 self.history_list.verticalScrollBar().setValue(scroll_position)
+            if pending:
+                self._load(append=True)
         try:
             self._runner.submit("search_notes", lambda _token: self._view_model.browse(request),
                                 on_complete=owned_callback(self, done))

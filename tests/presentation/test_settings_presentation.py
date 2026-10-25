@@ -94,7 +94,7 @@ class SettingsPresentationTests(unittest.TestCase):
         QTest.keyClicks(field, "proxy.example")
         page.set_state(replace(page.state, network_proxy_address="previous.example"))
         self.assertEqual(field.text(), "proxy.example")
-        page.cloud_backup_panel.set_busy(True, configured=True)
+        page.cloud_backup_panel.set_busy(True, configured=True, blocking=True)
         self.assertTrue(page.is_busy)
         page.cloud_backup_panel.set_busy(False, configured=True)
         self.assertFalse(page.is_busy)

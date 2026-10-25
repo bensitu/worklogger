@@ -154,6 +154,16 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         self.assertEqual(dict(data.work_modes), {"remote": 2, None: 1})
         self.assertEqual(sum(dict(data.work_modes).values()), data.stats.total_hours)
 
+    def test_daily_aggregation_keeps_timed_entries_distinct_from_standalone_notes(self):
+        day = date(2026, 4, 6)
+        records = aggregate_days((WorkLog(1, day, note="Daily note"),
+                                  WorkLog(1, day, "09:00", "17:00")))
+        self.assertTrue(records[0].has_times)
+        self.assertFalse(records[0].is_note_only)
+        self.assertEqual(records[0].worked_hours(), 8)
+        self.assertEqual((records[0].start_time, records[0].end_time), ("09:00", "17:00"))
+        self.assertIn("Daily note", records[0].note)
+
     def test_dashboard_quarter_and_year_boundaries(self) -> None:
         self.assertEqual(analytics_period(2024, 2, "monthly"), (date(2024, 2, 1), date(2024, 2, 29)))
         data = dashboard_data((), year=2026, month=5, scope="quarterly", standard_hours=8, monthly_target=160)
@@ -166,6 +176,9 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         self.assertEqual(len(data.trend.bar_data), 12)
         with self.assertRaises(ValueError):
             analytics_period(2026, 1, "invalid")
+        for year, month in ((0, 1), (2026, 0), (2026, 13), (None, 1)):
+            with self.assertRaisesRegex(ValueError, "analytics_scope_invalid"):
+                analytics_period(year, month, "monthly")
 
     def test_report_periods_match_calendar_week_and_month_boundaries(self) -> None:
         for day, offset, expected in (

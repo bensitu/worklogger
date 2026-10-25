@@ -71,8 +71,8 @@ class TimeEntryEditorControls:
         manual_layout = QHBoxLayout(manual)
         manual_layout.setContentsMargins(0, 0, 0, 0)
         manual_layout.setSpacing(8)
-        self.start_input = self._time_input("start_time_line_edit", _("Start"))
-        self.end_input = self._time_input("end_time_line_edit", _("End"))
+        self.start_input, self.start_time_action = self._time_input("start_time_line_edit", _("Start"))
+        self.end_input, self.end_time_action = self._time_input("end_time_line_edit", _("End"))
         for label, field in ((_("Start"), self.start_input), (_("End"), self.end_input)):
             column = QVBoxLayout()
             column.setSpacing(3)
@@ -199,4 +199,4 @@ class TimeEntryEditorControls:
         action = field.addAction(ui_icon("clock"), QLineEdit.ActionPosition.TrailingPosition)
         action.setText(title)
         action.setToolTip(title)
-        return field
+        return field, action

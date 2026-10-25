@@ -49,6 +49,9 @@ def _app() -> QApplication:
 
 
 class MemoryAuthRepository:
+    def get_by_id(self, user_id):
+        return next((row[0] for row in self.users.values() if row[0].id == user_id), None)
+
     def register_user(self, username, password, *, recovery_key):
         return self.create_user(username, password, recovery_key=recovery_key, is_admin=self.user_count() == 0)
 

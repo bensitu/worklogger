@@ -16,7 +16,7 @@ class ReportHistoryController(QObject):
         self.show_error = show_error
         self._revision = 0
         self._busy = False
-        self._pending = False
+        self._pending = None
         panel.filters_changed.connect(self._invalidate)
         panel.query_requested.connect(self._load)
         panel.more_requested.connect(lambda: self._load(append=True))
@@ -32,7 +32,7 @@ class ReportHistoryController(QObject):
     def _load(self, *, append=False):
         self.panel._search_timer.stop()
         if self._busy:
-            self._pending = True
+            self._pending = append if self._pending is None else self._pending and append
             return
         try:
             criteria = self.panel.criteria()
@@ -50,8 +50,8 @@ class ReportHistoryController(QObject):
 
         def complete(result):
             self._busy = False
-            if self._pending:
-                self._pending = False
+            pending, self._pending = self._pending, None
+            if pending is not None and (not pending or revision != self._revision):
                 self._load()
                 return
             if revision != self._revision:
@@ -65,6 +65,8 @@ class ReportHistoryController(QObject):
             self.panel.set_loading(False)
             if append:
                 self.panel.scroll_area.verticalScrollBar().setValue(position)
+            if pending:
+                self._load(append=True)
 
         try:
             self.runner.submit("search_report_history", lambda _token: self.model.browse_history(criteria, cursor=cursor)

@@ -96,6 +96,7 @@ class CloudBackupPanel(QWidget):
         self.setObjectName("cloud_backup_panel_widget")
         self._loading, self._dirty, self._busy, self._configured = True, False, False, False
         self._available, self._ready = True, False
+        self._blocking = False
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         card = _card_with_form(_("Personal cloud backup"))
@@ -297,15 +298,16 @@ class CloudBackupPanel(QWidget):
             QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
             self.clear_credentials_requested.emit()
 
-    def set_busy(self, busy, *, configured):
-        changed = self._busy != busy
+    def set_busy(self, busy, *, configured, blocking=False):
+        changed = self._blocking != blocking
+        self._blocking = blocking
         self._busy, self._configured = busy, configured
         self._ready = True
         self.setEnabled(self._available and not busy)
         self._refresh_actions()
         self.clear_credentials_button.setEnabled(not busy and self._configured)
         if changed:
-            self.busy_changed.emit(busy)
+            self.busy_changed.emit(blocking)
 
     def set_available(self, available):
         was_available = self._available

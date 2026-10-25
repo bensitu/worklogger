@@ -42,6 +42,7 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._job_runner = job_runner
         self._ai_ready = view_model.rewrite_available
         self._polish_task = TextReviewTask(self, job_runner=job_runner)
+        self._polish_target = None
         self.is_busy = False
         self._updating = False
         self._timer_failed = False
@@ -84,8 +85,9 @@ class TimeEntryPanel(QWidget, TimeEntryRecordActions, AutomaticRecordingActions)
         self._polish_task.finished.connect(lambda: self.content_heading_stack.setCurrentWidget(self.content_heading))
         self._polish_task.started.connect(self.editor_layout_changed)
         self._polish_task.finished.connect(self.editor_layout_changed)
-        for field, title in ((self.start_input, _("Start")), (self.end_input, _("End"))):
-            field.actions()[0].triggered.connect(
+        for field, action, title in ((self.start_input, controls.start_time_action, _("Start")),
+                                      (self.end_input, controls.end_time_action, _("End"))):
+            action.triggered.connect(
                 lambda _checked=False, field=field, title=title: self._pick_time(field, title))
 
         self.time_tabs.currentChanged.connect(self._mode_changed)

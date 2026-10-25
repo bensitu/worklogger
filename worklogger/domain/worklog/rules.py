@@ -240,7 +240,8 @@ def aggregate_days(records) -> tuple[WorkLog, ...]:
             result.append(entries[0])
             continue
         entries.sort(key=lambda entry: (entry.start_time or "", entry.id or 0))
-        result.append(WorkLog(user_id, day, entries[0].start_time, entries[-1].end_time,
+        timed = [entry for entry in entries if entry.has_times]
+        result.append(WorkLog(user_id, day, timed[0].start_time if timed else None, timed[-1].end_time if timed else None,
                               sum(entry.break_hours for entry in entries),
                               "\n".join(entry.note for entry in entries if entry.note),
                               entries[0].entry_type if all(entry.is_leave for entry in entries) else EntryType.NORMAL,

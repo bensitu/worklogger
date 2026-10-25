@@ -96,8 +96,8 @@ class AnalyticsPage(QWidget):
                 if revision != self._load_revision:
                     return
                 self._loading = False
-                self.export_button.setEnabled(not self._exporting and result.ok)
                 self._apply_dashboard(result, day, scope)
+                self.export_button.setEnabled(not self._exporting and self._state is not None)
             try:
                 self._job_runner.submit("load_analytics", lambda _token: model.load_dashboard(
                     year=day.year, month=day.month, scope=scope), on_complete=owned_callback(self, complete))

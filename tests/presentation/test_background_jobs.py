@@ -70,21 +70,26 @@ class BackgroundJobTests(unittest.TestCase):
         runner._pool.setMaxThreadCount(1)
         runner._long_pool.setMaxThreadCount(1)
         runner._render_pool.setMaxThreadCount(1)
+        runner._transfer_pool.setMaxThreadCount(2)
         render_started = threading.Event()
         def slow(_token):
             started.set()
             release.wait(3)
         runner.submit("local_model_download", slow)
+        identity_started = threading.Event()
+        runner.submit("identity_authorization", lambda _token: (identity_started.set(), release.wait(3)))
         runner.submit("glass_background", lambda _token: (render_started.set(), release.wait(3)))
         self.assertTrue(started.wait(3))
         self.assertTrue(render_started.wait(3))
+        self.assertTrue(identity_started.wait(3))
         try:
             runner.submit("load_calendar_overview", lambda _token: 42, on_complete=completed.append)
+            runner.submit("ai_rewrite", lambda _token: 43, on_complete=completed.append)
             deadline = time.monotonic() + 3
-            while not completed and time.monotonic() < deadline:
+            while len(completed) < 2 and time.monotonic() < deadline:
                 self._app.processEvents()
                 time.sleep(0.001)
-            self.assertEqual(completed[0].value, 42)
+            self.assertEqual(sorted(result.value for result in completed), [42, 43])
             QTimer.singleShot(0, lambda: responsive.append(True))
             self.assertFalse(runner.shutdown(wait=True, timeout_ms=20))
             self.assertTrue(responsive)

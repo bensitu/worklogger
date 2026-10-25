@@ -10,6 +10,7 @@ from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery, Ge
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
+from worklogger.infrastructure.i18n import _
 
 
 class AnalyticsBundleHandlerProtocol(Protocol):
@@ -168,9 +169,12 @@ def _normalize_choice(value: str, allowed: set[str], name: str) -> str:
 
 
 def _title(state: AnalyticsState) -> str:
+    title = _("Analytics")
     if state.scope == "monthly":
-        return f"Analytics {state.year}-{state.month:02d}"
-    return f"Analytics {state.year} {state.scope}"
+        return f"{title} {state.year}-{state.month:02d}"
+    if state.scope == "quarterly":
+        return f"{title} {state.year} Q{(state.month - 1) // 3 + 1}"
+    return f"{title} {state.year}"
 
 
 def _validation(code: str) -> ValidationError:

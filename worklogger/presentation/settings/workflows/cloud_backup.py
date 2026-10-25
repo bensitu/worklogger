@@ -109,6 +109,7 @@ class CloudBackupWorkflow(QObject):
         self._message = ""
         self._restore_handler = None
         self._confirming = False
+        self._restoring = False
         self._startup_delay_seconds = startup_delay_seconds
         self._retry_initial_seconds = retry_initial_seconds
         self._retry_max_seconds = retry_max_seconds
@@ -158,7 +159,8 @@ class CloudBackupWorkflow(QObject):
             status += ("\n" if status else "") + _("Some expired backups could not be removed. Cleanup will be retried.")
         for panel in tuple(self._panels):
             if isValid(panel):
-                panel.set_busy(self._busy or self._confirming, configured=self._configuration is not None)
+                panel.set_busy(self._busy or self._confirming, configured=self._configuration is not None,
+                               blocking=self._restoring)
                 panel.status_label.setText(_("Cloud backup operation in progress...") if self._busy else status)
 
     def _run(self, operation, *, success="", callback=None, configured=False, refresh=False, automatic=False):
@@ -264,6 +266,7 @@ class CloudBackupWorkflow(QObject):
         if not self._restore_allowed():
             return
         progress = RestoreProgressDialog(panel.window())
+        self._restoring = True
         finished = False
         def restored(value):
             nonlocal finished
@@ -276,11 +279,15 @@ class CloudBackupWorkflow(QObject):
                     QMessageBox.information(panel, _("Download and restore"),
                         _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
             finally:
+                self._restoring = False
+                self._update()
                 if value.ok and self._restore_handler is not None and (self._owner is None or isValid(self._owner)):
                     self._restore_handler()
         if self._run(operation, callback=restored) and not finished:
             progress.show()
         elif not finished:
+            self._restoring = False
+            self._update()
             progress.deleteLater()
 
     def _prepare_local(self, panel):
