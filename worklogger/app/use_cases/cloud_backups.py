@@ -73,6 +73,11 @@ class CloudBackupService:
         self.configuration.save(configuration, credentials)
 
     @_result
+    def clear_credentials(self):
+        self.configuration.clear_credentials()
+        self._verified_destination = None
+
+    @_result
     def test_connection(self):
         configuration, credentials, store = self._context()
         store.test_connection()

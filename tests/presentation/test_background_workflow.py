@@ -35,6 +35,18 @@ from worklogger.presentation.theme.context import current_colors
 
 
 class BackgroundWorkflowTests(unittest.TestCase):
+    def test_surface_failure_releases_busy_state_and_allows_reloading(self):
+        surface = self.surface()
+        surface.set_background = Mock(side_effect=[RuntimeError("surface unavailable"), None])
+        service = Mock()
+        service.load.return_value = Result.success(BackgroundState())
+        controller = BackgroundController(surface, service, available=True, job_runner=ImmediateJobRunner())
+        self.assertTrue(controller.reload())
+        self.assertFalse(controller.is_busy)
+        self.assertFalse(controller.last_result.ok)
+        self.assertTrue(controller.reload())
+        self.assertTrue(controller.last_result.ok)
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])

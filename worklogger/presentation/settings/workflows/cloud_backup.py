@@ -122,7 +122,7 @@ class CloudBackupWorkflow(QObject):
         self._owner = owner
         self._startup_ready_at = monotonic() + self._startup_delay_seconds
         self._timer.start()
-        QTimer.singleShot(self._startup_delay_seconds * 1000, self, self.reload)
+        QTimer.singleShot(self._startup_delay_seconds * 1000, self, lambda: self.reload(automatic=True))
 
     def set_restore_handler(self, handler):
         self._restore_handler = handler
@@ -132,6 +132,8 @@ class CloudBackupWorkflow(QObject):
         panel.save_requested.connect(lambda configuration, credentials: self._run(
             lambda: self.service.configure(configuration, credentials), success=_("Cloud backup settings saved."), configured=True))
         panel.test_requested.connect(lambda: self._run(self.service.test_connection, success=_("Connection verified.")))
+        panel.clear_credentials_requested.connect(lambda: self._run(self.service.clear_credentials,
+            success=_("Saved cloud credentials removed. Automatic backup is off."), configured=True))
         panel.upload_requested.connect(lambda: self._prepare(panel, restore=False))
         panel.restore_requested.connect(lambda: self._prepare(panel, restore=True))
         panel.local_restore_requested.connect(lambda: self._prepare_local(panel))
@@ -141,8 +143,8 @@ class CloudBackupWorkflow(QObject):
         if not self._loaded:
             self.reload()
 
-    def reload(self):
-        self._run(lambda: Result.success(None), refresh=True)
+    def reload(self, *, automatic=False):
+        self._run(lambda: Result.success(None), refresh=True, automatic=automatic)
 
     def _update(self):
         status = self._message
@@ -192,7 +194,7 @@ class CloudBackupWorkflow(QObject):
                     self._retry_initial_seconds * 2 ** min(self._failures - 1, 15))
                 self._message = display_error_message(result.error)
                 code = result.error.code if result.error else "cloud_operation_failed"
-                if not automatic or code != self._last_notification:
+                if not (automatic and refresh) and (not automatic or code != self._last_notification):
                     self._notify(self._message)
                     self._last_notification = code
             self._update()
@@ -242,6 +244,7 @@ class CloudBackupWorkflow(QObject):
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return
                 self._confirming = False
+                self._update()
                 latest = overview.versions[0].revision if overview.versions else ""
                 if restore:
                     revision, force, passphrase = dialog.versions.currentData(), dialog.force.isChecked(), dialog.passphrase.text() or None
@@ -265,12 +268,15 @@ class CloudBackupWorkflow(QObject):
         def restored(value):
             nonlocal finished
             finished = True
-            progress.accept()
-            progress.deleteLater()
-            if value.ok:
-                QMessageBox.information(panel, _("Download and restore"),
-                    _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
-                if self._restore_handler is not None:
+            try:
+                if isValid(progress):
+                    progress.accept()
+                    progress.deleteLater()
+                if value.ok and isValid(panel):
+                    QMessageBox.information(panel, _("Download and restore"),
+                        _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
+            finally:
+                if value.ok and self._restore_handler is not None and (self._owner is None or isValid(self._owner)):
                     self._restore_handler()
         if self._run(operation, callback=restored) and not finished:
             progress.show()
@@ -298,6 +304,7 @@ class CloudBackupWorkflow(QObject):
             try:
                 if dialog.exec() == QDialog.DialogCode.Accepted:
                     self._confirming = False
+                    self._update()
                     passphrase = dialog.passphrase.text()
                     self._restore(panel, lambda: self.service.restore_local(path, expected_local_digest=result.value.local_digest,
                         expected_archive_digest=result.value.archive_digest, passphrase=passphrase))

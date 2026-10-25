@@ -2071,6 +2071,12 @@ msgstr "배경 이미지를 삭제하시겠습니까?"
 msgid "Remove image"
 msgstr "이미지 삭제"
 
+msgid "Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."
+msgstr "저장된 클라우드 자격 증명을 삭제하고 자동 백업을 끄시겠습니까? 기존 클라우드 백업은 삭제되지 않습니다. 계속하기 전에 백업 암호를 안전하게 보관하세요."
+
+msgid "Remove saved credentials"
+msgstr "저장된 자격 증명 삭제"
+
 msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
 msgstr "비공개 복구 사본을 저장한 후 이 기록을 제거하시겠습니까? 다른 기록과 계정은 변경되지 않습니다."
 
@@ -2301,6 +2307,9 @@ msgstr "저장 시간 없음"
 
 msgid "Saved"
 msgstr "저장됨"
+
+msgid "Saved cloud credentials removed. Automatic backup is off."
+msgstr "클라우드 자격 증명이 삭제되었습니다. 자동 백업이 꺼져 있습니다."
 
 msgid "Saved daily report"
 msgstr "저장된 일간 보고서"

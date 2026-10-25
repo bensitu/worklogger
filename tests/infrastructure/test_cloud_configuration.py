@@ -35,6 +35,13 @@ class CloudConfigurationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "credential_storage_unavailable"):
             self.store.save(self.configuration, self.credentials)
 
+    def test_removing_credentials_disables_scheduling_and_retains_the_destination(self):
+        self.store.save(replace(self.configuration, schedule="daily"), self.credentials)
+        self.store.clear_credentials()
+        self.assertEqual(self.store.secrets(), BackupCredentials())
+        self.assertEqual(self.store.load().schedule, "off")
+        self.assertEqual(self.store.load().destination, self.configuration.destination)
+
     def test_destination_and_state_change_atomically_with_credential_compensation(self):
         self.store.save(self.configuration, self.credentials)
         original = self.settings.get_all(self.owner)

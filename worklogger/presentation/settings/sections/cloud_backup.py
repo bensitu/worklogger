@@ -83,6 +83,8 @@ class _BackupFieldGroup(QWidget):
 
 
 class CloudBackupPanel(QWidget):
+    busy_changed = Signal(bool)
+    clear_credentials_requested = Signal()
     save_requested = Signal(object, object)
     test_requested = Signal()
     upload_requested = Signal()
@@ -167,6 +169,10 @@ class CloudBackupPanel(QWidget):
         self.save_button, self.test_button = QPushButton(_("Save")), QPushButton(_("Test connection"))
         self.upload_button, self.restore_button = QPushButton(_("Upload backup")), QPushButton(_("Download and restore"))
         self.local_restore_button = QPushButton(_("Restore local recovery copy"))
+        self.clear_credentials_button = QPushButton(_("Remove saved credentials"))
+        self.clear_credentials_button.setProperty("variant", "outline")
+        set_button_icon(self.clear_credentials_button, "trash-2")
+        self.clear_credentials_button.clicked.connect(self._clear_credentials)
         for button, icon in ((self.save_button, "save"), (self.test_button, "link"),
                              (self.upload_button, "upload"), (self.restore_button, "download")):
             button.setProperty("variant", "outline")
@@ -174,7 +180,7 @@ class CloudBackupPanel(QWidget):
         _add_action_buttons(card, self.save_button, self.test_button, self.upload_button, self.restore_button, columns=2)
         set_button_icon(self.local_restore_button, "rotate-ccw")
         self.local_restore_button.setProperty("variant", "outline")
-        _add_action_buttons(card, self.local_restore_button)
+        _add_action_buttons(card, self.local_restore_button, self.clear_credentials_button, columns=2)
         self.status_label = _secondary_label("")
         self.status_label.setTextFormat(Qt.TextFormat.PlainText)
         card.content_layout.addWidget(self.status_label)
@@ -283,11 +289,23 @@ class CloudBackupPanel(QWidget):
             self.passphrase.text() or self._credentials.passphrase)
         self.save_requested.emit(configuration, credentials)
 
+    def _clear_credentials(self):
+        from PySide6.QtWidgets import QMessageBox
+        if QMessageBox.question(self, _("Remove saved credentials"),
+            _("Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
+            self.clear_credentials_requested.emit()
+
     def set_busy(self, busy, *, configured):
+        changed = self._busy != busy
         self._busy, self._configured = busy, configured
         self._ready = True
         self.setEnabled(self._available and not busy)
         self._refresh_actions()
+        self.clear_credentials_button.setEnabled(not busy and self._configured)
+        if changed:
+            self.busy_changed.emit(busy)
 
     def set_available(self, available):
         was_available = self._available

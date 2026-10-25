@@ -130,6 +130,8 @@ unlisted object; objects are not blindly deleted when publication is uncertain.
 
 ## Restore and Local Recovery
 
+Use **Remove saved credentials** to delete the stored storage password, session token, and backup passphrase. This also turns off automatic backup without deleting remote files or the saved destination. Keep the independent passphrase elsewhere before removing it; encrypted archives cannot be recovered without it.
+
 Use **Download and restore** to choose a saved version. Save or discard edits and
 stop automatic recording first. Restore replaces only the current account's
 portable data in one transaction. Its original account and login credentials,

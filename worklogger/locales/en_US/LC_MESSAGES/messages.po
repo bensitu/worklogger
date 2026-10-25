@@ -2071,6 +2071,12 @@ msgstr "Remove background image?"
 msgid "Remove image"
 msgstr "Remove image"
 
+msgid "Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."
+msgstr "Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."
+
+msgid "Remove saved credentials"
+msgstr "Remove saved credentials"
+
 msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
 msgstr "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
 
@@ -2301,6 +2307,9 @@ msgstr "Save time unavailable"
 
 msgid "Saved"
 msgstr "Saved"
+
+msgid "Saved cloud credentials removed. Automatic backup is off."
+msgstr "Saved cloud credentials removed. Automatic backup is off."
 
 msgid "Saved daily report"
 msgstr "Saved daily report"

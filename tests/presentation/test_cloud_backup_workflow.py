@@ -19,6 +19,29 @@ from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupW
 
 
 class CloudBackupWorkflowTests(unittest.TestCase):
+    def test_successful_restore_reloads_application_after_panel_destruction(self):
+        from shiboken6 import delete
+        workflow = self.workflow(86400)
+        handler = Mock()
+        workflow.set_restore_handler(handler)
+        panel = CloudBackupPanel(self.owner)
+        callbacks = []
+        workflow._run = lambda operation, *, callback: callbacks.append(callback) or True
+        workflow._restore(panel, lambda: Result.success(None))
+        delete(panel)
+        with patch.object(QMessageBox, "information") as message:
+            callbacks[0](Result.success(BackupTransfer("", "recovery.wlbackup")))
+        handler.assert_called_once()
+        message.assert_not_called()
+
+    def test_automatic_settings_refresh_reports_failure_without_interrupting_the_user(self):
+        workflow = self.workflow(86400)
+        workflow._notify = Mock()
+        self.service.settings.return_value = Result.failure(ValidationError("cloud_configuration_invalid", "cloud_configuration_invalid"))
+        workflow.reload(automatic=True)
+        workflow._notify.assert_not_called()
+        self.assertFalse(workflow._busy)
+
     @classmethod
     def setUpClass(cls):
         cls.application = QApplication.instance() or QApplication([])

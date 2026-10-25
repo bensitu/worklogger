@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from PySide6.QtCore import QSignalBlocker
+from PySide6.QtWidgets import QApplication, QLineEdit
 
 from worklogger.config.constants import (
     ENABLE_TRAY_SETTING_KEY,
@@ -22,6 +23,9 @@ from worklogger.presentation.widgets.avatar import avatar_pixmap
 
 class SettingsSectionState:
     def set_state(self, state: SettingsState) -> None:
+        editor = QApplication.focusWidget()
+        editing = (editor.text(), editor.cursorPosition(), editor.selectionStart(), editor.selectedText()) if (
+            isinstance(editor, QLineEdit) and self.isAncestorOf(editor)) else None
         self._state = state
         self._updating = True
         try:
@@ -75,7 +79,8 @@ class SettingsSectionState:
             index = self.holiday_country_combo.findData(country)
             self.holiday_country_combo.setCurrentIndex(max(index, 0))
             self._populate_holiday_subdivisions(
-                country or self._view_model.system_holiday_country, subdivision
+                (country if index >= 0 else "") or self._view_model.system_holiday_country,
+                subdivision if index >= 0 else ""
             )
             self.note_markers_switch.set_checked(state.show_note_markers)
             self.overnight_switch.set_checked(state.show_overnight_indicator)
@@ -111,6 +116,14 @@ class SettingsSectionState:
             self.avatar_preview_label.setPixmap(avatar_pixmap(state.profile_avatar_png))
             self.reset_avatar_button.setEnabled(bool(state.profile_avatar_png))
         finally:
+            if editing is not None:
+                text, cursor, selection_start, selection = editing
+                with QSignalBlocker(editor):
+                    if editor.text() != text:
+                        editor.setText(text)
+                    editor.setCursorPosition(cursor)
+                    if selection_start >= 0:
+                        editor.setSelection(selection_start, len(selection))
             self._updating = False
 
     def set_capabilities(self, capabilities: SettingsCapabilities) -> None:

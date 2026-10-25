@@ -22,6 +22,8 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Cloud credentials can be removed explicitly, turning off automatic backup without deleting remote files. Restore completion reloads application data even if its settings panel was closed.
+- Background display failures release their busy state. Numeric preferences save completed input, and asynchronous settings refresh preserves text being edited.
 - Database backup sanitization and restore preparation avoid holding the live write lock during expensive processing. Temporary upgrade snapshots are removed after restoration.
 - Cloud publication recovers from lost responses and interrupted local state updates. Personal recovery archives have bounded retention, and supported backups can restore data while skipping unrecognized settings.
 - The first account receives administrator access when created through browser sign-in. Password confirmation for sensitive account changes respects sign-in lockouts.

@@ -122,6 +122,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         configure_application_style()
         install_bundled_fonts()
         self._build_ui()
+        self.cloud_backup_panel.busy_changed.connect(lambda busy: self.set_busy("cloud_backup", busy))
         self._apply_capabilities()
 
     @property
@@ -144,7 +145,7 @@ class SettingsPage(QWidget, SettingsSectionState):
             self._busy_jobs.add(job)
         else:
             self._busy_jobs.discard(job)
-        self.category_stack.setEnabled(not self._busy_jobs.difference({"external_model_test", "update"}))
+        self.category_stack.setEnabled(not self._busy_jobs.difference({"external_model_test", "update", "preferences"}))
         if job == "update":
             self.check_updates_button.setEnabled(self._update_checks_available and not busy)
         if job == "external_model_test":

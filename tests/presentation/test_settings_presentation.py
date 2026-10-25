@@ -75,6 +75,31 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_state_refresh_preserves_focused_text_and_tracks_cloud_operations(self):
+        from PySide6.QtTest import QTest
+        application = _app()
+        page = SettingsPage(_view_model(MemorySettingsRepository()))
+        self.addCleanup(page.deleteLater)
+        self.addCleanup(page.close)
+        self.assertTrue(page.refresh())
+        page.show()
+        page.category_stack.setCurrentIndex(page._category_pages["network"])
+        page.proxy_enabled_switch.setChecked(True)
+        field = page.proxy_address_line_edit
+        page.activateWindow()
+        application.processEvents()
+        field.setFocus()
+        application.processEvents()
+        self.assertTrue(field.hasFocus())
+        QTest.keyClicks(field, "proxy.example")
+        page.set_state(replace(page.state, network_proxy_address="previous.example"))
+        self.assertEqual(field.text(), "proxy.example")
+        page.cloud_backup_panel.set_busy(True, configured=True)
+        self.assertTrue(page.is_busy)
+        page.cloud_backup_panel.set_busy(False, configured=True)
+        self.assertFalse(page.is_busy)
+        self.assertFalse(page.standard_hours_input.keyboardTracking())
+
     def test_target_modes_retain_custom_hours_and_presets_expand_only_when_requested(self):
         from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, WORK_TARGET_MODE_SETTING_KEY
 

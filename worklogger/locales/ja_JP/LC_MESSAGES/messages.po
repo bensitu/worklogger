@@ -2071,6 +2071,12 @@ msgstr "背景画像を削除しますか？"
 msgid "Remove image"
 msgstr "画像を削除"
 
+msgid "Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."
+msgstr "保存済みのクラウド認証情報を削除し、自動バックアップをオフにしますか？既存のクラウドバックアップは削除されません。続行する前にバックアップのパスフレーズを保管してください。"
+
+msgid "Remove saved credentials"
+msgstr "保存済みの認証情報を削除"
+
 msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
 msgstr "非公開の復旧用コピーを保存してから、これらの無効な記録を削除しますか？他の記録とアカウントは変更されません。"
 
@@ -2301,6 +2307,9 @@ msgstr "保存日時不明"
 
 msgid "Saved"
 msgstr "保存しました"
+
+msgid "Saved cloud credentials removed. Automatic backup is off."
+msgstr "クラウド認証情報を削除しました。自動バックアップはオフです。"
 
 msgid "Saved daily report"
 msgstr "保存済みの日報"

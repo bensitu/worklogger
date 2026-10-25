@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from threading import RLock
+
 import base64
 import math
 from collections.abc import Callable, Mapping
@@ -155,6 +157,7 @@ class SettingsViewModel:
         self._cached_password = None
         self._cached_api_key = None
         self._credentials_loaded = False
+        self._credentials_lock = RLock()
 
     @cached_property
     def holiday_regions(self) -> Mapping[str, tuple[str, ...]]:
@@ -169,7 +172,8 @@ class SettingsViewModel:
 
     def load(self, *, refresh_credentials=True) -> Result[SettingsState]:
         try:
-            return self._load(refresh_credentials=refresh_credentials)
+            with self._credentials_lock:
+                return self._load(refresh_credentials=refresh_credentials)
         except (ValueError, TypeError):
             return Result.failure(ValidationError("invalid_numeric_setting", "invalid_numeric_setting"))
         except Exception:
@@ -288,9 +292,10 @@ class SettingsViewModel:
         if self._external_key_store is None or not isinstance(value, str) or len(value) > 8192:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
         try:
-            result = self._external_key_store.set_secret("ai_api_key", value.strip())
-            if result.ok:
-                self._cached_api_key = Result.success(value.strip())
+            with self._credentials_lock:
+                result = self._external_key_store.set_secret("ai_api_key", value.strip())
+                if result.ok:
+                    self._cached_api_key = Result.success(value.strip())
             return result
         except Exception:
             return Result.failure(InfrastructureError("credential_storage_unavailable", "credential_storage_unavailable"))
@@ -340,9 +345,10 @@ class SettingsViewModel:
         if key == NETWORK_PROXY_PASSWORD_SETTING_KEY:
             if self._proxy_password_settings is None:
                 return Result.failure(ValidationError("credential_storage_unavailable", "credential_storage_unavailable"))
-            result = self._proxy_password_settings.save(str(value or ""))
-            if result.ok:
-                self._cached_password = Result.success(str(value or ""))
+            with self._credentials_lock:
+                result = self._proxy_password_settings.save(str(value or ""))
+                if result.ok:
+                    self._cached_password = Result.success(str(value or ""))
             return result
         cleaned = str(value or "").strip()
         if key == NETWORK_PROXY_PORT_SETTING_KEY:

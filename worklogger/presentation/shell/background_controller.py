@@ -6,6 +6,7 @@ from shiboken6 import isValid
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.images.background import prepare_background
+from worklogger.app.use_cases._errors import infrastructure_failure
 from worklogger.presentation.job_runner import shared_job_runner
 
 
@@ -89,15 +90,19 @@ class BackgroundController(QObject):
         def complete(result):
             if not isValid(self) or not isValid(self._surface) or version != self._version:
                 return
-            if result.ok:
-                state, frame = result.value
-                if not frame.isNull():
-                    self._prepared_background = (state.image, frame)
-                elif state.image is None:
-                    self._prepared_background = None
-                self._surface.set_background(state, frame)
-                result = Result.success(state)
-            self._busy, self._handle = False, None
+            try:
+                if result.ok:
+                    state, frame = result.value
+                    self._surface.set_background(state, frame)
+                    if not frame.isNull():
+                        self._prepared_background = (state.image, frame)
+                    elif state.image is None:
+                        self._prepared_background = None
+                    result = Result.success(state)
+            except Exception as error:
+                result = Result.failure(infrastructure_failure("background_load_failed", error, logger_name=__name__))
+            finally:
+                self._busy, self._handle = False, None
             self._last_result = result
             # Keep intermediate saves from replacing a newer selection in the controls.
             if self._pending_options is not None:

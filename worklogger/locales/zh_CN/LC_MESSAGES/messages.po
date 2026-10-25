@@ -2071,6 +2071,12 @@ msgstr "移除当前背景图片？"
 msgid "Remove image"
 msgstr "移除图片"
 
+msgid "Remove saved cloud credentials and turn off automatic backup? Existing cloud backups will not be deleted. Keep your backup passphrase before continuing."
+msgstr "移除已保存的云存储凭据并关闭自动备份？已有云备份不会被删除。请先妥善保管备份口令，再继续操作。"
+
+msgid "Remove saved credentials"
+msgstr "移除已保存的凭据"
+
 msgid "Remove these invalid records only after saving a private recovery copy? Other records and accounts will not change."
 msgstr "保存私密的恢复副本后，移除这些异常记录？其他记录和账户不会改变。"
 
@@ -2301,6 +2307,9 @@ msgstr "保存时间未知"
 
 msgid "Saved"
 msgstr "已保存"
+
+msgid "Saved cloud credentials removed. Automatic backup is off."
+msgstr "已移除云存储凭据，自动备份已关闭。"
 
 msgid "Saved daily report"
 msgstr "已保存日报"

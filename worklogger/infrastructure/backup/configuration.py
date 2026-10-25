@@ -1,6 +1,6 @@
 """Account-scoped cloud settings and OS-protected storage credentials."""
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 import logging
 import re
@@ -79,6 +79,18 @@ class CloudBackupConfigurationStore:
         except (ValueError, TypeError, OverflowError, RecursionError):
             logging.getLogger(__name__).warning("cloud_backup_state_invalid")
             return {"last_error": "cloud_configuration_invalid"}
+
+    def clear_credentials(self):
+        configuration = self.load()
+        previous = self.credentials.get_secret(self._secret_name)
+        if not previous.ok or not self.credentials.set_secret(self._secret_name, "").ok:
+            raise ValueError("credential_storage_unavailable")
+        try:
+            if configuration is not None:
+                self.settings.set(self.user_id, CONFIG_KEY, json.dumps(asdict(replace(configuration, schedule="off"))))
+        except Exception:
+            self.credentials.set_secret(self._secret_name, previous.value or "")
+            raise
 
     def save_state(self, state):
         self.settings.set(self.user_id, STATE_KEY, json.dumps(state))

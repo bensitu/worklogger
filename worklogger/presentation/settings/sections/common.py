@@ -120,6 +120,7 @@ def _switch_row(switch: SwitchButton) -> QWidget:
 
 def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     spin = QDoubleSpinBox()
+    spin.setKeyboardTracking(False)
     apply_numeric_input_padding(spin)
     spin.setDecimals(2)
     spin.setRange(minimum, maximum)
