@@ -1,4 +1,36 @@
-/* Shared tabs with recording and management variants. */
+/* Shared tabs and segmented view selectors. */
+
+QPushButton[segment="true"] {
+  background: {{ surface }};
+  border: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 7px 18px;
+}
+
+QWidget#segmented_control_widget[compact="true"] QPushButton[segment="true"] {
+  min-height: 22px;
+  padding: 2px 10px;
+}
+
+QPushButton[page_tab="true"] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid {{ border }};
+  border-radius: 0;
+  padding: 10px 16px;
+  color: {{ muted_text }};
+}
+
+QPushButton[page_tab="true"]:checked {
+  color: {{ accent }};
+  border-bottom: 3px solid {{ accent }};
+  font-weight: 600;
+}
+
+QPushButton[page_tab="true"]:hover:enabled {
+  background: {{ button_hover }};
+  border-bottom-color: {{ accent }};
+}
 
 QTabWidget::pane {
   background: {{ tab_pane_fill }};
@@ -55,6 +87,7 @@ QTabBar[tab_style="segmented"]::tab:hover:enabled {
   background: {{ card_hover }};
 }
 
+QPushButton[segment="true"]:checked,
 QTabBar[tab_style="segmented"]::tab:selected,
 QTabBar[tab_style="segmented"]::tab:selected:hover:enabled {
   background: {{ accent_dim }};

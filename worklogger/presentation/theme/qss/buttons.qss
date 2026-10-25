@@ -8,7 +8,7 @@ QToolButton {
   font-weight: 500;
   border-radius: {{ control_radius }};
   min-height: {{ control_min_height }};
-  padding: {{ control_padding_vertical }} 14px;
+  padding: {{ control_padding_vertical }} {{ button_padding_horizontal }};
 }
 
 QPushButton[dialog_action="true"],

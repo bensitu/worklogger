@@ -14,9 +14,7 @@ QAbstractSpinBox {
   padding: {{ control_padding_vertical }} {{ field_padding_horizontal }};
 }
 
-QLineEdit#account_name_line_edit,
-QLineEdit#account_id_line_edit,
-QLineEdit#account_role_line_edit {
+QLineEdit:read-only {
   background: {{ readonly_fill }};
 }
 
@@ -104,9 +102,4 @@ QTimeEdit::down-arrow {
   image: url("{{ icons_root }}/chevron-down.svg");
   width: 12px;
   height: 12px;
-}
-
-QSpinBox#local_context_spin_box {
-  min-height: 18px;
-  padding: 2px 8px;
 }
