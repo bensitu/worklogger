@@ -16,8 +16,10 @@ operating system, architecture, and CPU requirements; use `--from-source` on Lin
 for a portable CPU build. Restart after installing it. Packaged
 applications must include that dependency when built; see [packaging](packaging.md).
 
-Open **Settings > AI > Local Model > Manage models**. Download a catalog entry or
-import a GGUF file, verify it, and choose Use model. Enable Local Model and AI Assist.
+Open **Settings > AI > Local Model**, enable Local Model, and choose **Manage models**.
+Download a catalog entry or import a GGUF file, verify it, and choose Use model.
+Enable AI Assist to use the model. Turning off Local Model disables model management
+and text-capacity editing without removing files or changing the saved capacity.
 Downloading a file alone does not select it.
 
 ## Managing Files

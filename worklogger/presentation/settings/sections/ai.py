@@ -130,7 +130,7 @@ class AISection(SettingsScrollPage):
         external.content_layout.addWidget(self.external_processing_progress)
         page.layout().addWidget(external)
 
-        local = _action_card(_("Local Model"))
+        local = _action_card(_("Local Model"), _("Local text processing does not send content to an external service."))
         self.local_model_enabled_switch = SwitchButton()
         self.local_model_enabled_switch.toggled.connect(
             lambda enabled: actions.set_bool(LOCAL_MODEL_ENABLED_SETTING_KEY, enabled)
@@ -141,7 +141,7 @@ class AISection(SettingsScrollPage):
         model_summary = SettingsContainer("local_model_summary_widget")
         summary_layout = QVBoxLayout(model_summary)
         summary_layout.setContentsMargins(0, 0, 0, 0)
-        summary_layout.setSpacing(FIELD_SPACING // 2)
+        summary_layout.setSpacing(local.content_layout.spacing())
         model_heading = QHBoxLayout()
         model_heading.setContentsMargins(0, 0, 0, 0)
         model_heading.setSpacing(FIELD_SPACING)

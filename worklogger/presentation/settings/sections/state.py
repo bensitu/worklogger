@@ -66,7 +66,7 @@ class SettingsSectionState:
             )
             self.local_model_enabled_switch.set_checked(state.local_model_enabled)
             self._update_local_model_status()
-            self._update_local_context()
+            self._update_local_model_controls()
             self.standard_hours_input.setValue(state.standard_work_hours)
             self.default_break_input.setValue(state.default_break_hours)
             self.timer_reminder_input.setValue(state.timer_reminder_hours)
@@ -171,15 +171,7 @@ class SettingsSectionState:
         self.local_model_enabled_switch.setEnabled(True)
         self.external_model_enabled_switch.setEnabled(self._capabilities.external_generation)
         self.external_model_enabled_switch.setAccessibleName(_("Use external model"))
-        for widget in (self.manage_local_models_button,):
-            widget.setEnabled(self._capabilities.model_management and self._model_management_available)
-            widget.setToolTip(
-                _("Local model management is not configured.")
-                if not self._model_management_available
-                else ""
-                if self._capabilities.model_management
-                else _("Model file management is unavailable.")
-            )
+        self._update_local_model_controls()
         self.proxy_enabled_switch.setEnabled(True)
         self._update_configuration_status()
         for switch, name in (
@@ -277,6 +269,16 @@ class SettingsSectionState:
     def set_local_model_context_limit(self, limit: int | None):
         self._local_context_limit = limit
         self._update_local_context()
+
+    def _update_local_model_controls(self):
+        self._update_local_context()
+        enabled = self.local_model_enabled_switch.is_checked()
+        self.manage_local_models_button.setEnabled(
+            enabled and self._capabilities.model_management and self._model_management_available)
+        self.manage_local_models_button.setToolTip(
+            _("Local model management is not configured.") if not self._model_management_available else
+            _("Model file management is unavailable.") if not self._capabilities.model_management else
+            _("Local model is disabled.") if not enabled else "")
 
     def _update_local_context(self):
         if not hasattr(self, "local_context_spin_box"):
