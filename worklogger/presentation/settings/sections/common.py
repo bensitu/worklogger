@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QLineEdit,
     QPushButton,
     QScrollArea,
@@ -120,16 +122,39 @@ def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     return spin
 
 
-def _add_half_width_row(form: QFormLayout, label: str, field: QWidget) -> QWidget:
-    row = QWidget()
-    row.setObjectName("settings_field_group_widget")
-    row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-    layout = QHBoxLayout(row)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(0)
-    layout.addWidget(field, 1)
-    layout.addSpacing(12)
-    layout.addStretch(1)
+class _HalfWidthFieldRow(QWidget):
+    def __init__(self, field: QWidget, accessory: QWidget | None):
+        super().__init__()
+        self.setObjectName("settings_field_group_widget")
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self._field, self._accessory = field, accessory
+        self._minimum_field_width = field.minimumWidth()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+        layout.addWidget(field)
+        if accessory is not None:
+            layout.addSpacing(12)
+            layout.addWidget(accessory)
+        layout.addStretch(1)
+
+    def minimumSizeHint(self):
+        minimum = max(self._minimum_field_width, self._field.minimumSizeHint().width())
+        accessory_width = self._accessory.width() + 12 if self._accessory is not None else 0
+        return QSize(minimum + accessory_width, self.layout().minimumSize().height())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        half = max(0, (self.width() - 12) // 2)
+        minimum = max(160, self._minimum_field_width, self._field.minimumSizeHint().width())
+        accessory_width = self._accessory.width() + 12 if self._accessory is not None else 0
+        width = half if half >= minimum else max(0, self.width() - accessory_width)
+        self._field.setFixedWidth(width)
+
+
+def _add_half_width_row(form: QFormLayout, label: str, field: QWidget, *, accessory: QWidget | None = None) -> QWidget:
+    row = _HalfWidthFieldRow(field, accessory)
     form.addRow(label, row)
     form.labelForField(row).setBuddy(field)
     return row

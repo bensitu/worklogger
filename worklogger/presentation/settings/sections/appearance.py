@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QComboBox,
-    QHBoxLayout,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -20,6 +19,7 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.background import BackgroundSettings
 from worklogger.presentation.settings.sections.common import (
     _card_with_form,
+    _add_half_width_row,
     _language_label,
     _secondary_label,
     _switch_line,
@@ -48,21 +48,12 @@ class AppearanceSection(_SettingsScrollPage):
         form = card.form_layout
 
         self.language_combo = QComboBox()
-        self.language_combo.setFixedWidth(320)
         self.language_combo.setObjectName("language_combo")
         for language in available_languages():
             self.language_combo.addItem(_language_label(language), language)
         self.language_combo.currentIndexChanged.connect(actions.language_changed)
-        form.addRow(_("Language"), self.language_combo)
-
-        theme_row = QWidget()
-        theme_row.setObjectName("settings_theme_row_widget")
-        theme_layout = QHBoxLayout(theme_row)
-        theme_layout.setContentsMargins(0, 0, 0, 0)
-        theme_layout.setSpacing(10)
+        _add_half_width_row(form, _("Language"), self.language_combo)
         self.theme_combo = QComboBox()
-        self.theme_combo.setFixedWidth(320)
-        theme_row.setFixedWidth(370)
         self.theme_combo.setObjectName("theme_combo")
         for definition in THEME_DEFINITIONS:
             self.theme_combo.addItem(_(definition.label), definition.key)
@@ -75,18 +66,14 @@ class AppearanceSection(_SettingsScrollPage):
         self.custom_color_button.setObjectName("custom_color_button")
         self.custom_color_button.hide()
         self.custom_color_button.clicked.connect(actions.choose_custom_color)
-        theme_layout.addWidget(self.theme_combo, 1)
-        theme_layout.addWidget(self.custom_color_button)
-        theme_layout.addStretch()
-        form.addRow(_("Theme"), theme_row)
+        _add_half_width_row(form, _("Theme"), self.theme_combo, accessory=self.custom_color_button)
 
         self.mode_combo = QComboBox()
-        self.mode_combo.setFixedWidth(320)
         self.mode_combo.setObjectName("mode_combo")
         self.mode_combo.addItem(_("Light mode"), "light")
         self.mode_combo.addItem(_("Dark mode"), "dark")
         self.mode_combo.currentIndexChanged.connect(actions.mode_changed)
-        form.addRow(_("Mode"), self.mode_combo)
+        _add_half_width_row(form, _("Mode"), self.mode_combo)
 
         self.dark_switch = SwitchButton()
         self.dark_switch.setVisible(False)

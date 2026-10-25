@@ -27,7 +27,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
     def setUp(self):
         self.addCleanup(dispose_test_windows)
 
-    def test_weekly_schedule_controls_fit_supported_languages_and_themes(self):
+    def test_general_and_appearance_controls_fit_supported_languages_and_themes(self):
         from PySide6.QtWidgets import QStyle, QStyleOptionComboBox
 
         old_language, old_style, old_palette = get_language(), self.app.styleSheet(), self.app.palette()
@@ -90,6 +90,37 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                                 self.assertEqual(label.x(), row.x() + field.x())
                                 self.assertLessEqual(abs(field.width() - (row.width() - 12) / 2), 1)
                             self.capture(scroll.content_widget, f"{language}-general-{theme}-{dark}-{width}")
+                        page.category_nav.set_category("appearance")
+                        for width in (520, 740, 1100):
+                            page.resize(width, 760)
+                            previous_width = None
+                            for selected in ("blue", "custom", "liquid_glass"):
+                                page.theme_combo.setCurrentIndex(page.theme_combo.findData(selected))
+                                for _pass in range(4):
+                                    self.app.processEvents()
+                                scroll = page.category_stack.currentWidget()
+                                self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                                self.assertEqual(page.custom_color_button.isVisible(), selected == "custom")
+                                for field in (page.language_combo, page.theme_combo, page.mode_combo):
+                                    option = QStyleOptionComboBox()
+                                    field.initStyleOption(option)
+                                    rect = field.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
+                                        QStyle.SubControl.SC_ComboBoxEditField, field)
+                                    self.assertLessEqual(field.fontMetrics().horizontalAdvance(field.currentText()), rect.width())
+                                    if width >= 740:
+                                        self.assertLessEqual(abs(field.width() - (field.parentWidget().width() - 12) / 2), 1)
+                                    else:
+                                        reserved = page.custom_color_button.width() + 12 if field is page.theme_combo else 0
+                                        self.assertEqual(field.width(), field.parentWidget().width() - reserved)
+                                if previous_width is not None:
+                                    self.assertEqual(page.theme_combo.width(), previous_width)
+                                previous_width = page.theme_combo.width()
+                                if selected == "custom":
+                                    self.assertEqual(page.custom_color_button.x() - page.theme_combo.geometry().right() - 1, 12)
+                                    self.assertLessEqual(page.custom_color_button.geometry().right(),
+                                                         page.custom_color_button.parentWidget().width() - 1)
+                                self.capture(page.language_combo.parentWidget().parentWidget(),
+                                    f"{language}-appearance-{theme}-{dark}-{width}-{selected}")
                     finally:
                         page.hide()
                         page.deleteLater()
