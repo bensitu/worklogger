@@ -47,7 +47,7 @@ class WindowLifecycleController(QObject):
                 self._date_timer.start()
                 self._update_today()
             elif (event.type() == QEvent.Type.WindowStateChange and self._window.isMinimized()
-                    and self._residency is not None and self._residency.should_keep_resident()):
+                    and self._residency is not None and self._residency.should_hide_on_minimize()):
                 self._window.hide()
         return False
 
@@ -69,7 +69,7 @@ class WindowLifecycleController(QObject):
         if not self._confirm_close():
             return False
         if (self._residency is not None and not self._residency.quit_requested
-                and self._residency.should_keep_resident()):
+                and self._residency.should_hide_on_close()):
             self._date_timer.stop()
             self._window.hide()
             return False

@@ -4,13 +4,14 @@ from datetime import date
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, EntryType
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from worklogger.app.use_cases.data_portability import WorkLogCsvImportResult
 from worklogger.presentation.shell import (
@@ -167,6 +168,8 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
         assert loaded.value is not None
         self.assertEqual(loaded.value.setting_key, "enable_tray")
         self.assertFalse(loaded.value.keep_resident)
+        self.assertEqual(loaded.value.close_action.value, "hide")
+        self.assertTrue(loaded.value.minimize_to_tray)
 
         updated = view_model.set_enabled(True)
 
@@ -175,7 +178,7 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
         self.assertTrue(updated.value.keep_resident)
         self.assertEqual(repository.values[(1, "enable_tray")], "1")
         self.assertEqual(residency_setting_key("darwin"), "enable_menu_bar")
-        self.assertIsNone(residency_setting_key("linux"))
+        self.assertEqual(residency_setting_key("linux"), "enable_tray")
 
     def test_qt_residency_controller_tracks_platform_availability(self) -> None:
         repository = MemorySettingsRepository()
@@ -203,6 +206,50 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
         self.assertTrue(self._app.quitOnLastWindowClosed())
         controller.request_quit()
         self.assertTrue(controller.quit_requested)
+
+    def test_window_actions_are_independent_and_unavailable_trays_restore_hidden_windows(self):
+        from worklogger.domain.settings.window_behavior import WindowCloseAction
+
+        for platform in ("win32", "darwin", "linux"):
+            with self.subTest(platform=platform), patch("worklogger.presentation.shell.residency.QSystemTrayIcon"):
+                repository = MemorySettingsRepository()
+                repository.set(1, residency_setting_key(platform), "1")
+                model = ResidencyViewModel(user_id=1, get_handler=GetSettingHandler(repository),
+                    set_handler=SetSettingHandler(repository), platform=platform)
+                availability = {"tray": True}
+                application, window = Mock(), QWidget()
+                controller = QtResidencyController(model, application=application,
+                    tray_available=lambda: availability["tray"])
+                controller.attach(window, open_callback=window.showNormal)
+                self.assertTrue(window.isHidden())
+                try:
+                    for action in WindowCloseAction:
+                        for minimize in (False, True):
+                            repository.set(1, "window_close_action", action.value)
+                            repository.set(1, "minimize_to_tray", "1" if minimize else "0")
+                            controller.refresh()
+                            self.assertEqual(controller.should_hide_on_close(), action == WindowCloseAction.HIDE)
+                            self.assertEqual(controller.should_hide_on_minimize(), minimize)
+                            application.setQuitOnLastWindowClosed.assert_called_with(action == WindowCloseAction.EXIT)
+                    window.show()
+                    window.hide()
+                    availability["tray"] = False
+                    controller._availability_timer.timeout.emit()
+                    self.assertFalse(window.isHidden())
+                    self.assertFalse(controller.should_hide_on_close())
+                    self.assertFalse(controller.should_hide_on_minimize())
+                    application.setQuitOnLastWindowClosed.assert_called_with(True)
+                    availability["tray"] = True
+                    controller.refresh()
+                    window.hide()
+                    repository.set(1, residency_setting_key(platform), "0")
+                    controller.refresh()
+                    self.assertFalse(window.isHidden())
+                    controller.request_quit()
+                    application.quit.assert_called_once()
+                finally:
+                    window.close()
+                    window.deleteLater()
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ _TABLES = ("projects", "work_items", "entry_types", "work_modes", "worklog", "da
            "calendar_events", "reports", "report_revisions", "report_templates", "settings", "background_images")
 _PORTABLE_SETTINGS = frozenset(key for key in SETTINGS_DEFAULTS
     if not key.startswith(("network_", "external_", "local_model", "enable_tray", "enable_menu_bar"))
-    and key not in {"last_backup_at", "minimal_mode"})
+    and key not in {"last_backup_at", "minimal_mode", "window_close_action", "minimize_to_tray"})
 _AUTONUMBER = {"worklog", "quick_logs", "calendar_events", "reports", "report_templates"}
 _ORDER_COLUMNS = {table: "id" for table in _TABLES} | {
     "daily_notes": "d", "settings": "key", "background_images": "user_id",

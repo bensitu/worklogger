@@ -641,7 +641,7 @@ class AppWindowTests(unittest.TestCase):
                 self.refreshed += 1
                 return None
 
-            def should_keep_resident(self) -> bool:
+            def should_hide_on_close(self) -> bool:
                 return True
 
             def request_quit(self) -> None:
@@ -659,6 +659,28 @@ class AppWindowTests(unittest.TestCase):
 
         self.assertTrue(controller.attached)
         self.assertFalse(event.isAccepted())
+
+    def test_window_exit_and_normal_minimize_remain_available_with_tray_enabled(self):
+        for minimal in (False, True):
+            with self.subTest(minimal=minimal):
+                controller = Mock()
+                controller.quit_requested = False
+                controller.should_hide_on_close.return_value = False
+                controller.should_hide_on_minimize.return_value = False
+                model = _entry_model(MemoryWorkLogRepository())
+                window = (MinimalView(time_entry_view_model=model, job_runner=ImmediateJobRunner(),
+                    residency_controller=controller) if minimal else
+                    _window(MemoryWorkLogRepository(), residency_controller=controller))
+                window.showMinimized()
+                self._app.processEvents()
+                self.assertFalse(window.isHidden())
+                self.assertTrue(window.isMinimized())
+                event = QCloseEvent()
+                window.closeEvent(event)
+                self.assertTrue(event.isAccepted())
+                self.assertFalse(window.entry_panel.auto_timer.isActive())
+                window.hide()
+                window.deleteLater()
 
     def test_minimal_view_saves_entry_and_navigates_days(self) -> None:
         repository = MemoryWorkLogRepository()

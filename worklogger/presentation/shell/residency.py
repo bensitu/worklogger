@@ -7,18 +7,25 @@ from dataclasses import dataclass
 import sys
 from typing import Protocol
 
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon, QWidget
+from shiboken6 import isValid
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
 from worklogger.app.queries.settings_queries import GetSettingQuery
+from worklogger.app.settings import read_setting_values
 from worklogger.config.constants import (
-    ENABLE_MENU_BAR_SETTING_KEY,
-    ENABLE_TRAY_SETTING_KEY,
+    WINDOW_CLOSE_ACTION_SETTING_KEY,
+    MINIMIZE_TO_TRAY_SETTING_KEY,
 )
+from worklogger.domain.settings.preferences import SETTINGS_DEFAULTS
+from worklogger.domain.settings.values import setting_bool
+from worklogger.domain.settings.window_behavior import WindowCloseAction
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
+from worklogger.presentation.platform_integration import residency_setting_key
 
 
 class ResidencyGetHandler(Protocol):
@@ -37,6 +44,8 @@ class ResidencyState:
     setting_key: str | None
     available: bool
     enabled: bool
+    close_action: WindowCloseAction = WindowCloseAction.HIDE
+    minimize_to_tray: bool = True
 
     @property
     def keep_resident(self) -> bool:
@@ -71,15 +80,19 @@ class ResidencyViewModel:
                     enabled=False,
                 )
             )
-        value = self._get_handler.handle(GetSettingQuery(self._user_id, key, "0"))
-        if not value.ok:
-            return Result.failure(value.error or _error("residency_load_failed"))
+        loaded = read_setting_values(self._get_handler, self._user_id,
+            {name: SETTINGS_DEFAULTS[name] for name in (key, WINDOW_CLOSE_ACTION_SETTING_KEY, MINIMIZE_TO_TRAY_SETTING_KEY)})
+        if not loaded.ok:
+            return Result.failure(loaded.error or _error("residency_load_failed"))
+        values = loaded.value
         return Result.success(
             ResidencyState(
                 platform=self._platform,
                 setting_key=key,
                 available=available,
-                enabled=available and _bool(value.value),
+                enabled=available and setting_bool(values[key]),
+                close_action=WindowCloseAction.from_setting(values[WINDOW_CLOSE_ACTION_SETTING_KEY]),
+                minimize_to_tray=setting_bool(values[MINIMIZE_TO_TRAY_SETTING_KEY], True),
             )
         )
 
@@ -97,19 +110,6 @@ class ResidencyViewModel:
         if not result.ok:
             return Result.failure(result.error or _error("residency_save_failed"))
         return self.load()
-
-
-def residency_setting_key(platform: str | None = None) -> str | None:
-    value = str(platform or sys.platform).lower()
-    if value.startswith("win"):
-        return ENABLE_TRAY_SETTING_KEY
-    if value == "darwin":
-        return ENABLE_MENU_BAR_SETTING_KEY
-    return None
-
-
-def _bool(value: str | None) -> bool:
-    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _error(code: str) -> ValidationError:
@@ -135,6 +135,12 @@ class QtResidencyController:
         self._start_recording = None
         self._end_recording = None
         self._recording_state = None
+        self._close_action = WindowCloseAction.EXIT
+        self._minimize_to_tray = False
+        self._window = None
+        self._open_callback = None
+        self._quit_callback = None
+        self._availability_timer = None
 
     @property
     def quit_requested(self) -> bool:
@@ -147,6 +153,18 @@ class QtResidencyController:
         open_callback: Callable[[], None] | None = None,
         quit_callback: Callable[[], None] | None = None,
     ) -> None:
+        self._window = parent
+        self._open_callback = open_callback or parent.show
+        self._quit_callback = quit_callback or self.request_quit
+        self._availability_timer = QTimer(parent)
+        self._availability_timer.setInterval(5_000)
+        self._availability_timer.timeout.connect(self.should_keep_resident)
+        self.refresh()
+
+    def _ensure_tray_icon(self) -> None:
+        parent = self._window
+        if parent is None or not isValid(parent):
+            return
         if self._tray_icon is None and self._tray_available():
             icon = parent.windowIcon()
             if icon.isNull():
@@ -154,9 +172,9 @@ class QtResidencyController:
             self._tray_icon = QSystemTrayIcon(icon, parent)
             menu = QMenu(parent)
             open_action = QAction(_("Open"), parent)
-            open_action.triggered.connect(open_callback or parent.show)
+            open_action.triggered.connect(self._open_callback)
             quit_action = QAction(_("Quit"), parent)
-            quit_action.triggered.connect(quit_callback or self.request_quit)
+            quit_action.triggered.connect(self._quit_callback)
             menu.addAction(open_action)
             menu.addSeparator()
             self._start_action = menu.addAction(_("Start recording"))
@@ -168,9 +186,8 @@ class QtResidencyController:
             menu.aboutToShow.connect(self.update_recording_actions)
             self._tray_icon.setContextMenu(menu)
             self._tray_icon.activated.connect(
-                lambda reason: self._handle_activated(reason, open_callback or parent.show)
+                lambda reason: self._handle_activated(reason, self._open_callback)
             )
-        self.refresh()
 
     def bind_recording(self, *, start_callback, end_callback, state_probe):
         self._start_recording = start_callback
@@ -197,16 +214,29 @@ class QtResidencyController:
         self.update_recording_actions()
 
     def refresh(self) -> ResidencyState | None:
+        was_resident = self._last_keep_resident
         self.update_recording_actions()
         state = self._view_model.load()
         if not state.ok or state.value is None:
             self._last_keep_resident = False
             self._set_quit_on_last_window_closed(True)
+            if was_resident:
+                self._restore_hidden_window()
             return None
+        self._close_action = state.value.close_action
+        self._minimize_to_tray = state.value.minimize_to_tray
+        self._ensure_tray_icon()
         self._last_keep_resident = bool(
             state.value.keep_resident and self._tray_available()
         )
-        self._set_quit_on_last_window_closed(not self._last_keep_resident)
+        self._set_quit_on_last_window_closed(not self.should_hide_on_close())
+        if self._availability_timer is not None:
+            if self._last_keep_resident:
+                self._availability_timer.start()
+            else:
+                self._availability_timer.stop()
+        if was_resident and not self._last_keep_resident:
+            self._restore_hidden_window()
         if self._tray_icon is not None:
             self._tray_icon.setToolTip(_("WorkLogger"))
             if self._last_keep_resident:
@@ -219,11 +249,27 @@ class QtResidencyController:
         if self._last_keep_resident and not self._tray_available():
             self._last_keep_resident = False
             self._set_quit_on_last_window_closed(True)
+            if self._availability_timer is not None:
+                self._availability_timer.stop()
+            self._restore_hidden_window()
         return self._last_keep_resident
+
+    def should_hide_on_close(self) -> bool:
+        return self.should_keep_resident() and self._close_action == WindowCloseAction.HIDE
+
+    def should_hide_on_minimize(self) -> bool:
+        return self.should_keep_resident() and self._minimize_to_tray
+
+    def _restore_hidden_window(self) -> None:
+        if (not self._quit_requested and self._window is not None and isValid(self._window)
+                and self._window.isHidden() and self._open_callback is not None):
+            self._open_callback()
 
     def request_quit(self) -> None:
         self._quit_requested = True
         self._last_keep_resident = False
+        if self._availability_timer is not None:
+            self._availability_timer.stop()
         if self._tray_icon is not None:
             self._tray_icon.hide()
         self._set_quit_on_last_window_closed(True)

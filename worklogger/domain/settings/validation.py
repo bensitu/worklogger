@@ -9,6 +9,7 @@ from worklogger.config.constants import (
     NETWORK_PROXY_PORT_SETTING_KEY, PROFILE_AVATAR_SETTING_KEY, THEME_SETTING_KEY,
     WORK_SCHEDULE_SETTING_KEY,
     WORK_TARGET_MODE_SETTING_KEY,
+    WINDOW_CLOSE_ACTION_SETTING_KEY,
 )
 from worklogger.domain.local_model.preferences import normalize_runtime_context
 from worklogger.domain.settings.appearance import normalize_hex_color, normalize_theme
@@ -16,6 +17,7 @@ from worklogger.domain.settings.preferences import BOOLEAN_SETTING_KEYS, NUMERIC
 from worklogger.domain.settings.values import setting_bool
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.domain.settings.work_schedule import WorkSchedule
+from worklogger.domain.settings.window_behavior import WindowCloseAction
 
 
 def normalize_setting(key, value):
@@ -30,6 +32,11 @@ def normalize_setting(key, value):
         if text not in {"manual", "schedule"}:
             raise ValueError("setting_value_invalid")
         return text
+    if key == WINDOW_CLOSE_ACTION_SETTING_KEY:
+        try:
+            return WindowCloseAction(text).value
+        except ValueError:
+            raise ValueError("setting_value_invalid") from None
     if key in BOOLEAN_SETTING_KEYS:
         if text.lower() not in {"1", "0", "true", "false", "yes", "no", "on", "off"}:
             raise ValueError("setting_value_invalid")
