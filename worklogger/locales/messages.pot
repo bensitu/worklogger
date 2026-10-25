@@ -494,6 +494,9 @@ msgstr ""
 msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 msgstr ""
 
+msgid "Close and minimize actions require an enabled tray or menu bar icon."
+msgstr ""
+
 msgid "Close the note editor before continuing."
 msgstr ""
 
@@ -842,7 +845,7 @@ msgstr ""
 msgid "Enable local model"
 msgstr ""
 
-msgid "Enable menu bar"
+msgid "Enable menu bar icon"
 msgstr ""
 
 msgid "Enable the local model to use text processing."
@@ -1160,6 +1163,9 @@ msgstr ""
 msgid "Hide this type from new records? Existing records will not change."
 msgstr ""
 
+msgid "Hide when minimized"
+msgstr ""
+
 msgid "Historical"
 msgstr ""
 
@@ -1296,6 +1302,9 @@ msgid "Keep files and create a new database"
 msgstr ""
 
 msgid "Keep restored database"
+msgstr ""
+
+msgid "Keep running in background"
 msgstr ""
 
 msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
@@ -2786,6 +2795,9 @@ msgstr ""
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr ""
 
+msgid "The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."
+msgstr ""
+
 msgid "The user ID cannot contain invisible formatting or control characters."
 msgstr ""
 
@@ -3240,6 +3252,9 @@ msgid "Welcome to WorkLogger"
 msgstr ""
 
 msgid "Welcome!"
+msgstr ""
+
+msgid "When closing the window"
 msgstr ""
 
 msgid "Window"

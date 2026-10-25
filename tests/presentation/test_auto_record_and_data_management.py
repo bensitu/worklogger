@@ -240,7 +240,8 @@ class AutoRecordDataManagementPresentationTests(unittest.TestCase):
                     self.assertFalse(controller.should_hide_on_minimize())
                     application.setQuitOnLastWindowClosed.assert_called_with(True)
                     availability["tray"] = True
-                    controller.refresh()
+                    controller._availability_timer.timeout.emit()
+                    self.assertTrue(controller.should_keep_resident())
                     window.hide()
                     repository.set(1, residency_setting_key(platform), "0")
                     controller.refresh()

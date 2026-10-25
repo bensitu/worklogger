@@ -130,6 +130,7 @@ class QtResidencyController:
         self._tray_icon: QSystemTrayIcon | None = None
         self._quit_requested = False
         self._last_keep_resident = False
+        self._residency_enabled = False
         self._start_action = None
         self._end_action = None
         self._start_recording = None
@@ -219,19 +220,23 @@ class QtResidencyController:
         state = self._view_model.load()
         if not state.ok or state.value is None:
             self._last_keep_resident = False
+            self._residency_enabled = False
             self._set_quit_on_last_window_closed(True)
+            if self._availability_timer is not None:
+                self._availability_timer.stop()
+            if self._tray_icon is not None:
+                self._tray_icon.hide()
             if was_resident:
                 self._restore_hidden_window()
             return None
         self._close_action = state.value.close_action
         self._minimize_to_tray = state.value.minimize_to_tray
         self._ensure_tray_icon()
-        self._last_keep_resident = bool(
-            state.value.keep_resident and self._tray_available()
-        )
+        self._residency_enabled = state.value.keep_resident
+        self.should_keep_resident()
         self._set_quit_on_last_window_closed(not self.should_hide_on_close())
         if self._availability_timer is not None:
-            if self._last_keep_resident:
+            if self._residency_enabled:
                 self._availability_timer.start()
             else:
                 self._availability_timer.stop()
@@ -246,12 +251,16 @@ class QtResidencyController:
         return state.value
 
     def should_keep_resident(self) -> bool:
-        if self._last_keep_resident and not self._tray_available():
-            self._last_keep_resident = False
-            self._set_quit_on_last_window_closed(True)
-            if self._availability_timer is not None:
-                self._availability_timer.stop()
-            self._restore_hidden_window()
+        available = self._residency_enabled and not self._quit_requested and self._tray_available()
+        if available != self._last_keep_resident:
+            self._last_keep_resident = available
+            self._set_quit_on_last_window_closed(not (available and self._close_action == WindowCloseAction.HIDE))
+            if available:
+                self._ensure_tray_icon()
+                if self._tray_icon is not None:
+                    self._tray_icon.show()
+            else:
+                self._restore_hidden_window()
         return self._last_keep_resident
 
     def should_hide_on_close(self) -> bool:
@@ -267,6 +276,7 @@ class QtResidencyController:
 
     def request_quit(self) -> None:
         self._quit_requested = True
+        self._residency_enabled = False
         self._last_keep_resident = False
         if self._availability_timer is not None:
             self._availability_timer.stop()

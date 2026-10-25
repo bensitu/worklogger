@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
@@ -19,10 +17,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from worklogger.config.constants import (
-    ENABLE_MENU_BAR_SETTING_KEY,
-    ENABLE_TRAY_SETTING_KEY,
-)
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.widgets import CardFrame, SwitchButton
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
@@ -160,11 +154,3 @@ def _language_label(language: str) -> str:
         "zh_TW": _("Traditional Chinese", language="zh_TW"),
     }
     return labels.get(language, language)
-
-
-def _residency_setting_key() -> str | None:
-    if sys.platform.startswith("win"):
-        return ENABLE_TRAY_SETTING_KEY
-    if sys.platform == "darwin":
-        return ENABLE_MENU_BAR_SETTING_KEY
-    return None

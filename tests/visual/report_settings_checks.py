@@ -68,8 +68,12 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                             scroll = page.category_stack.currentWidget()
                             self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
                             for field in (page.target_mode_combo, page.manage_entry_types_button,
-                                          page.manage_work_modes_button, page.manage_projects_button):
+                                          page.manage_work_modes_button, page.manage_projects_button,
+                                          page.close_action_combo):
                                 self.assertEqual(field.width(), field.parentWidget().form_layout.contentsRect().width())
+                            row = page.minimize_to_tray_switch.parentWidget()
+                            self.assertGreater(row.width(), page.minimize_to_tray_switch.width())
+                            self.assertGreater(page.minimize_to_tray_switch.x(), row.width() / 2)
                             reminders = (page.default_break_input, page.timer_reminder_input,
                                          page.continuous_timer_reminder_input)
                             for field in reminders:

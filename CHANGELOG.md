@@ -12,6 +12,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 - A welcoming introduction before initial account setup, with clearer local account and password-recovery guidance in all supported interface languages.
 - Optional, account-specific first-use guidance highlights the recording area without shrinking the workspace. Reopen it from Settings > About in either window layout. Existing accounts are not interrupted after upgrading.
+- Independent close-window and minimize settings, with tray support on compatible Linux desktops and automatic window recovery if the tray becomes unavailable.
 
 ### Changed
 

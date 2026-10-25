@@ -92,6 +92,9 @@ class SettingsSectionState:
                     if self._residency_key == ENABLE_TRAY_SETTING_KEY
                     else state.enable_menu_bar
                 )
+                self.close_action_combo.setCurrentIndex(self.close_action_combo.findData(state.window_close_action))
+                self.minimize_to_tray_switch.set_checked(state.minimize_to_tray)
+                self.category_stack.widget(self._category_pages["general"]).refresh_window_behavior()
             self.proxy_enabled_switch.set_checked(state.network_proxy_enabled)
             self.proxy_address_line_edit.setText(state.network_proxy_address)
             self.proxy_port_line_edit.setText(state.network_proxy_port)
@@ -197,7 +200,7 @@ class SettingsSectionState:
             self.residency_switch.setAccessibleName(
                 _("Enable tray icon")
                 if self._residency_key == ENABLE_TRAY_SETTING_KEY
-                else _("Enable menu bar")
+                else _("Enable menu bar icon")
             )
 
     def _update_configuration_status(self) -> None:

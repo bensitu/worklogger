@@ -496,6 +496,9 @@ msgstr "閉じる"
 msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 msgstr "ファイルを変更せずに WorkLogger を終了します。管理者への相談や、互換性のあるバージョンで既存のデータベースを開く必要がある場合に選択してください。"
 
+msgid "Close and minimize actions require an enabled tray or menu bar icon."
+msgstr "閉じる操作と最小化の動作を変更するには、トレイまたはメニューバーのアイコンを有効にしてください。"
+
 msgid "Close the note editor before continuing."
 msgstr "続行する前にノートエディターを閉じてください。"
 
@@ -844,7 +847,7 @@ msgstr "背景画像を有効にする"
 msgid "Enable local model"
 msgstr "ローカルモデルを有効にする"
 
-msgid "Enable menu bar"
+msgid "Enable menu bar icon"
 msgstr "メニューバーアイコンを有効にする"
 
 msgid "Enable the local model to use text processing."
@@ -1162,6 +1165,9 @@ msgstr "新しい記録でこの項目を非表示にしますか？既存の記
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "新しい記録からこの種別を非表示にしますか？既存の記録は変更されません。"
 
+msgid "Hide when minimized"
+msgstr "最小化時にウィンドウを非表示にする"
+
 msgid "Historical"
 msgstr "過去の記録"
 
@@ -1299,6 +1305,9 @@ msgstr "元のファイルを保持して新規作成"
 
 msgid "Keep restored database"
 msgstr "復元後のデータベースを使用"
+
+msgid "Keep running in background"
+msgstr "バックグラウンドで実行を続ける"
 
 msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
 msgstr "現在のデータベースとジャーナルファイルを別の復旧フォルダーに保持し、空のデータベースと新しいアカウントを作成します。既存の記録は自動で取り込まれません。"
@@ -2788,6 +2797,9 @@ msgstr "システム時刻がログインプロバイダーと異なります。
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "勤務表にこの形式で表せない内容があります。出力先ファイルは変更されていません。"
 
+msgid "The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."
+msgstr "トレイまたはメニューバーのアイコンを利用できません。ウィンドウを閉じるとアプリが終了し、最小化にはシステム標準の動作が適用されます。"
+
 msgid "The user ID cannot contain invisible formatting or control characters."
 msgstr "ユーザー ID に不可視の書式文字や制御文字は使用できません。"
 
@@ -3243,6 +3255,9 @@ msgstr "WorkLogger へようこそ"
 
 msgid "Welcome!"
 msgstr "ようこそ！"
+
+msgid "When closing the window"
+msgstr "ウィンドウを閉じるとき"
 
 msgid "Window"
 msgstr "ウィンドウ"

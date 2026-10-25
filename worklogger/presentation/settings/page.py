@@ -34,9 +34,7 @@ from worklogger.presentation.settings.sections.account import AccountSection
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.ai import AISection
 from worklogger.presentation.settings.sections.appearance import AppearanceSection
-from worklogger.presentation.settings.sections.common import (
-    _residency_setting_key,
-)
+from worklogger.presentation.platform_integration import residency_setting_key
 from worklogger.presentation.settings.sections.data import DataSection
 from worklogger.presentation.settings.sections.general import GeneralSection
 from worklogger.presentation.settings.sections.network import NetworkSection
@@ -109,7 +107,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._saved_state_timer.setSingleShot(True)
         self._saved_state_timer.timeout.connect(self._reload_saved_state)
         self._busy_jobs: set[str] = set()
-        self._residency_key = _residency_setting_key()
+        self._residency_key = residency_setting_key()
         self._category_pages: dict[str, int] = {}
         self._custom_color = "#4f8ef7"
         self._local_model_ready = False

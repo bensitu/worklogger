@@ -29,6 +29,8 @@ from worklogger.config.constants import (
     DEFAULT_BREAK_HOURS_SETTING_KEY,
     ENABLE_MENU_BAR_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
+    WINDOW_CLOSE_ACTION_SETTING_KEY,
+    MINIMIZE_TO_TRAY_SETTING_KEY,
     EXTERNAL_MODEL_BASE_URL_SETTING_KEY,
     EXTERNAL_MODEL_ENABLED_SETTING_KEY,
     EXTERNAL_MODEL_NAME_SETTING_KEY,
@@ -74,6 +76,7 @@ from worklogger.domain.settings.preferences import (
 )
 from worklogger.domain.settings.values import setting_bool, setting_text
 from worklogger.domain.settings.work_schedule import WorkSchedule
+from worklogger.domain.settings.window_behavior import WindowCloseAction
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.languages import normalize_language
 from worklogger.domain.shared.result import Result
@@ -128,6 +131,8 @@ class SettingsState:
     show_recent_context: bool = True
     work_schedule: WorkSchedule = WorkSchedule()
     work_target_mode: str = "manual"
+    window_close_action: str = "hide"
+    minimize_to_tray: bool = True
 
 
 class SettingsViewModel:
@@ -255,6 +260,8 @@ class SettingsViewModel:
                 week_start_monday=setting_bool(values[WEEK_START_MONDAY_SETTING_KEY], False),
                 enable_tray=setting_bool(values[ENABLE_TRAY_SETTING_KEY], False),
                 enable_menu_bar=setting_bool(values[ENABLE_MENU_BAR_SETTING_KEY], False),
+                window_close_action=WindowCloseAction.from_setting(values[WINDOW_CLOSE_ACTION_SETTING_KEY]).value,
+                minimize_to_tray=setting_bool(values[MINIMIZE_TO_TRAY_SETTING_KEY], True),
                 network_proxy_enabled=setting_bool(
                     values[NETWORK_PROXY_ENABLED_SETTING_KEY],
                     False,

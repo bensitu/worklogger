@@ -163,12 +163,17 @@ class PersonalBackupTests(unittest.TestCase):
         self.personal = SQLitePersonalData(self.factory, self.owner)
 
     def test_snapshot_contains_only_portable_owned_data_and_restores_without_credentials(self):
+        with self.factory.transaction(write=True) as connection:
+            connection.executemany("INSERT INTO settings(user_id,key,value) VALUES(?,?,?)", (
+                (self.owner, "window_close_action", "exit"), (self.owner, "minimize_to_tray", "0")))
         document = self.personal.capture()
         self.assertIn(b"Personal work", document)
         self.assertNotIn(b"Private other work", document)
         self.assertNotIn(b"never-upload", document)
         self.assertNotIn(b"password_hash", document)
         self.assertNotIn(b"local-cloud-settings", document)
+        self.assertNotIn(b"window_close_action", document)
+        self.assertNotIn(b"minimize_to_tray", document)
         record = self.repository.list_for_day(self.owner, date(2026, 10, 18))[0]
         self.repository.save_entry(replace(record, note="Later work"))
         before = self.personal.capture()
@@ -179,6 +184,8 @@ class PersonalBackupTests(unittest.TestCase):
         self.assertEqual(self.repository.list_for_day(self.other, date(2026, 10, 18))[0].note, "Private other work")
         with self.factory.connection() as connection:
             self.assertEqual(connection.execute("SELECT value FROM settings WHERE user_id=? AND key='secret:ai_api_key'", (self.owner,)).fetchone()[0], "never-upload")
+            self.assertEqual(connection.execute("SELECT value FROM settings WHERE user_id=? AND key='window_close_action'", (self.owner,)).fetchone()[0], "exit")
+            self.assertEqual(connection.execute("SELECT value FROM settings WHERE user_id=? AND key='minimize_to_tray'", (self.owner,)).fetchone()[0], "0")
 
     def test_restore_rejects_stale_confirmation_and_rolls_back_invalid_relationships(self):
         document = self.personal.capture()

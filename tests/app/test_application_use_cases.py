@@ -252,6 +252,17 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertEqual(result.error.code, "setting_value_invalid")
         self.assertIsNone(repository.get(1, "theme"))
 
+    def test_window_preferences_validate_actions_without_overwriting_saved_choices(self):
+        repository = MemorySettingsRepository()
+        handler = SetSettingHandler(repository)
+        for action in ("hide", "exit"):
+            self.assertTrue(handler.handle(SetSettingCommand(1, "window_close_action", action)).ok)
+            self.assertEqual(repository.get(1, "window_close_action"), action)
+        self.assertFalse(handler.handle(SetSettingCommand(1, "window_close_action", "unknown")).ok)
+        self.assertEqual(repository.get(1, "window_close_action"), "exit")
+        self.assertTrue(handler.handle(SetSettingCommand(1, "minimize_to_tray", "false")).ok)
+        self.assertEqual(repository.get(1, "minimize_to_tray"), "0")
+
     def test_auth_register_login_remember_change_and_reset(self) -> None:
         credentials = MemoryAuthRepository()
         failures = MemoryLoginFailures()

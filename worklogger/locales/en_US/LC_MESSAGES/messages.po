@@ -496,6 +496,9 @@ msgstr "Close"
 msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 msgstr "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 
+msgid "Close and minimize actions require an enabled tray or menu bar icon."
+msgstr "Close and minimize actions require an enabled tray or menu bar icon."
+
 msgid "Close the note editor before continuing."
 msgstr "Close the note editor before continuing."
 
@@ -844,8 +847,8 @@ msgstr "Enable background image"
 msgid "Enable local model"
 msgstr "Enable local model"
 
-msgid "Enable menu bar"
-msgstr "Enable menu bar"
+msgid "Enable menu bar icon"
+msgstr "Enable menu bar icon"
 
 msgid "Enable the local model to use text processing."
 msgstr "Enable the local model to use text processing."
@@ -1162,6 +1165,9 @@ msgstr "Hide this item from new records? Existing records will not change."
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "Hide this type from new records? Existing records will not change."
 
+msgid "Hide when minimized"
+msgstr "Hide when minimized"
+
 msgid "Historical"
 msgstr "Historical"
 
@@ -1299,6 +1305,9 @@ msgstr "Keep files and create a new database"
 
 msgid "Keep restored database"
 msgstr "Keep restored database"
+
+msgid "Keep running in background"
+msgstr "Keep running in background"
 
 msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
 msgstr "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
@@ -2788,6 +2797,9 @@ msgstr "The system clock differs from the sign-in provider. Check your device da
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 
+msgid "The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."
+msgstr "The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."
+
 msgid "The user ID cannot contain invisible formatting or control characters."
 msgstr "The user ID cannot contain invisible formatting or control characters."
 
@@ -3243,6 +3255,9 @@ msgstr "Welcome to WorkLogger"
 
 msgid "Welcome!"
 msgstr "Welcome!"
+
+msgid "When closing the window"
+msgstr "When closing the window"
 
 msgid "Window"
 msgstr "Window"

@@ -496,6 +496,9 @@ msgstr "關閉"
 msgid "Close WorkLogger without changing any files. Use this if you need help from your administrator or a compatible version to access the existing database."
 msgstr "關閉 WorkLogger，不變更任何檔案。若需要管理員協助，或需要使用相容版本開啟原資料庫，請選擇此項。"
 
+msgid "Close and minimize actions require an enabled tray or menu bar icon."
+msgstr "關閉與最小化行為需要先啟用系統匣或選單列圖示。"
+
 msgid "Close the note editor before continuing."
 msgstr "請先關閉筆記編輯器再繼續。"
 
@@ -844,7 +847,7 @@ msgstr "啟用背景圖片"
 msgid "Enable local model"
 msgstr "啟用本機模型"
 
-msgid "Enable menu bar"
+msgid "Enable menu bar icon"
 msgstr "啟用選單列圖示"
 
 msgid "Enable the local model to use text processing."
@@ -1162,6 +1165,9 @@ msgstr "在新紀錄中隱藏此項目？現有紀錄不會改變。"
 msgid "Hide this type from new records? Existing records will not change."
 msgstr "在新記錄中停用此類型？既有記錄不會改變。"
 
+msgid "Hide when minimized"
+msgstr "最小化時隱藏視窗"
+
 msgid "Historical"
 msgstr "歷史紀錄"
 
@@ -1299,6 +1305,9 @@ msgstr "保留原檔案並建立新資料庫"
 
 msgid "Keep restored database"
 msgstr "保留還原後的資料庫"
+
+msgid "Keep running in background"
+msgstr "在背景繼續執行"
 
 msgid "Keep the current database and its journal files in a separate recovery folder, then start with an empty database and create a new account. Existing records are not imported."
 msgstr "將目前資料庫及其日誌檔案保留在獨立的復原資料夾中，再建立空白資料庫並設定新帳戶。原有記錄不會自動匯入。"
@@ -2788,6 +2797,9 @@ msgstr "系統時間與登入提供者不一致。請檢查裝置的日期和時
 msgid "The timesheet contains content that cannot be represented in this format. The destination file is unchanged."
 msgstr "工時表含有此格式無法表示的內容，目標檔案未改變。"
 
+msgid "The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."
+msgstr "系統匣或選單列圖示無法使用。關閉視窗將結束應用程式，最小化則採用系統預設行為。"
+
 msgid "The user ID cannot contain invisible formatting or control characters."
 msgstr "使用者 ID 不能包含不可見的格式字元或控制字元。"
 
@@ -3243,6 +3255,9 @@ msgstr "歡迎使用 WorkLogger"
 
 msgid "Welcome!"
 msgstr "歡迎！"
+
+msgid "When closing the window"
+msgstr "關閉視窗時"
 
 msgid "Window"
 msgstr "視窗"

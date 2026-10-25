@@ -465,9 +465,11 @@ backups, and application-side identity requests after sign-in. They do not chang
 the operating system or browser proxy; authentication before account selection
 uses direct HTTPS. See [network routing](configuration.md#network) for boundaries.
 
-On supported platforms, enabling tray/menu-bar residency keeps a closed window
-available through its icon. The menu can start a timer when idle or end an active
-timer.
+**Settings > General > Application behavior** separates the tray icon from window actions. Windows and supported Linux desktops use a system tray icon; macOS uses a menu bar icon. With the icon enabled, choose whether closing the main window exits the application or keeps it running in the background. Independently choose whether minimizing hides the window through that icon. With hiding disabled, minimizing follows the operating system's normal behavior, including the Dock on macOS.
+
+Existing accounts retain the previous defaults: with the icon enabled, closing and minimizing hide the window. These preferences are account-specific and remain local to the device; personal cloud restores do not replace them. No database conversion is needed for these additional preferences.
+
+The icon menu can reopen the main window, start or end a timer, and explicitly quit the application. Quit, including Command-Q on macOS, exits regardless of the close-window preference and retains existing checks for unsaved changes. Linux support depends on the desktop session providing a compatible tray host. If the icon is unavailable, the related controls are disabled, closing exits, and minimizing uses the system default. If the tray becomes unavailable while a window is hidden, the application checks periodically and restores the window.
 
 ## Backups and Updates
 

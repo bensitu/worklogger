@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSizePolicy,
+    QSystemTrayIcon,
 )
 
 from worklogger.config.constants import (
@@ -16,6 +17,8 @@ from worklogger.config.constants import (
     TIMER_REMINDER_HOURS_SETTING_KEY,
     CONTINUOUS_TIMER_REMINDER_HOURS_SETTING_KEY,
     ENABLE_TRAY_SETTING_KEY,
+    WINDOW_CLOSE_ACTION_SETTING_KEY,
+    MINIMIZE_TO_TRAY_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
     WORK_SCHEDULE_SETTING_KEY,
     WORK_TARGET_MODE_SETTING_KEY,
@@ -27,12 +30,14 @@ from worklogger.config.constants import (
     WEEK_START_MONDAY_SETTING_KEY,
 )
 from worklogger.infrastructure.i18n import _
+from worklogger.domain.settings.window_behavior import WindowCloseAction
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _hours_input,
     _SettingsScrollPage,
     _switch_line,
+    _secondary_label,
 )
 from worklogger.presentation.settings.sections.field_group import SettingsFieldGroup
 from worklogger.presentation.widgets import SwitchButton
@@ -53,6 +58,8 @@ class GeneralSection(_SettingsScrollPage):
         "overnight_switch",
         "recent_context_switch",
         "residency_switch",
+        "close_action_combo",
+        "minimize_to_tray_switch",
         "standard_hours_input",
         "week_start_switch",
         "manage_entry_types_button",
@@ -201,6 +208,8 @@ class GeneralSection(_SettingsScrollPage):
         page.layout().addWidget(card)
 
         self.residency_switch: SwitchButton | None = None
+        self.close_action_combo: QComboBox | None = None
+        self.minimize_to_tray_switch: SwitchButton | None = None
         if actions.residency_key:
             card = _card_with_form(_("Application behavior"))
             form = card.form_layout
@@ -211,9 +220,27 @@ class GeneralSection(_SettingsScrollPage):
             label = (
                 _("Enable tray icon")
                 if actions.residency_key == ENABLE_TRAY_SETTING_KEY
-                else _("Enable menu bar")
+                else _("Enable menu bar icon")
             )
             form.addRow(_switch_line(label, self.residency_switch))
+            self.close_action_combo = QComboBox()
+            self.close_action_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            self.close_action_combo.setAccessibleName(_("When closing the window"))
+            self.close_action_combo.addItem(_("Exit application"), WindowCloseAction.EXIT.value)
+            self.close_action_combo.addItem(_("Keep running in background"), WindowCloseAction.HIDE.value)
+            self.close_action_combo.currentIndexChanged.connect(
+                lambda: actions.set_text(WINDOW_CLOSE_ACTION_SETTING_KEY, self.close_action_combo.currentData()))
+            form.addRow(_("When closing the window"), self.close_action_combo)
+            self.minimize_to_tray_switch = SwitchButton()
+            self.minimize_to_tray_switch.setAccessibleName(_("Hide when minimized"))
+            self.minimize_to_tray_switch.toggled.connect(
+                lambda enabled: actions.set_bool(MINIMIZE_TO_TRAY_SETTING_KEY, enabled))
+            form.addRow(_switch_line(_("Hide when minimized"), self.minimize_to_tray_switch))
+            self._window_behavior_form = form
+            self._window_behavior_hint = _secondary_label("")
+            form.addRow(self._window_behavior_hint)
+            self.residency_switch.toggled.connect(self.refresh_window_behavior)
+            self.refresh_window_behavior()
             page.layout().addWidget(card)
         for control in (self.target_mode_combo, self.manage_entry_types_button,
                         self.manage_work_modes_button, self.manage_projects_button):
@@ -223,3 +250,21 @@ class GeneralSection(_SettingsScrollPage):
     def _update_target_visibility(self, *_args):
         visible = self.target_mode_combo.currentData() == "manual"
         self._target_form.setRowVisible(self.monthly_target_input, visible)
+
+    def refresh_window_behavior(self, *_args):
+        if self.residency_switch is None:
+            return
+        available = QSystemTrayIcon.isSystemTrayAvailable()
+        self.residency_switch.setEnabled(available)
+        enabled = available and self.residency_switch.isChecked()
+        self.close_action_combo.setEnabled(enabled)
+        self._window_behavior_form.labelForField(self.close_action_combo).setEnabled(enabled)
+        self.minimize_to_tray_switch.parentWidget().setEnabled(enabled)
+        hint = (_("Close and minimize actions require an enabled tray or menu bar icon.") if available else
+                _("The tray or menu bar icon is unavailable. Closing exits the application; minimizing uses the system default."))
+        self._window_behavior_hint.setText(hint)
+        self.residency_switch.setToolTip("" if available else hint)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.refresh_window_behavior()

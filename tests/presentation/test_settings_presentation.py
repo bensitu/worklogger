@@ -76,6 +76,42 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 
 class SettingsPresentationTests(unittest.TestCase):
+    def test_window_preferences_persist_independently_and_unavailable_trays_preserve_choices(self):
+        from worklogger.presentation.platform_integration import residency_setting_key
+
+        for platform in ("win32", "darwin", "linux"):
+            key = residency_setting_key(platform)
+            with (self.subTest(platform=platform),
+                  patch("worklogger.presentation.settings.page.residency_setting_key", return_value=key),
+                  patch("worklogger.presentation.settings.sections.general.QSystemTrayIcon.isSystemTrayAvailable", return_value=True) as available):
+                repository = MemorySettingsRepository()
+                page = SettingsPage(_view_model(repository))
+                self.addCleanup(page.deleteLater)
+                self.assertTrue(page.refresh())
+                self.assertFalse(page.close_action_combo.isEnabled())
+                page.residency_switch.click()
+                self._app.processEvents()
+                self.assertTrue(page.close_action_combo.isEnabled())
+                self.assertTrue(page.minimize_to_tray_switch.isChecked())
+                page.close_action_combo.setCurrentIndex(page.close_action_combo.findData("exit"))
+                page.minimize_to_tray_switch.click()
+                self._app.processEvents()
+                self.assertEqual(repository.get(1, key), "1")
+                self.assertEqual(repository.get(1, "window_close_action"), "exit")
+                self.assertEqual(repository.get(1, "minimize_to_tray"), "0")
+                available.return_value = False
+                self.assertTrue(page.refresh())
+                self.assertFalse(page.residency_switch.isEnabled())
+                self.assertFalse(page.close_action_combo.isEnabled())
+                self.assertFalse(page.minimize_to_tray_switch.isEnabled())
+                self.assertTrue(page.residency_switch.isChecked())
+                self.assertEqual(page.close_action_combo.currentData(), "exit")
+                self.assertFalse(page.minimize_to_tray_switch.isChecked())
+                available.return_value = True
+                self.assertTrue(page.refresh())
+                self.assertTrue(page.residency_switch.isEnabled())
+                self.assertTrue(page.close_action_combo.isEnabled())
+
     def test_state_refresh_preserves_focused_text_and_tracks_cloud_operations(self):
         from PySide6.QtTest import QTest
         application = _app()
