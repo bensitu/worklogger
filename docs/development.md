@@ -190,6 +190,8 @@ must still update wrapping and minimum heights.
 Settings containers and responsive field, half-width, and action groups live in `presentation/settings/sections/layouts.py`. Reuse their spacing and wrapping rules rather than fixing widths in individual pages. Field labels appear above their inputs; switches pair a wrapping label with a right-aligned control. Action groups fall back to fewer columns when translated captions need more space. Network address and port fields retain their weighted columns when space permits.
 
 `SettingsContainer` uses `surface_role="transparent"`; object names describe the container's purpose rather than supplying repeated background rules. Section titles use the shared `section_heading` role. Standard read-only line edits use the common read-only input rule, while disabled overrides remain later in the stylesheet. Settings reuse an unchanged color-swatch icon instead of repainting it on every state refresh.
+
+Run `python -m unittest tests.visual.settings_checks` to verify every settings category in the supported languages, both color modes, solid and translucent materials, and narrow through wide windows. These rendering checks are opt-in and use synthetic settings without network access or account data.
 Shared sRGB calculations and color mixing belong to
 `theme/color_contrast.py`, not individual widgets or theme definitions.
 
