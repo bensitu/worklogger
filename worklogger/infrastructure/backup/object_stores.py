@@ -210,6 +210,7 @@ class S3BackupStore(ConditionalObjectStore):
             raise ConnectionError("cloud_connection_failed") from None
 
     def get(self, key, *, limit):
+        from botocore.exceptions import BotoCoreError
         response = self._call("get_object", key)
         if response is None:
             return None
@@ -221,6 +222,8 @@ class S3BackupStore(ConditionalObjectStore):
             if len(data) > limit:
                 raise ValueError("cloud_backup_too_large")
             return StoredObject(data, response.get("ETag", ""))
+        except BotoCoreError:
+            raise ConnectionError("cloud_connection_failed") from None
         finally:
             body.close()
 

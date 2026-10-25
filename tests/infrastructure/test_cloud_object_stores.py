@@ -65,7 +65,7 @@ class CloudObjectStoreTests(unittest.TestCase):
         self.assertEqual(store.get("sample", limit=32).data, b"content")
 
     def test_s3_confirms_an_upload_when_its_response_is_lost(self):
-        from botocore.exceptions import EndpointConnectionError
+        from botocore.exceptions import EndpointConnectionError, ReadTimeoutError
         client = Mock()
         client.put_object.side_effect = EndpointConnectionError(endpoint_url="https://storage.example")
         stream = io.BytesIO(b"content")
@@ -74,6 +74,15 @@ class CloudObjectStoreTests(unittest.TestCase):
         store.put("sample", b"content", expected_etag=None)
         client.put_object.assert_called_once()
         self.assertTrue(stream.closed)
+        client.reset_mock(side_effect=True)
+        failed_body = Mock()
+        failed_body.read.side_effect = ReadTimeoutError(endpoint_url="https://storage.example")
+        client.get_object.return_value = {"Body": failed_body, "ContentLength": 7}
+        client.put_object.side_effect = [EndpointConnectionError(endpoint_url="https://storage.example"), None]
+        with patch("worklogger.infrastructure.backup.object_stores.sleep"):
+            store.put("sample", b"content", expected_etag=None)
+        self.assertEqual(client.put_object.call_count, 2)
+        failed_body.close.assert_called_once()
 
     def test_webdav_retries_reads_but_does_not_repeat_an_upload_already_published(self):
         server = WebDAVServer()

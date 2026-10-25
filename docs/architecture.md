@@ -234,6 +234,8 @@ Business operations, long-running service requests, and glass rendering use
 separate owned thread pools. Glass rendering is limited to two workers; shutdown
 cancels and drains all pools. Browser authorization and local model transfers use a separate two-worker pool so waiting for a browser or downloading a model does not occupy interactive AI workers.
 
+Report, analytics, identity, and template dialogs share serialized operation handling. Desktop composition supplies the existing application job runner; dialogs capture input on the UI thread, perform storage and export operations on workers, and apply owner-scoped results on the UI thread. Closing is deferred while a dialog operation is active.
+
 Cancellation is cooperative. Controllers reject stale results and completions
 for disposed owners; cancellation does not forcibly stop a native call.
 CSV and calendar imports check cancellation during parsing and before writing.

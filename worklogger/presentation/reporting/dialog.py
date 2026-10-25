@@ -31,8 +31,8 @@ from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.text_review import TextReviewTask
-from worklogger.presentation.job_runner import owned_callback
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
+from worklogger.presentation.dialog_operations import DialogOperations
 
 
 def confirm_report_overwrite(parent: QWidget) -> bool:
@@ -53,7 +53,6 @@ class ReportTemplateDialog(QDialog):
         self._view_model = view_model
         self._report_type = report_type
         self._saved_template = ""
-        self._runner, self._busy = job_runner, False
         self.setObjectName("report_template_dialog")
         self.setWindowTitle(_("Templates"))
         apply_window_icon(self)
@@ -92,6 +91,11 @@ class ReportTemplateDialog(QDialog):
             button.setProperty("dialog_action", True)
         row.addWidget(self.close_button)
         layout.addLayout(row)
+        self._operations = DialogOperations(self, self.status_label, job_runner=job_runner)
+
+    @property
+    def _busy(self):
+        return self._operations.is_running
 
     def refresh(self) -> bool:
         return self._run(lambda: self._view_model.load_template(self._report_type), self._show_template)
@@ -133,27 +137,12 @@ class ReportTemplateDialog(QDialog):
             apply()
 
     def _run(self, operation, completed):
-        if self._busy:
-            return False
         def complete(result):
-            self._busy = False
-            self.setEnabled(True)
             if result.ok:
                 completed(result)
             else:
                 self.status_label.setText(display_error_message(result.error))
-        if self._runner is None:
-            result = operation()
-            complete(result)
-            return result.ok
-        self._busy = True
-        self.setEnabled(False)
-        try:
-            self._runner.submit("report_template_update", lambda _token: operation(), on_complete=owned_callback(self, complete))
-        except Exception:
-            complete(Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed")))
-            return False
-        return True
+        return self._operations.run("report_template_update", operation, complete, error_code="settings_save_failed")
 
     def _update_actions(self) -> None:
         if hasattr(self, "apply_button"):
@@ -198,6 +187,7 @@ class ReportDialog(QDialog):
         self.setWindowTitle(_("Work Report"))
         apply_window_icon(self)
         self._build_ui()
+        self._operations = DialogOperations(self, self.status_label, job_runner=job_runner)
 
     @property
     def last_error(self) -> AppError | None:
@@ -211,20 +201,35 @@ class ReportDialog(QDialog):
         return False
 
     def refresh(self) -> bool:
-        ok = True
-        for report_type, editor in self._editors().items():
-            result = self._view_model.load(report_type, self._selected_day)
-            if not result.ok or result.value is None:
-                self._set_error(result.error)
-                ok = False
-                continue
-            self._states[report_type] = result.value
-            editor.setPlainText(result.value.content)
-            self._saved_content[report_type] = result.value.content
-        if ok:
+        report_types, day = tuple(self._editors()), self._selected_day
+        def load():
+            states = {}
+            for report_type in report_types:
+                result = self._view_model.load(report_type, day)
+                if not result.ok:
+                    return result
+                if result.value is None:
+                    return Result.failure(InfrastructureError("report_load_failed", "report_load_failed"))
+                states[report_type] = result.value
+            return Result.success(states)
+        def loaded(result):
+            for report_type, state in result.value.items():
+                self._states[report_type] = state
+                self._editors()[report_type].setPlainText(state.content)
+                self._saved_content[report_type] = state.content
             self._last_error = None
             self.status_label.clear()
-        return ok
+        return self._run_io("load_report", load, loaded, error_code="report_load_failed")
+
+    def _run_io(self, name, operation, completed, *, error_code):
+        if self._rewrite_task.is_running:
+            return False
+        def complete(result):
+            if not result.ok:
+                self._set_error(result.error)
+                return
+            completed(result)
+        return self._operations.run(name, operation, complete, error_code=error_code)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -312,29 +317,21 @@ class ReportDialog(QDialog):
         if state.report_id is not None:
             if content == state.content or not confirm_report_overwrite(self):
                 return
-        result = self._view_model.save(state, content)
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return
-        self._states[report_type] = result.value
-        self._saved_content[report_type] = result.value.content
-        self.status_label.setText(_("Report saved."))
-        self.saved.emit()
+        def saved(result):
+            self._states[report_type] = result.value
+            self._saved_content[report_type] = result.value.content
+            self.status_label.setText(_("Report saved."))
+            self.saved.emit()
+        self._run_io("save_report", lambda: self._view_model.save(state, content), saved, error_code="report_save_failed")
 
     def copy_markdown(self) -> None:
         QApplication.clipboard().setText(self._current_editor().toPlainText())
         self.status_label.setText(_("Copied"))
 
     def export_markdown(self, destination: Path) -> bool:
-        result = self._view_model.export_markdown(
-            destination,
-            self._current_editor().toPlainText(),
-        )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self.status_label.setText(_("Exported Markdown"))
-        return True
+        content = self._current_editor().toPlainText()
+        return self._run_io("export_report", lambda: self._view_model.export_markdown(destination, content),
+            lambda _result: self.status_label.setText(_("Exported Markdown")), error_code="markdown_export_failed")
 
     def _choose_export_path(self) -> None:
         report_type = self._current_type()
@@ -351,24 +348,17 @@ class ReportDialog(QDialog):
 
     def _save_template_current(self) -> None:
         report_type = self._current_type()
-        result = self._view_model.save_template(
-            report_type,
-            self._current_editor().toPlainText(),
-        )
-        if not result.ok:
-            self._set_error(result.error)
-            return
-        self.status_label.setText(_("Template saved."))
+        content = self._current_editor().toPlainText()
+        self._run_io("report_template_update", lambda: self._view_model.save_template(report_type, content),
+            lambda _result: self.status_label.setText(_("Template saved.")), error_code="settings_save_failed")
 
     def _reset_template_current(self) -> None:
-        result = self._view_model.reset_template(self._current_type())
-        if not result.ok:
-            self._set_error(result.error)
-            return
-        self.status_label.setText(_("Template reset."))
+        report_type = self._current_type()
+        self._run_io("report_template_update", lambda: self._view_model.reset_template(report_type),
+            lambda _result: self.status_label.setText(_("Template reset.")), error_code="settings_save_failed")
 
     def _rewrite_current(self) -> None:
-        if self._rewrite_task.is_running or not self._view_model.rewrite_available:
+        if self._operations.is_running or self._rewrite_task.is_running or not self._view_model.rewrite_available:
             return
         report_type = self._current_type()
         state = self._states.get(report_type)
@@ -403,14 +393,14 @@ class ReportDialog(QDialog):
         self.status_label.setText(display_error_message(error))
 
     def reject(self) -> None:
-        if self._rewrite_task.is_running:
+        if self._operations.is_running or self._rewrite_task.is_running:
             return
         if not self._confirm_discard_changes_if_needed():
             return
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._rewrite_task.is_running:
+        if self._operations.is_running or self._rewrite_task.is_running:
             event.ignore()
             return
         if not self._confirm_discard_changes_if_needed():

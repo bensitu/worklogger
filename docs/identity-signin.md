@@ -17,7 +17,7 @@ account recovery, then replace the old binding in Settings. Email addresses are
 never used to infer ownership. Conflicting bindings abort the upgrade and leave
 the original database and its migration snapshot available for recovery.
 
-Create the initial local administrator before using Google or Microsoft sign-in.
+The first account is the local administrator, including an account created through Google or Microsoft sign-in when self-registration is enabled. Later self-registered accounts are standard users.
 To retain existing records, sign in locally and open **Settings > Account >
 Linked identities**. Choose Link and complete authorization in the system browser.
 
@@ -33,7 +33,7 @@ browser session. If the provider cannot confirm recent authentication, an
 administrator can establish local password access before identities are changed.
 
 Later provider sign-in opens that same account. An unlinked identity creates a
-separate non-administrator account when deployment self-registration is enabled.
+separate account when deployment self-registration is enabled; it is a standard user if other accounts already exist.
 When it is disabled, an administrator must create an account, and the user must
 sign in locally and link the external identity first. Matching names or email addresses do not
 merge accounts. Unlinking the only usable sign-in method is rejected; establish a
@@ -59,6 +59,8 @@ For Microsoft, use a mobile/desktop public client with
 `http://localhost/callback` as its redirect. Enter the client ID and a concrete
 tenant ID whose registration permits the intended users. Tenant aliases such as
 `common` are rejected. A confidential web-client secret is not used.
+
+For a managed Microsoft registration, include `auth_time` in the ID token's optional claims under **Token configuration**. See Microsoft's [optional claims configuration](https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims). WorkLogger checks this signed authentication time when confirming identity changes; it does not substitute the token issue time or silently skip confirmation if the claim is absent.
 
 Manage provider consent and registration policies through the provider's
 administrative tools. WorkLogger does not provision the registration.

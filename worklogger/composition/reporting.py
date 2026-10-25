@@ -41,6 +41,7 @@ def build_analytics_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
+    *, job_runner=None,
 ) -> AnalyticsWorkflowController:
     return AnalyticsWorkflowController(
         AnalyticsViewModel(
@@ -53,7 +54,7 @@ def build_analytics_workflow(
             csv_exporter=AnalyticsCsvExporter(),
             pdf_exporter=AnalyticsPdfExporter(),
             project_handler=ProjectAnalyticsHandler(repositories.work_logs, repositories.settings),
-        )
+        ), job_runner=job_runner,
     )
 
 
@@ -85,6 +86,7 @@ def build_reports_workflow(
     user: User,
     repositories: RuntimeRepositories,
     handlers: RuntimeHandlers,
+    *, job_runner=None,
 ) -> ReportsWorkflowController:
     return ReportsWorkflowController(
         ReportEditorViewModel(
@@ -114,5 +116,5 @@ def build_reports_workflow(
             rewrite_handler=handlers.rewrite_handler,
             timesheet_export_handler=ExportTimesheetHandler(records=repositories.work_logs,
                 exporters={"xlsx": TimesheetXlsxExporter(), "pdf": TimesheetPdfExporter()}, profiles=handlers.user_profiles),
-        )
+        ), job_runner=job_runner,
     )

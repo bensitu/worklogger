@@ -30,6 +30,7 @@ from worklogger.presentation.widgets.processing_progress import ProcessingProgre
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.identity_authorization import IdentityAuthorizationRequest
 from worklogger.presentation.identity.dialogs import IdentityConfigurationDialog
+from worklogger.presentation.dialog_operations import DialogOperations
 
 
 class IdentityDialog(QDialog):
@@ -50,6 +51,7 @@ class IdentityDialog(QDialog):
         self.setWindowTitle(_("Linked identities"))
         apply_window_icon(self)
         self._build_ui()
+        self._operations = DialogOperations(self, self.status_label, job_runner=job_runner)
         self.resize(640, 420)
         self.setMinimumWidth(520)
         self._authorization_request.started.connect(lambda: self._set_busy(True))
@@ -64,10 +66,13 @@ class IdentityDialog(QDialog):
         return self._state
 
     def refresh(self) -> bool:
-        return self._set_state_result(self._view_model.load())
+        if self._authorization_request.is_running:
+            return False
+        return self._operations.run("load_identities", self._view_model.load, self._set_state_result,
+                                    error_code="identity_load_failed")
 
     def link_selected_provider(self) -> bool:
-        if self._authorization_request.is_running:
+        if self._operations.is_running or self._authorization_request.is_running:
             return False
         provider = str(self.provider_combo.currentData() or "")
         if not provider:
@@ -80,7 +85,7 @@ class IdentityDialog(QDialog):
             provider, cancellation=token, **authorization), on_complete=self._change_completed)
 
     def unlink_selected_identity(self) -> bool:
-        if self._authorization_request.is_running:
+        if self._operations.is_running or self._authorization_request.is_running:
             return False
         item = self.identity_list.currentItem()
         if item is None:
@@ -114,6 +119,8 @@ class IdentityDialog(QDialog):
             self.done(self._pending_close)
 
     def done(self, result):
+        if self._operations.is_running:
+            return
         if self._authorization_request.is_running:
             self._pending_close = result
             self._authorization_request.cancel()

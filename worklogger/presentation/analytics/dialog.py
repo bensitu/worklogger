@@ -27,6 +27,7 @@ from worklogger.presentation.widgets import ComboChart
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
 from worklogger.presentation.widgets.assets import apply_window_icon
 from worklogger.presentation.widgets.status_label import StatusLabel
+from worklogger.presentation.dialog_operations import DialogOperations
 
 
 class AnalyticsDialog(QDialog):
@@ -35,6 +36,7 @@ class AnalyticsDialog(QDialog):
         view_model: AnalyticsViewModel,
         selected_day: date,
         parent: QWidget | None = None,
+        *, job_runner=None,
     ) -> None:
         super().__init__(parent)
         self._view_model = view_model
@@ -45,13 +47,14 @@ class AnalyticsDialog(QDialog):
         self.setWindowTitle(_("Analytics"))
         apply_window_icon(self)
         self._build_ui()
+        self._operations = DialogOperations(self, self.status_label, job_runner=job_runner)
 
     @property
     def last_error(self) -> AppError | None:
         return self._last_error
 
     def refresh(self) -> bool:
-        result = self._view_model.load(
+        options = dict(
             year=self.year_input.value(),
             month=self.month_input.value(),
             scope=self.scope_combo.currentData(),
@@ -59,13 +62,29 @@ class AnalyticsDialog(QDialog):
             chart_mode=self.chart_combo.currentData(),
             include_leaves=self.include_leaves_check.isChecked(),
         )
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self.set_state(result.value)
-        self._last_error = None
-        self.status_label.clear()
-        return True
+        def loaded(result):
+            self.set_state(result.value)
+            self._last_error = None
+            self.status_label.clear()
+        return self._run_io("load_analytics", lambda: self._view_model.load(**options), loaded)
+
+    def _run_io(self, name, operation, completed):
+        def complete(result):
+            if not result.ok:
+                self._set_error(result.error)
+                return
+            completed(result)
+        return self._operations.run(name, operation, complete, error_code="analytics_load_failed")
+
+    def done(self, result):
+        if not self._operations.is_running:
+            super().done(result)
+
+    def closeEvent(self, event):
+        if self._operations.is_running:
+            event.ignore()
+        else:
+            super().closeEvent(event)
 
     def set_state(self, state: AnalyticsState) -> None:
         self._state = state
@@ -141,24 +160,20 @@ class AnalyticsDialog(QDialog):
     def export_csv(self, destination: Path) -> bool:
         if self._state is None and not self.refresh():
             return False
-        assert self._state is not None
-        result = self._view_model.export_csv(destination, self._state)
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
+        state = self._state
+        if state is None:
             return False
-        self.status_label.setText(_("Exported CSV"))
-        return True
+        return self._run_io("export_analytics", lambda: self._view_model.export_csv(destination, state),
+            lambda _result: self.status_label.setText(_("Exported CSV")))
 
     def export_pdf(self, destination: Path) -> bool:
         if self._state is None and not self.refresh():
             return False
-        assert self._state is not None
-        result = self._view_model.export_pdf(destination, self._state)
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
+        state = self._state
+        if state is None:
             return False
-        self.status_label.setText(_("Exported PDF"))
-        return True
+        return self._run_io("export_analytics", lambda: self._view_model.export_pdf(destination, state),
+            lambda _result: self.status_label.setText(_("Exported PDF")))
 
     def _choose_csv_path(self) -> None:
         path, _selected_filter = QFileDialog.getSaveFileName(

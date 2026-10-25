@@ -437,7 +437,9 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     panel.processing_progress.cancel_button.click()
                     panel.clear_button.click()
                     window.close()
-                    page = ReportsPage(ReportsViewModel(), date(2026, 5, 21), job_runner=ImmediateJobRunner())
+                    report_model = ReportsViewModel()
+                    report_model.rewrite_available = True
+                    page = ReportsPage(report_model, date(2026, 5, 21), job_runner=ImmediateJobRunner())
                     page.refresh()
                     page._rewrite_task._runner = DeferredRunner()
                     page.resize(1000, 650)

@@ -77,42 +77,60 @@ class StatusFeedbackTests(unittest.TestCase):
             dialog.deleteLater()
 
     def test_dialogs_clear_idle_status_after_load_and_error_recovery(self):
+        from worklogger.app.job_runner import CancellationToken, JobHandle
+        from worklogger.presentation.job_runner import _run_job
+        class QueuedRunner:
+            def submit(self, name, work, *, on_complete):
+                self.pending = work, on_complete
+                return JobHandle(name, lambda: None)
+            def complete(self):
+                work, callback = self.pending
+                callback(_run_job(work, CancellationToken()))
+
         day = date(2026, 5, 4)
         factories = (
-            lambda model: AnalyticsDialog(model, day),
-            lambda model: IdentityDialog(model),
-            lambda model: LocalModelsDialog(model, job_runner=ImmediateJobRunner()),
-            lambda model: UserManagementDialog(model, job_runner=ImmediateJobRunner()),
-            lambda model: ReportDialog(model, day),
+            lambda model, runner: AnalyticsDialog(model, day, job_runner=runner),
+            lambda model, runner: IdentityDialog(model, job_runner=runner),
+            lambda model, runner: LocalModelsDialog(model, job_runner=runner),
+            lambda model, runner: UserManagementDialog(model, job_runner=runner),
+            lambda model, runner: ReportDialog(model, day, job_runner=runner),
         )
         state = SimpleNamespace(content="", message="", identities=(), providers=(),
                                 inventory=SimpleNamespace(items=()))
         error = InfrastructureError("test_failure", "test_failure")
         for factory in factories:
-            model = Mock()
-            model.load.return_value = Result.success(state)
-            dialog = factory(model)
-            with self.subTest(dialog=type(dialog).__name__):
-                try:
-                    # Test feedback independently of content rendering.
-                    if hasattr(dialog, "set_state"):
-                        dialog.set_state = Mock()
-                    self.assertTrue(dialog.status_label.isHidden())
-                    self.assertTrue(dialog.refresh())
-                    self.assertEqual(dialog.status_label.text(), "")
-                    self.assertTrue(dialog.status_label.isHidden())
-                    model.load.return_value = Result.failure(error)
-                    dialog.refresh()
-                    self.assertEqual(dialog.last_error, error)
-                    self.assertFalse(dialog.status_label.isHidden())
-                    self.assertTrue(dialog.status_label.text())
-                    model.load.return_value = Result.success(state)
-                    self.assertTrue(dialog.refresh())
-                    self.assertIsNone(dialog.last_error)
-                    self.assertEqual(dialog.status_label.text(), "")
-                    self.assertTrue(dialog.status_label.isHidden())
-                finally:
-                    dialog.deleteLater()
+            for runner in (ImmediateJobRunner(), QueuedRunner()):
+                model = Mock()
+                model.load.return_value = Result.success(state)
+                dialog = factory(model, runner)
+                with self.subTest(dialog=type(dialog).__name__, runner=type(runner).__name__):
+                    try:
+                        # Test feedback independently of content rendering.
+                        if hasattr(dialog, "set_state"):
+                            dialog.set_state = Mock()
+                        self.assertTrue(dialog.status_label.isHidden())
+                        self.assertTrue(dialog.refresh())
+                        if isinstance(runner, QueuedRunner):
+                            model.load.assert_not_called()
+                            runner.complete()
+                        self.assertEqual(dialog.status_label.text(), "")
+                        self.assertTrue(dialog.status_label.isHidden())
+                        model.load.return_value = Result.failure(error)
+                        dialog.refresh()
+                        if isinstance(runner, QueuedRunner):
+                            runner.complete()
+                        self.assertEqual(dialog.last_error, error)
+                        self.assertFalse(dialog.status_label.isHidden())
+                        self.assertTrue(dialog.status_label.text())
+                        model.load.return_value = Result.success(state)
+                        self.assertTrue(dialog.refresh())
+                        if isinstance(runner, QueuedRunner):
+                            runner.complete()
+                        self.assertIsNone(dialog.last_error)
+                        self.assertEqual(dialog.status_label.text(), "")
+                        self.assertTrue(dialog.status_label.isHidden())
+                    finally:
+                        dialog.deleteLater()
 
     def test_ai_busy_feedback_clears_on_success_but_errors_remain_visible(self):
         class DeferredRunner:

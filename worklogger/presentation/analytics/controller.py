@@ -22,9 +22,10 @@ class AnalyticsWorkflowController:
         self,
         view_model: AnalyticsViewModel,
         dialog_factory: AnalyticsDialogFactory | None = None,
+        *, job_runner=None,
     ) -> None:
         self._view_model = view_model
-        self._dialog_factory = dialog_factory or AnalyticsDialog
+        self._dialog_factory = dialog_factory or (lambda model, day, parent: AnalyticsDialog(model, day, parent, job_runner=job_runner))
 
     @property
     def view_model(self) -> AnalyticsViewModel:

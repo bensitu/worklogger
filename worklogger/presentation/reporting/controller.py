@@ -29,9 +29,10 @@ class ReportsWorkflowController:
         view_model: ReportEditorViewModel,
         *,
         dialog_factory: ReportDialogFactory | None = None,
+        job_runner=None,
     ) -> None:
         self._view_model = view_model
-        self._dialog_factory = dialog_factory or ReportDialog
+        self._dialog_factory = dialog_factory or (lambda model, day, parent: ReportDialog(model, day, parent, job_runner=job_runner))
 
     @property
     def view_model(self) -> ReportEditorViewModel:
