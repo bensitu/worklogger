@@ -35,6 +35,7 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _hours_input,
+    _add_half_width_row,
     _SettingsScrollPage,
     _switch_line,
     _secondary_label,
@@ -80,7 +81,7 @@ class GeneralSection(_SettingsScrollPage):
         self.standard_hours_input.valueChanged.connect(
             lambda value: actions.set_number(STANDARD_WORK_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Daily standard hours (h)"), self.standard_hours_input)
+        _add_half_width_row(form, _("Daily standard hours (h)"), self.standard_hours_input)
 
         self.work_schedule_editor = WorkScheduleEditor()
         self.work_schedule_editor.schedule_changed.connect(lambda value: actions.set_text(WORK_SCHEDULE_SETTING_KEY, value))
@@ -99,7 +100,7 @@ class GeneralSection(_SettingsScrollPage):
         self.monthly_target_input.valueChanged.connect(
             lambda value: actions.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Monthly target (h)"), self.monthly_target_input)
+        self._monthly_target_row = _add_half_width_row(form, _("Monthly target (h)"), self.monthly_target_input)
         self._target_form = form
         self.target_mode_combo.currentIndexChanged.connect(self._update_target_visibility)
         self.target_mode_combo.currentIndexChanged.connect(
@@ -114,7 +115,7 @@ class GeneralSection(_SettingsScrollPage):
         self.default_break_input.valueChanged.connect(
             lambda value: actions.set_number(DEFAULT_BREAK_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Default break (h)"), self.default_break_input)
+        _add_half_width_row(form, _("Default break (h)"), self.default_break_input)
 
         self.timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
         self.continuous_timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
@@ -124,7 +125,7 @@ class GeneralSection(_SettingsScrollPage):
             field.setKeyboardTracking(False)
             field.setAccessibleName(caption)
             field.valueChanged.connect(lambda value, key=key: actions.set_number(key, value))
-            form.addRow(caption, field)
+            _add_half_width_row(form, caption, field)
         page.layout().addWidget(card)
         card = _card_with_form(_("Classification"))
         form = card.form_layout
@@ -249,7 +250,8 @@ class GeneralSection(_SettingsScrollPage):
 
     def _update_target_visibility(self, *_args):
         visible = self.target_mode_combo.currentData() == "manual"
-        self._target_form.setRowVisible(self.monthly_target_input, visible)
+        self._target_form.setRowVisible(self._monthly_target_row, visible)
+        self.monthly_target_input.setVisible(visible)
 
     def refresh_window_behavior(self, *_args):
         if self.residency_switch is None:

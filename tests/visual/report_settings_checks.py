@@ -76,18 +76,19 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                             self.assertGreater(page.minimize_to_tray_switch.x(), row.width() / 2)
                             reminders = (page.default_break_input, page.timer_reminder_input,
                                          page.continuous_timer_reminder_input)
-                            for field in reminders:
-                                self.assertLessEqual(field.width(), 180)
                             self.assertEqual(len({field.x() for field in reminders}), 1)
-                            self.assertLess(reminders[0].geometry().bottom(), reminders[1].y())
-                            self.assertLess(reminders[1].geometry().bottom(), reminders[2].y())
+                            rows = [field.parentWidget() for field in reminders]
+                            self.assertLess(rows[0].geometry().bottom(), rows[1].y())
+                            self.assertLess(rows[1].geometry().bottom(), rows[2].y())
                             self.assertIs(page.recent_context_switch.parentWidget().parentWidget(),
                                           page.manage_projects_button.parentWidget())
                             for field in (*reminders, page.standard_hours_input, page.monthly_target_input):
-                                form = field.parentWidget().form_layout
-                                label = form.labelForField(field)
-                                self.assertLess(label.geometry().bottom(), field.y())
-                                self.assertEqual(label.x(), field.x())
+                                row = field.parentWidget()
+                                form = row.parentWidget().form_layout
+                                label = form.labelForField(row)
+                                self.assertLess(label.geometry().bottom(), row.y())
+                                self.assertEqual(label.x(), row.x() + field.x())
+                                self.assertLessEqual(abs(field.width() - (row.width() - 12) / 2), 1)
                             self.capture(scroll.content_widget, f"{language}-general-{theme}-{dark}-{width}")
                     finally:
                         page.hide()

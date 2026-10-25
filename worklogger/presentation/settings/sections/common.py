@@ -116,9 +116,23 @@ def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     spin.setRange(minimum, maximum)
     spin.setSingleStep(step)
     spin.setMinimumWidth(120)
-    spin.setMaximumWidth(180)
     spin.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     return spin
+
+
+def _add_half_width_row(form: QFormLayout, label: str, field: QWidget) -> QWidget:
+    row = QWidget()
+    row.setObjectName("settings_field_group_widget")
+    row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+    layout.addWidget(field, 1)
+    layout.addSpacing(12)
+    layout.addStretch(1)
+    form.addRow(label, row)
+    form.labelForField(row).setBuddy(field)
+    return row
 
 
 def _readonly_line_edit(object_name: str) -> QLineEdit:
