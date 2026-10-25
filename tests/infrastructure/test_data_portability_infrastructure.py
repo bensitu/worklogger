@@ -254,6 +254,28 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.error.code if result.error else "", "backup_same_path")
 
+    def test_restore_released_database_cleans_temporary_upgrade_snapshots(self):
+        from tests.infrastructure.schema_samples import create_released_database
+        self.register_user("admin")
+        source = Path(self._tempdir.name) / "released.db"
+        create_released_database(SQLiteConnectionFactory(source))
+        result = SQLiteBackupService(self.factory, expected_username="admin").restore_database(source)
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(list(Path(self._tempdir.name).glob("*.tmp*")), [])
+
+    def test_backup_sanitization_does_not_hold_the_live_database_write_lock(self):
+        from concurrent.futures import ThreadPoolExecutor
+        self.register_user("admin")
+        original = sqlite_backup._sanitized_snapshot
+        def sanitize(source, destination):
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.register_user, "during-backup")
+                self.assertGreater(future.result(timeout=2), 0)
+            return original(source, destination)
+        with patch.object(sqlite_backup, "_sanitized_snapshot", side_effect=sanitize):
+            result = SQLiteBackupService(self.factory).backup_database(Path(self._tempdir.name) / "backup.db")
+        self.assertTrue(result.ok, result.error)
+
     def test_database_management_requires_current_administrator_identity(self) -> None:
         admin = self.register_user("administrator")
         member = self.register_user("member")

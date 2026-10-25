@@ -15,6 +15,31 @@ from worklogger.domain.worklog.models import WorkLog
 
 
 class PersonalBackupTests(unittest.TestCase):
+    def test_restore_ignores_unrecognized_settings_without_importing_secrets(self):
+        document = json.loads(self.personal.capture())
+        document["tables"]["settings"].extend((
+            {"key": "future_display_option", "value": "1"},
+            {"key": "secret:ai_api_key", "value": "excluded"}))
+        self.personal.restore(json.dumps(document).encode(), expected_digest=document_digest(self.personal.capture()),
+                              before_replace=lambda _data: None)
+        restored = self.personal.capture()
+        self.assertNotIn(b"future_display_option", restored)
+        self.assertNotIn(b"excluded", restored)
+
+    def test_local_recovery_keeps_three_archives_and_account_cleanup_is_scoped(self):
+        from pathlib import Path
+        from worklogger.infrastructure.backup.recovery import PersonalRecoveryStore, remove_account_recovery
+        root = Path(self.factory.database_path).parent / "personal-recovery"
+        store = PersonalRecoveryStore(root / str(self.owner))
+        other = PersonalRecoveryStore(root / str(self.other))(b"other account")
+        for _ in range(5):
+            latest = store(b"current account")
+        self.assertEqual(len(list(store.directory.glob("*.wlbackup"))), 3)
+        self.assertTrue(latest.is_file())
+        remove_account_recovery(self.owner, self.factory.database_path)
+        self.assertFalse(store.directory.exists())
+        self.assertTrue(other.is_file())
+
     def test_snapshot_digest_is_independent_of_setting_insertion_order(self):
         with self.factory.transaction(write=True) as connection:
             connection.execute("INSERT INTO settings(user_id,key,value) VALUES(?,'dark_mode','1')", (self.owner,))

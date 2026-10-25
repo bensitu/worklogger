@@ -11,7 +11,7 @@ from urllib.parse import quote
 from urllib.request import Request
 from uuid import uuid4
 
-from worklogger.domain.cloud_backup import StoredObject
+from worklogger.domain.cloud_backup import StoredObject, MAX_BACKUP_BYTES
 from worklogger.infrastructure.http import certificate_bundle, https_opener
 
 
@@ -28,6 +28,36 @@ def _key(value):
 
 
 class ConditionalObjectStore:
+    def _conditional_put(self, key, data, send):
+        uncertain = False
+        for attempt in range(3):
+            try:
+                return send()
+            except ValueError as error:
+                if str(error) != "cloud_conflict" or not uncertain:
+                    raise
+                if self._matches(key, data):
+                    return
+                raise
+            except (URLError, TimeoutError, ConnectionError, HTTPException):
+                uncertain = True
+                if self._matches(key, data):
+                    return
+                if attempt == 2:
+                    raise
+                sleep(0.25 * 2 ** attempt)
+
+    def _matches(self, key, data):
+        try:
+            found = self.get(key, limit=MAX_BACKUP_BYTES)
+            return found is not None and found.data == data
+        except (URLError, TimeoutError, ConnectionError, HTTPException):
+            return False
+        except ValueError as error:
+            if str(error) == "cloud_backup_too_large":
+                raise ValueError("cloud_conflict") from None
+            raise
+
     def test_connection(self):
         name = "probe-" + uuid4().hex
         created = False
@@ -76,10 +106,6 @@ class WebDAVBackupStore(ConditionalObjectStore):
             except (URLError, TimeoutError, ConnectionError, HTTPException):
                 if attempt == 2:
                     raise
-                if method == "PUT":
-                    found = self.get(key, limit=len(data))
-                    if found is not None and found.data == data:
-                        return found
                 sleep(0.25 * 2 ** attempt)
 
     def _request_once(self, method, key, *, data=None, headers=None, limit=0):
@@ -126,14 +152,14 @@ class WebDAVBackupStore(ConditionalObjectStore):
                 status = error.code
                 error.close()
                 if status != 405:
-                    raise ValueError("cloud_connection_failed") from None
+                    raise ValueError("cloud_authentication_failed" if status in {401, 403} else "cloud_connection_failed") from None
             self._collections.add(path)
 
     def put(self, key, data, *, expected_etag):
         self._prepare(key)
         headers = {"Content-Type": "application/octet-stream"}
         headers.update({"If-Match": _etag(expected_etag)} if expected_etag is not None else {"If-None-Match": "*"})
-        self._request("PUT", key, data=data, headers=headers)
+        self._conditional_put(key, data, lambda: self._request_once("PUT", key, data=data, headers=headers))
 
     def delete(self, key):
         self._request("DELETE", key)
@@ -152,11 +178,11 @@ class S3BackupStore(ConditionalObjectStore):
                 config=Config(signature_version="s3v4", connect_timeout=10, read_timeout=30,
                     proxies={"https": proxy_url} if proxy_url else {},
                     request_checksum_calculation="when_required", response_checksum_validation="when_required",
-                    retries={"max_attempts": 2, "mode": "standard"}, s3={"addressing_style": "path"}))
+                    retries={"total_max_attempts": 1, "mode": "standard"}, s3={"addressing_style": "path"}))
         self.client, self.bucket, self.prefix = client, configuration.bucket, configuration.prefix
 
     def _call(self, method, key, **kwargs):
-        from botocore.exceptions import ClientError, SSLError
+        from botocore.exceptions import BotoCoreError, ClientError, SSLError
         _key(key)
         try:
             return getattr(self.client, method)(Bucket=self.bucket, Key=self.prefix + "/" + key, **kwargs)
@@ -166,9 +192,13 @@ class S3BackupStore(ConditionalObjectStore):
                 return None
             if status in {409, 412}:
                 raise ValueError("cloud_conflict") from None
+            if status in {408, 429, 500, 502, 503, 504}:
+                raise ConnectionError("cloud_connection_failed") from None
             raise ValueError("cloud_authentication_failed" if status in {401, 403} else "cloud_connection_failed") from None
         except SSLError:
             raise ValueError("cloud_certificate_invalid") from None
+        except BotoCoreError:
+            raise ConnectionError("cloud_connection_failed") from None
 
     def get(self, key, *, limit):
         response = self._call("get_object", key)
@@ -187,8 +217,8 @@ class S3BackupStore(ConditionalObjectStore):
 
     def put(self, key, data, *, expected_etag):
         condition = {"IfMatch": _etag(expected_etag)} if expected_etag is not None else {"IfNoneMatch": "*"}
-        self._call("put_object", key, Body=data, ContentType="application/octet-stream",
-                   **condition)
+        self._conditional_put(key, data, lambda: self._call("put_object", key, Body=data,
+            ContentType="application/octet-stream", **condition))
 
     def delete(self, key):
         self._call("delete_object", key)

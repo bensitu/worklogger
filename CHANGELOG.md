@@ -22,6 +22,8 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Database backup sanitization and restore preparation avoid holding the live write lock during expensive processing. Temporary upgrade snapshots are removed after restoration.
+- Cloud publication recovers from lost responses and interrupted local state updates. Personal recovery archives have bounded retention, and supported backups can restore data while skipping unrecognized settings.
 - The first account receives administrator access when created through browser sign-in. Password confirmation for sensitive account changes respects sign-in lockouts.
 - Large daily notes can be imported from exported CSV files. Report generation respects note-sharing choices for associated historical entries, and diagnostics redact additional cloud credential fields.
 - Repeated AI polishing separates additional editing requests from source text and supports explicit formatting changes. Unchanged responses are explained without overwriting the previous result or manual edits.

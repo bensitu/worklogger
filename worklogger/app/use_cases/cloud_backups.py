@@ -98,14 +98,23 @@ class CloudBackupService:
                         or type(row.encrypted) is not bool or stamp.tzinfo is None):
                     raise ValueError("cloud_backup_invalid")
             return versions, head.etag
-        except (TypeError, KeyError, AttributeError, RecursionError):
+        except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
             raise ValueError("cloud_backup_invalid") from None
+
+    def _reconcile_state(self, versions, state):
+        pending = state.get("pending_upload", {})
+        if versions and pending and versions[0].revision == pending.get("revision"):
+            state = {key: value for key, value in state.items() if key != "pending_upload"}
+            state.update(remote_revision=versions[0].revision, local_digest=pending["local_digest"],
+                         last_success=versions[0].created_at, last_error="")
+            self.configuration.save_state(state)
+        return state
 
     @_result
     def overview(self):
         _configuration, _credentials, store = self._context()
         versions, _etag = self._head(store)
-        state = self.configuration.state()
+        state = self._reconcile_state(versions, self.configuration.state())
         digest = _digest(self.personal_data.capture())
         latest = versions[0].revision if versions else ""
         return BackupOverview(versions, digest, latest != state.get("remote_revision", ""),
@@ -115,7 +124,7 @@ class CloudBackupService:
     def upload(self, *, expected_revision=None, force=False):
         configuration, credentials, store = self._context()
         versions, etag = self._head(store)
-        state = self.configuration.state()
+        state = self._reconcile_state(versions, self.configuration.state())
         latest = versions[0].revision if versions else ""
         expected = state.get("remote_revision", "") if expected_revision is None else expected_revision
         if latest != expected or (latest != state.get("remote_revision", "") and not force):
@@ -137,6 +146,8 @@ class CloudBackupService:
         kept = tuple(row for index, row in enumerate((version,) + versions)
                      if index < minimum or datetime.fromisoformat(row.created_at) >= cutoff)[:configuration.keep_count]
         head = json.dumps({"format": 1, "versions": [asdict(row) for row in kept]}, separators=(",", ":")).encode()
+        self.configuration.save_state({**state, "pending_deletions": sorted(pending),
+            "pending_upload": {"revision": version.revision, "local_digest": _digest(document)}})
         try:
             store.put("head.json", head, expected_etag=etag)
         except ValueError as error:

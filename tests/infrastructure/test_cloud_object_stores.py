@@ -47,6 +47,34 @@ class WebDAVServer:
 
 
 class CloudObjectStoreTests(unittest.TestCase):
+    def test_webdav_retries_upload_after_failed_confirmation_read(self):
+        server = WebDAVServer()
+        puts = []
+        def transport(request, *, timeout):
+            if request.method == "PUT":
+                puts.append(True)
+                if len(puts) == 1:
+                    raise URLError("connection interrupted")
+            if request.method == "GET" and len(puts) == 1:
+                raise URLError("connection interrupted")
+            return server(request, timeout=timeout)
+        store = WebDAVBackupStore(self.configuration, self.credentials, opener=transport)
+        with patch("worklogger.infrastructure.backup.object_stores.sleep"):
+            store.put("sample", b"content", expected_etag=None)
+        self.assertEqual(len(puts), 2)
+        self.assertEqual(store.get("sample", limit=32).data, b"content")
+
+    def test_s3_confirms_an_upload_when_its_response_is_lost(self):
+        from botocore.exceptions import EndpointConnectionError
+        client = Mock()
+        client.put_object.side_effect = EndpointConnectionError(endpoint_url="https://storage.example")
+        stream = io.BytesIO(b"content")
+        client.get_object.return_value = {"Body": stream, "ContentLength": 7, "ETag": '"current"'}
+        store = S3BackupStore(replace(self.configuration, provider="s3", bucket="backups"), self.credentials, client=client)
+        store.put("sample", b"content", expected_etag=None)
+        client.put_object.assert_called_once()
+        self.assertTrue(stream.closed)
+
     def test_webdav_retries_reads_but_does_not_repeat_an_upload_already_published(self):
         server = WebDAVServer()
         dropped = {"PUT": False, "GET": False}

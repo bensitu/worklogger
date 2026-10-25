@@ -6,6 +6,7 @@ from pathlib import Path
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.security.key_store import SystemCredentialStore, trusted_keyring_backend
+from worklogger.infrastructure.backup.recovery import remove_account_recovery
 
 
 def account_credential_namespaces(user_id, database_path):
@@ -16,6 +17,7 @@ def account_credential_namespaces(user_id, database_path):
 
 def cleanup_account_credentials(user_id, database_path, *, backend=None):
     try:
+        remove_account_recovery(user_id, database_path)
         external_service, proxy_namespace = account_credential_namespaces(user_id, database_path)
         backend = backend if backend is not None else trusted_keyring_backend()
         if backend.get_password(external_service, "ai_api_key") is not None:

@@ -61,6 +61,18 @@ class MemoryPersonalData:
 
 
 class CloudBackupTests(unittest.TestCase):
+    def test_upload_recovers_its_published_revision_after_local_state_failure(self):
+        from unittest.mock import patch
+        save = self.settings.save_state
+        def fail_after_publication(state):
+            if "head.json" in self.remote.objects:
+                raise OSError("storage unavailable")
+            save(state)
+        with patch.object(self.settings, "save_state", side_effect=fail_after_publication):
+            self.assertFalse(self.service.upload().ok)
+        self.assertTrue(self.service.upload().ok)
+        self.assertNotIn("pending_upload", self.settings.state())
+
     def setUp(self):
         self.remote, self.settings, self.data = MemoryObjects(), MemoryConfiguration(), MemoryPersonalData()
         self.data.configuration = self.settings

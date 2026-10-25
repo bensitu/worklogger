@@ -139,8 +139,7 @@ local version aborts replacement. Sign in again after success to reload all view
 
 Before replacement, a private account recovery archive is written under
 `personal-recovery/<account-id>/` beside the local database. The completion
-message gives its exact path. These safety copies are local and are not deleted
-by cloud retention. Their encryption follows the current backup setting.
+message gives its exact path. The latest three local recovery archives are retained per account, independently of cloud retention. Deleting an account through user management also removes its local recovery archives. Their encryption follows the current backup setting; protect the data directory when encryption is disabled.
 
 Use **Restore local recovery copy** to select a `.wlbackup` file even when the
 cloud is offline. Enter its passphrase and confirm replacement of the current
@@ -153,5 +152,4 @@ been reviewed. Keep the source archive and passphrase until recovery is verified
 For a complete local database, including account credentials, administrators
 should use the separate **Database Backup** controls rather than personal
 cloud restoration. Back up the database before upgrading WorkLogger. Personal
-restore accepts supported document versions and rejects unknown future formats
-without replacing account data.
+restore accepts supported document versions and rejects unknown future formats without replacing account data. Unrecognized settings in a supported document are skipped; credentials and device-specific settings are never imported.

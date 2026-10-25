@@ -57,13 +57,18 @@ class SQLiteBackupService:
             return Result.failure(ValidationError("backup_same_path", "backup_same_path"))
         snapshot = None
         try:
+            self._authorize()
+            if any(Path(str(destination) + suffix).exists() for suffix in ("-wal", "-shm")):
+                raise ValueError("backup_destination_busy")
+            with tempfile.TemporaryDirectory(prefix="worklogger-backup-") as directory:
+                with self._connection_factory.connection() as connection:
+                    private = create_database_snapshot(connection, Path(directory) / "worklog.db")
+                with closing(sqlite3.connect(private)) as connection:
+                    snapshot = _sanitized_snapshot(connection, destination)
             with self._connection_factory.write_access():
                 self._authorize()
                 if any(Path(str(destination) + suffix).exists() for suffix in ("-wal", "-shm")):
                     raise ValueError("backup_destination_busy")
-                with self._connection_factory.connection() as connection:
-                    _ensure_integrity(connection, "backup_integrity_failed")
-                    snapshot = _sanitized_snapshot(connection, destination)
                 os.replace(snapshot, destination)
                 secure_database_files(destination)
         except ValueError as exc:
@@ -77,9 +82,8 @@ class SQLiteBackupService:
 
     def validate_restore_database(self, source: Path) -> Result[None]:
         try:
-            with self._connection_factory.write_access():
-                self._authorize()
-                self._validate_restore_source(Path(source))
+            self._authorize()
+            self._validate_restore_source(Path(source))
         except FileNotFoundError:
             return Result.failure(InfrastructureError("restore_source_missing", "restore_source_missing"))
         except ValueError as exc:
@@ -91,8 +95,7 @@ class SQLiteBackupService:
 
     def restore_database(self, source: Path) -> Result[None]:
         try:
-            with self._connection_factory.write_access():
-                return self._restore_database(source)
+            return self._restore_database(source)
         except Exception as error:
             return Result.failure(InfrastructureError("restore_failed", "restore_failed", {"reason": type(error).__name__}))
 
@@ -105,22 +108,21 @@ class SQLiteBackupService:
         previous = target.with_name(target.name + ".pre_restore")
         retained = None
         try:
-            with self._connection_factory.write_access():
-                self._authorize()
-                self._validate_restore_source(source)
-                if previous.exists():
-                    raise ValueError("restore_pending")
-                if target.resolve() == source.resolve():
-                    return Result.success(None)
-                with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
-                    snapshot = create_database_snapshot(connection, target)
-                staged = SQLiteConnectionFactory(snapshot)
-                MigrationRunner(staged).run_pending()
-                with staged.connection(write=True) as connection:
-                    _ensure_integrity(connection, "restore_integrity_failed")
-                    connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-                    _use_delete_journal(connection)
-                retained = self._publish_restore(snapshot, target, previous)
+            self._authorize()
+            self._validate_restore_source(source)
+            if previous.exists():
+                raise ValueError("restore_pending")
+            if target.resolve() == source.resolve():
+                return Result.success(None)
+            with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
+                snapshot = create_database_snapshot(connection, target)
+            staged = SQLiteConnectionFactory(snapshot)
+            MigrationRunner(staged).run_pending()
+            with staged.connection(write=True) as connection:
+                _ensure_integrity(connection, "restore_integrity_failed")
+                connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                _use_delete_journal(connection)
+            retained = self._publish_restore(snapshot, target, previous)
         except ValueError as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
         except Exception as exc:
@@ -128,6 +130,10 @@ class SQLiteBackupService:
         finally:
             if snapshot:
                 _remove_if_exists(snapshot)
+                for leftover in snapshot.parent.glob(snapshot.name + ".bak_upgrade_*"):
+                    _remove_if_exists(leftover)
+                for suffix in ("-wal", "-shm"):
+                    _remove_if_exists(Path(str(snapshot) + suffix))
         prune_restore_backups(target, preserve=retained)
         return Result.success(None)
 
@@ -135,6 +141,9 @@ class SQLiteBackupService:
         retained, replacement_started = None, False
         with self._connection_factory.maintenance():
             try:
+                self._authorize()
+                if previous.exists():
+                    raise ValueError("restore_pending")
                 with self._connection_factory.connection(write=True) as connection:
                     checkpoint = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
                     if checkpoint and checkpoint[0]:
@@ -173,15 +182,12 @@ class SQLiteBackupService:
 
 
 def _sanitized_snapshot(source: sqlite3.Connection, destination: Path) -> Path:
-    with tempfile.TemporaryDirectory(prefix="worklogger-backup-") as directory:
-        private = create_database_snapshot(source, Path(directory) / "worklog.db")
-        with closing(sqlite3.connect(private)) as backup:
-            backup.execute("PRAGMA secure_delete=ON")
-            backup.execute("DELETE FROM settings WHERE key IN (?, ?) OR key LIKE ?",
-                           (NETWORK_PROXY_PASSWORD_SETTING_KEY, "ai_api_key", SECRET_SETTING_PREFIX + "%"))
-            backup.commit()
-            backup.execute("VACUUM")
-            return create_database_snapshot(backup, destination)
+    source.execute("PRAGMA secure_delete=ON")
+    source.execute("DELETE FROM settings WHERE key IN (?, ?) OR key LIKE ?",
+                   (NETWORK_PROXY_PASSWORD_SETTING_KEY, "ai_api_key", SECRET_SETTING_PREFIX + "%"))
+    source.commit()
+    source.execute("VACUUM")
+    return create_database_snapshot(source, destination)
 
 
 def create_database_snapshot(source: sqlite3.Connection, destination: Path) -> Path:

@@ -70,6 +70,11 @@ class CloudBackupConfigurationStore:
             pending = state.get("pending_deletions", [])
             if not isinstance(pending, list) or any(not re.fullmatch(r"[0-9a-f]{32}", item) for item in pending):
                 raise ValueError
+            upload = state.get("pending_upload")
+            if upload is not None and (not isinstance(upload, dict) or set(upload) != {"revision", "local_digest"}
+                    or not isinstance(upload["revision"], str) or not re.fullmatch(r"[0-9a-f]{32}", upload["revision"])
+                    or not isinstance(upload["local_digest"], str) or not re.fullmatch(r"[0-9a-f]{64}", upload["local_digest"])):
+                raise ValueError
             return state
         except (ValueError, TypeError, OverflowError, RecursionError):
             logging.getLogger(__name__).warning("cloud_backup_state_invalid")

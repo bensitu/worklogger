@@ -78,14 +78,16 @@ class SQLitePersonalData:
 
     def restore(self, document, *, expected_digest, before_replace, sync_state=None):
         tables = self._parse(document)
+        previous = self.capture()
+        if document_digest(previous) != expected_digest:
+            raise ValueError("cloud_local_changed")
+        before_replace(previous)
         with self.factory.transaction(write=True) as connection:
             timer = connection.execute("SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'", (self.user_id,)).fetchone()
             if timer and timer[0]:
                 raise ValueError("cloud_timer_active")
-            previous = self._capture(connection)
-            if document_digest(previous) != expected_digest:
+            if document_digest(self._capture(connection)) != expected_digest:
                 raise ValueError("cloud_local_changed")
-            before_replace(previous)
             connection.execute("DELETE FROM entry_changes WHERE user_id=?", (self.user_id,))
             for table in reversed(_TABLES):
                 if table == "report_revisions":
@@ -133,7 +135,11 @@ class SQLitePersonalData:
                     if any(item is not None and type(item) not in (str, int, float) for item in row.values()):
                         raise ValueError("cloud_backup_invalid")
                     _json(row)
+                    if table == "settings" and isinstance(row["key"], str) and not _portable_key(row["key"]):
+                        continue
                     self._validate_row(table, row)
+                if table == "settings":
+                    tables[table] = [row for row in rows if _portable_key(row["key"])]
             return tables
         except (KeyError, TypeError, ValueError, UnicodeError, OverflowError, RecursionError):
             raise ValueError("cloud_backup_invalid") from None
