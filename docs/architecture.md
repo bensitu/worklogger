@@ -98,6 +98,12 @@ busy states, and processing feedback. Controllers do not probe widget attributes
 to discover these capabilities. Dialog attribute forwarding remains available to
 existing callers, but is not used to assemble or bind settings workflows.
 
+`settings/preferences.py` owns ordered preference writes, their busy state, and
+coalesced reloads. `SettingsPage` assembles controls and applies returned state;
+the save controller receives explicit callbacks rather than accessing widgets.
+Failed writes, job submission failures, and state-display errors release the
+operation and allow subsequent changes to be saved.
+
 `bootstrap.py` prepares the application, database, and authentication boundary.
 `composition/desktop.py` assembles an account-scoped session and its window.
 Composition factories use `build_` names and receive lifecycle dependencies

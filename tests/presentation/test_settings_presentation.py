@@ -571,6 +571,67 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertFalse(page.state.show_holidays)
         self.assertFalse(page.state.show_recent_context)
 
+    def test_preference_queue_continues_after_write_and_display_failures(self):
+        from worklogger.app.job_runner import CancellationToken
+
+        repository = MemorySettingsRepository()
+        model = _view_model(repository)
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        self.assertTrue(page.refresh())
+        jobs = []
+
+        def submit(_name, work, *, on_complete):
+            jobs.append((work, on_complete))
+
+        page.set_job_runner(Mock(submit=submit))
+        page.holidays_switch.click()
+        page.recent_context_switch.click()
+        self.assertEqual(len(jobs), 1)
+        self.assertTrue(page.is_busy)
+        work, complete = jobs.pop(0)
+        with patch.object(model, "set_bool", side_effect=RuntimeError("Private setting content")), \
+                self.assertLogs("worklogger.presentation.settings.preferences", level="ERROR"):
+            complete(work(CancellationToken()))
+        self.assertEqual(page.last_error.code, "settings_save_failed")
+        self.assertEqual(len(jobs), 1)
+        work, complete = jobs.pop(0)
+        with patch.object(page, "set_state", side_effect=RuntimeError("Private display content")), \
+                self.assertLogs("worklogger.presentation.settings.preferences", level="ERROR"):
+            complete(work(CancellationToken()))
+        self.assertEqual(page.last_error.code, "settings_load_failed")
+        self.assertFalse(page.is_busy)
+        self.assertFalse(model.load().value.show_recent_context)
+        page.holidays_switch.click()
+        work, complete = jobs.pop(0)
+        complete(work(CancellationToken()))
+        self.assertFalse(page.is_busy)
+        self.assertIsNone(page.last_error)
+        self.assertTrue(page.state.show_holidays)
+        self.assertFalse(page.state.show_recent_context)
+
+    def test_failed_preference_submission_and_synchronous_write_allow_retry(self):
+        from tests.job_runner import ImmediateJobRunner
+
+        for background in (False, True):
+            with self.subTest(background=background):
+                model = _view_model(MemorySettingsRepository())
+                page = SettingsPage(model)
+                self.addCleanup(page.deleteLater)
+                self.assertTrue(page.refresh())
+                if background:
+                    page.set_job_runner(Mock(submit=Mock(side_effect=RuntimeError("closed"))))
+                with patch.object(model, "set_bool", side_effect=RuntimeError("unavailable")), \
+                        self.assertLogs("worklogger.presentation.settings.preferences", level="ERROR"):
+                    page.holidays_switch.click()
+                self.assertEqual(page.last_error.code, "settings_save_failed")
+                self.assertFalse(page.is_busy)
+                page.set_job_runner(ImmediateJobRunner() if background else None)
+                page.recent_context_switch.click()
+                self._app.processEvents()
+                self.assertIsNone(page.last_error)
+                self.assertFalse(page.state.show_recent_context)
+
     def test_unavailable_services_preserve_preferences_without_claiming_activation(self):
         repository = MemorySettingsRepository()
         model = _view_model(repository)

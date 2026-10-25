@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections import deque
-
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -24,11 +22,10 @@ from worklogger.config.constants import (
 )
 from worklogger.config.themes import get_theme
 from worklogger.domain.auth.models import User
-from worklogger.domain.shared.errors import AppError, InfrastructureError
-from worklogger.domain.shared.result import Result
+from worklogger.domain.shared.errors import AppError
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.errors import display_error_message
-from worklogger.presentation.job_runner import owned_callback
+from worklogger.presentation.settings.preferences import PreferenceSaveController
 from worklogger.presentation.settings.sections.about import AboutSection
 from worklogger.presentation.settings.sections.account import AccountSection
 from worklogger.presentation.settings.sections.actions import SectionActions
@@ -101,12 +98,15 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._model_management_available = True
         self._updating = False
         self._last_error: AppError | None = None
-        self._job_runner = None
-        self._preference_queue = deque()
-        self._saved_state_timer = QTimer(self)
-        self._saved_state_timer.setSingleShot(True)
-        self._saved_state_timer.timeout.connect(self._reload_saved_state)
         self._busy_jobs: set[str] = set()
+        self._preferences = PreferenceSaveController(
+            self,
+            load_state=lambda: self._view_model.load(refresh_credentials=False),
+            on_state=self._apply_saved_state,
+            on_error=self._set_error,
+            on_saved=self._preference_saved,
+            on_busy=lambda busy: self.set_busy("preferences", busy),
+        )
         self._residency_key = residency_setting_key()
         self._category_pages: dict[str, int] = {}
         self._custom_color = "#4f8ef7"
@@ -133,7 +133,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         return self._state
 
     def set_job_runner(self, runner):
-        self._job_runner = runner
+        self._preferences.set_job_runner(runner)
 
     @property
     def is_busy(self) -> bool:
@@ -161,7 +161,7 @@ class SettingsPage(QWidget, SettingsSectionState):
                 self._update_configuration_status()
 
     def refresh(self) -> bool:
-        self._saved_state_timer.stop()
+        self._preferences.cancel_refresh()
         result = self._view_model.load()
         if not result.ok or result.value is None:
             self._set_error(result.error)
@@ -530,56 +530,15 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._save_preference(lambda: self._view_model.set_text(key, value))
 
     def _save_preference(self, operation, *, message=None):
-        if self._job_runner is None:
-            result = operation()
-            self._handle_save_result(result)
-            if result.ok and message:
-                self.set_operation_status(message)
-            return
-        self._preference_queue.append((operation, message))
-        if "preferences" not in self._busy_jobs:
-            self._save_next_preference()
+        self._preferences.save(operation, message=message)
 
-    def _save_next_preference(self):
-        if not self._preference_queue:
-            return
-        operation, message = self._preference_queue.popleft()
-        self._saved_state_timer.stop()
-        self.set_busy("preferences", True)
-        def work(_token):
-            result = operation()
-            return self._view_model.load(refresh_credentials=False) if result.ok else result
-        def complete(result):
-            self.set_busy("preferences", False)
-            if result.ok and result.value is not None:
-                self._last_error = None
-                if not self._preference_queue:
-                    self.set_state(result.value)
-                    self.settings_changed.emit(result.value)
-                self.set_operation_status(message or _("Saved"))
-            else:
-                self._set_error(result.error)
-            self._save_next_preference()
-        try:
-            self._job_runner.submit("save_preferences", work, on_complete=owned_callback(self, complete))
-        except Exception:
-            complete(Result.failure(InfrastructureError("settings_save_failed", "settings_save_failed")))
-
-    def _handle_save_result(self, result: object) -> None:
-        if not getattr(result, "ok", False):
-            self._set_error(getattr(result, "error", None))
-            return
+    def _preference_saved(self, message: str) -> None:
         self._last_error = None
-        self._saved_state_timer.start(0)
-        self.set_operation_status(_("Saved"))
+        self.set_operation_status(message)
 
-    def _reload_saved_state(self) -> None:
-        loaded = self._view_model.load(refresh_credentials=False)
-        if not loaded.ok or loaded.value is None:
-            self._set_error(loaded.error)
-            return
-        self.set_state(loaded.value)
-        self.settings_changed.emit(loaded.value)
+    def _apply_saved_state(self, state: SettingsState) -> None:
+        self.set_state(state)
+        self.settings_changed.emit(state)
 
     def _set_error(self, error: AppError | None) -> None:
         self._last_error = error
