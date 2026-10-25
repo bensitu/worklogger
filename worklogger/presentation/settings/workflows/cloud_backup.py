@@ -199,9 +199,11 @@ class CloudBackupWorkflow(QObject):
                 if not (automatic and refresh) and (not automatic or code != self._last_notification):
                     self._notify(self._message)
                     self._last_notification = code
-            self._update()
-            if callback is not None:
-                callback(result)
+            try:
+                self._update()
+            finally:
+                if callback is not None:
+                    callback(result)
             if refresh or configured:
                 self._tick()
         try:
@@ -280,9 +282,11 @@ class CloudBackupWorkflow(QObject):
                         _("Data restored. Recovery copy: {path}").format(path=value.value.recovery_path))
             finally:
                 self._restoring = False
-                self._update()
-                if value.ok and self._restore_handler is not None and (self._owner is None or isValid(self._owner)):
-                    self._restore_handler()
+                try:
+                    self._update()
+                finally:
+                    if value.ok and self._restore_handler is not None and (self._owner is None or isValid(self._owner)):
+                        self._restore_handler()
         if self._run(operation, callback=restored) and not finished:
             progress.show()
         elif not finished:

@@ -14,6 +14,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QLineEdit, QMessageBox
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
+from worklogger.__about__ import APP_VERSION
 from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
@@ -803,7 +804,7 @@ class SettingsPresentationTests(unittest.TestCase):
         )
         self.assertEqual(repository.values[(1, LOCAL_MODEL_ENABLED_SETTING_KEY)], "0")
         self.assertEqual(dialog.about_name_label.text(), "WorkLogger")
-        self.assertIn("4.0.0", dialog.about_version_label.text())
+        self.assertIn(APP_VERSION, dialog.about_version_label.text())
 
 
     def test_settings_page_is_native_widget_and_switches_categories(self) -> None:
@@ -836,7 +837,7 @@ class SettingsPresentationTests(unittest.TestCase):
 
         self.assertEqual(emitted, ["csv", "import_csv", "password", "identities", "updates"])
         self.assertEqual(page.about_name_label.text(), "WorkLogger")
-        self.assertIn("4.0.0", page.about_version_label.text())
+        self.assertIn(APP_VERSION, page.about_version_label.text())
 
 
 if __name__ == "__main__":

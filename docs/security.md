@@ -201,3 +201,9 @@ See [database](database.md), [testing](testing.md), and [packaging](packaging.md
 Password confirmation for password changes and external identity changes uses the same failure counter and temporary lockout as password sign-in.
 
 Failed sign-in attempts use the same temporary lockout response for existing and unknown IDs. Unknown-ID records are limited to 1,024 entries; failure records expire after seven days.
+
+The first self-registered account receives administrator access, whether it uses a local password or browser sign-in. Existing accounts are not automatically promoted. Keep a database backup containing a usable administrator account.
+
+Account deletion removes the account's live data, protected credentials, and account-specific local recovery archives. It does not erase previously exported files, complete database backups, or preserved startup recovery databases. Protect and manage those copies separately.
+
+Deployment feature controls depend on the installed configuration and operating-system file permissions. A missing configuration uses built-in defaults and records a warning; invalid configuration disables restricted services. Protect the application directory against changes by users who should not alter deployment policy.

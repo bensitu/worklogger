@@ -78,7 +78,11 @@ class SQLitePersonalData:
 
     def restore(self, document, *, expected_digest, before_replace, sync_state=None):
         tables = self._parse(document)
-        previous = self.capture()
+        with self.factory.transaction(write=False) as connection:
+            timer = connection.execute("SELECT value FROM settings WHERE user_id=? AND key='time_entry_timer'", (self.user_id,)).fetchone()
+            if timer and timer[0]:
+                raise ValueError("cloud_timer_active")
+            previous = self._capture(connection)
         if document_digest(previous) != expected_digest:
             raise ValueError("cloud_local_changed")
         before_replace(previous)

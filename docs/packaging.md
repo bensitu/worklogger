@@ -120,7 +120,7 @@ The **Build and Release WorkLogger** workflow is started manually from GitHub
 Actions. Its entry point is `.github/workflows/release-build.yml`, matching the
 repository's existing release workflow. Choose **Run workflow**, select the
 source branch (normally `main`), and enter
-the tag matching `APP_VERSION` in `worklogger/__about__.py`, such as `v4.0.0`.
+the tag matching `APP_VERSION` in `worklogger/__about__.py`, such as `v4.1.0`.
 Enable **validate_only** to run the full verification and prepare release files
 without creating a tag or release.
 

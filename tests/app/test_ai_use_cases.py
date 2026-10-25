@@ -136,6 +136,23 @@ class FakeHttpResponse:
 
 
 class AiUseCaseTests(unittest.TestCase):
+    def test_historical_note_references_follow_note_permissions_in_ai_context(self):
+        from worklogger.domain.quicklog.rules import quick_log_reference
+        day = date(2026, 5, 4)
+        entry = QuickLog(1, 1, day, "10:00", "Confidential historical detail", end_time="10:30")
+        notes, previous = Mock(), Mock()
+        notes.list_range.return_value = Result.success((DailyNote(1, day, quick_log_reference(entry)),))
+        previous.handle.return_value = Result.success((entry,))
+        settings = FakeSettings()
+        handler = BuildAiContextHandler(work_logs_handler=FakeWorkLogs(), note_handler=notes,
+            quick_logs_handler=previous, calendar_events_handler=FakeCalendar(), settings_handler=settings)
+        query = BuildAiContextQuery(1, day)
+        self.assertNotIn(entry.description, handler.handle(query).value.content)
+        settings.values[note_sharing_key(day)] = NoteSharing(False, True).encode()
+        self.assertEqual(handler.handle(query).value.content.count(entry.description), 1)
+        settings.values[AI_PRIVACY_INCLUDE_NOTES_SETTING_KEY] = "0"
+        self.assertNotIn(entry.description, handler.handle(query).value.content)
+
     def test_chat_generation_uses_notes_language_without_using_the_interface_locale(self):
         gateway = FakeGateway()
         handler = AiChatHandler(gateway)

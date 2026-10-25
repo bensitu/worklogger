@@ -116,6 +116,7 @@ class SQLiteBackupService:
                 return Result.success(None)
             with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
                 snapshot = create_database_snapshot(connection, target)
+            self._validate_restore_source(snapshot)
             staged = SQLiteConnectionFactory(snapshot)
             MigrationRunner(staged).run_pending()
             with staged.connection(write=True) as connection:

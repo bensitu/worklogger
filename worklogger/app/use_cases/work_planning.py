@@ -37,9 +37,9 @@ class WorkPlanningService:
             country, _separator, subdivision = region.partition("/")
             country = country or self._country
             error = "work_plan_region_required" if not country else "work_plan_holidays_failed"
+            if not country or self._holidays is None:
+                return WorkPlanSummary(None, manual_target if mode == "manual" else None, mode, error)
             try:
-                if not country or self._holidays is None:
-                    raise ValueError("holiday_provider_unavailable")
                 entries = self._holidays.list_for_range(country, start, end, subdivision=subdivision or None)
                 holidays = tuple(entry.day for entry in entries)
             except Exception as error_detail:

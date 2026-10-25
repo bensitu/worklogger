@@ -21,6 +21,7 @@ from worklogger.domain.calendar.models import CalendarEvent
 from worklogger.domain.notes.models import DailyNote
 from worklogger.domain.notes.preferences import NoteSharing, note_sharing_key
 from worklogger.domain.quicklog.models import QuickLog
+from worklogger.domain.quicklog.rules import unreferenced_quick_logs
 from worklogger.domain.reporting.periods import period_for_day
 from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
@@ -88,7 +89,7 @@ class BuildAiContextHandler:
             query.user_id,
             start_day,
             end_day,
-            include_notes=options["notes"],
+            include_notes=options["notes"] or options["quick_logs"],
         )
         if not notes.ok or notes.value is None:
             return Result.failure(notes.error or InfrastructureError("ai_context_failed", "ai_context_failed"))
@@ -99,7 +100,7 @@ class BuildAiContextHandler:
         if not permissions.ok:
             return Result.failure(permissions.error)
         for note in notes.value:
-            if NoteSharing.decode(permissions.value.get(note_sharing_key(note.day))).ai:
+            if options["notes"] and NoteSharing.decode(permissions.value.get(note_sharing_key(note.day))).ai:
                 approved_notes.append(note)
         quick_logs = self._quick_logs_handler.handle(
             GetQuickLogsForRangeQuery(query.user_id, start_day, end_day)
@@ -122,7 +123,7 @@ class BuildAiContextHandler:
             end_day=end_day,
             work_logs=filtered_logs,
             notes=tuple(approved_notes),
-            quick_logs=quick_logs.value,
+            quick_logs=unreferenced_quick_logs(quick_logs.value, notes.value),
             events=events.value,
             include_notes=options["notes"],
             include_quick_logs=options["quick_logs"],
