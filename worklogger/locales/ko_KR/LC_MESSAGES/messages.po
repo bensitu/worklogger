@@ -2437,9 +2437,6 @@ msgstr "선택 기간"
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "선택한 기록: {count}개 | 기존 연결: {existing}개"
 
-msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
-msgstr "외부 처리가 활성화되면 선택한 텍스트와 허용된 맥락이 이 제공업체에 전송됩니다."
-
 msgid "Selected user"
 msgstr "선택한 사용자"
 
@@ -3255,6 +3252,9 @@ msgstr "환영합니다!"
 
 msgid "When closing the window"
 msgstr "창을 닫을 때"
+
+msgid "When processing text with an external model, your text and permitted context are sent to the configured service."
+msgstr "외부 모델로 텍스트를 처리할 때 입력한 텍스트와 사용이 허용된 관련 정보가 설정한 서비스로 전송됩니다."
 
 msgid "Window"
 msgstr "창"

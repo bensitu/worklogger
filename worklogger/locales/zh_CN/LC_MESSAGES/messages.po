@@ -2437,9 +2437,6 @@ msgstr "所选期间"
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "已选择：{count} 条记录 | 已有关联：{existing} 条"
 
-msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
-msgstr "启用外部处理后，所选文本和允许的上下文将发送至此供应商。"
-
 msgid "Selected user"
 msgstr "选中用户"
 
@@ -3255,6 +3252,9 @@ msgstr "欢迎！"
 
 msgid "When closing the window"
 msgstr "关闭窗口时"
+
+msgid "When processing text with an external model, your text and permitted context are sent to the configured service."
+msgstr "使用外部模型处理文本时，输入文本及获准使用的相关内容会发送至所配置的服务。"
 
 msgid "Window"
 msgstr "窗口"

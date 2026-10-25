@@ -2437,9 +2437,6 @@ msgstr "Selected period"
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "Selected records: {count} | Existing associations: {existing}"
 
-msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
-msgstr "Selected text and permitted context are sent to this provider when external processing is enabled."
-
 msgid "Selected user"
 msgstr "Selected user"
 
@@ -3255,6 +3252,9 @@ msgstr "Welcome!"
 
 msgid "When closing the window"
 msgstr "When closing the window"
+
+msgid "When processing text with an external model, your text and permitted context are sent to the configured service."
+msgstr "When processing text with an external model, your text and permitted context are sent to the configured service."
 
 msgid "Window"
 msgstr "Window"

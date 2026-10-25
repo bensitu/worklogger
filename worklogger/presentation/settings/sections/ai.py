@@ -70,11 +70,11 @@ class AISection(SettingsScrollPage):
         super().__init__()
         page = self
 
-        external = _action_card(_("External Model"))
+        external = _action_card(_("External Model"),
+            _("When processing text with an external model, your text and permitted context are sent to the configured service."))
         self.external_model_enabled_switch = SwitchButton()
         self.external_model_enabled_switch.toggled.connect(lambda enabled: actions.set_bool(EXTERNAL_MODEL_ENABLED_SETTING_KEY, enabled))
         external.content_layout.addWidget(_switch_line(_("Use external model"), self.external_model_enabled_switch))
-        external.content_layout.addWidget(_secondary_label(_("Selected text and permitted context are sent to this provider when external processing is enabled.")))
         self.external_runtime_status_label = _secondary_label("")
         external.content_layout.addWidget(self.external_runtime_status_label)
         form = _settings_form()

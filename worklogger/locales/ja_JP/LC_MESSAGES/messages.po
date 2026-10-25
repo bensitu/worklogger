@@ -2437,9 +2437,6 @@ msgstr "選択期間"
 msgid "Selected records: {count} | Existing associations: {existing}"
 msgstr "選択した記録：{count}件 | 既存の関連付け：{existing}件"
 
-msgid "Selected text and permitted context are sent to this provider when external processing is enabled."
-msgstr "外部処理を有効にすると、選択したテキストと許可されたコンテキストがこのプロバイダーに送信されます。"
-
 msgid "Selected user"
 msgstr "選択したユーザー"
 
@@ -3255,6 +3252,9 @@ msgstr "ようこそ！"
 
 msgid "When closing the window"
 msgstr "ウィンドウを閉じるとき"
+
+msgid "When processing text with an external model, your text and permitted context are sent to the configured service."
+msgstr "外部モデルでテキストを処理する際、入力したテキストと利用を許可した関連情報が設定したサービスに送信されます。"
 
 msgid "Window"
 msgstr "ウィンドウ"
