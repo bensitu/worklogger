@@ -5,12 +5,10 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
 
 from worklogger.__about__ import APP_AUTHOR, APP_NAME, APP_VERSION, GITHUB_URL
@@ -19,13 +17,14 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _secondary_label,
     _separator,
-    _SettingsScrollPage,
+    _add_action_buttons,
 )
+from worklogger.presentation.settings.sections.layouts import SettingsContainer, SettingsScrollPage
 from worklogger.presentation.widgets.assets import pixmap_asset
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
-class AboutSection(_SettingsScrollPage):
+class AboutSection(SettingsScrollPage):
     control_names = (
         "about_author_label",
         "about_license_label",
@@ -41,8 +40,7 @@ class AboutSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        card = QWidget()
-        card.setObjectName("settings_about_widget")
+        card = SettingsContainer("settings_about_widget")
         card.content_layout = QVBoxLayout(card)
         card.content_layout.setContentsMargins(18, 20, 18, 20)
         card.content_layout.setSpacing(16)
@@ -105,7 +103,6 @@ class AboutSection(_SettingsScrollPage):
             details.addWidget(widget, row, 1)
         card.content_layout.addLayout(details)
         card.content_layout.addWidget(_separator())
-        help_actions = QHBoxLayout()
         self.getting_started_button = QPushButton(_("Getting started"))
         self.user_guide_button = QPushButton(_("User guide"))
         for button, icon, callback in (
@@ -116,8 +113,7 @@ class AboutSection(_SettingsScrollPage):
             button.setAutoDefault(False)
             set_button_icon(button, icon)
             button.clicked.connect(callback)
-            help_actions.addWidget(button)
-        card.content_layout.addLayout(help_actions)
+        _add_action_buttons(card, self.getting_started_button, self.user_guide_button, columns=2)
         self.check_updates_button = QPushButton(_("Check for updates"))
         self.check_updates_button.setObjectName("check_updates_button")
         self.check_updates_button.setProperty("variant", "outline")

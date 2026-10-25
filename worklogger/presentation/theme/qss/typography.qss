@@ -3,7 +3,6 @@
 QLabel[role="section_heading"],
 QLabel[role="credential_success"],
 QPushButton#date_picker_button,
-QLabel#settings_section_title_label,
 QLabel#report_title_label,
 QLabel#report_history_title_label {
   font-size: 16px;

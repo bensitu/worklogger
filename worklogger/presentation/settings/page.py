@@ -110,6 +110,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         self._residency_key = residency_setting_key()
         self._category_pages: dict[str, int] = {}
         self._custom_color = "#4f8ef7"
+        self._rendered_swatch_color = ""
         self._local_model_ready = False
         self._local_model_name = ""
         self._local_runtime_reason = None
@@ -463,6 +464,8 @@ class SettingsPage(QWidget, SettingsSectionState):
             self._save_preference(save)
 
     def _update_color_swatch(self) -> None:
+        if self._rendered_swatch_color == self._custom_color:
+            return
         pixmap = QPixmap(20, 20)
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
@@ -472,6 +475,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         painter.drawRoundedRect(1, 1, 18, 18, 3, 3)
         painter.end()
         self.custom_color_button.setIcon(QIcon(pixmap))
+        self._rendered_swatch_color = self._custom_color
 
     def _toggle_proxy_password(self) -> None:
         visible = (

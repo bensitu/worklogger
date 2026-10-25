@@ -3,27 +3,24 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
-    QFormLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QWidget,
 )
 
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _readonly_line_edit,
-    _secondary_label,
-    _section_title,
-    _SettingsScrollPage,
+    _card_with_form,
+    _action_card,
 )
-from worklogger.presentation.widgets import CardFrame
+from worklogger.presentation.settings.sections.layouts import SettingsActionGroup, SettingsContainer, SettingsScrollPage
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.display_name_editor import DisplayNameEditor
 
 
-class AccountSection(_SettingsScrollPage):
+class AccountSection(SettingsScrollPage):
     control_names = (
         "change_password_button",
         "current_user_id_line_edit",
@@ -42,21 +39,16 @@ class AccountSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        card = CardFrame(object_name="settings_content_frame")
-        card.content_layout.addWidget(_section_title(_("Personal profile")))
-        form = QFormLayout()
-        form.setSpacing(12)
+        card = _card_with_form(_("Personal profile"))
+        form = card.form_layout
         self.display_name_editor = DisplayNameEditor()
         self.current_user_name_line_edit = self.display_name_editor.input
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         self.current_user_id_line_edit = _readonly_line_edit("account_id_line_edit")
         self.current_user_role_line_edit = _readonly_line_edit("account_role_line_edit")
         form.addRow(_("Display name"), self.display_name_editor)
         form.addRow(_("Login ID"), self.current_user_id_line_edit)
         form.addRow(_("Role"), self.current_user_role_line_edit)
-        avatar_row = QWidget()
-        avatar_row.setObjectName("account_avatar_row_widget")
+        avatar_row = SettingsContainer("account_avatar_row_widget")
         avatar_layout = QHBoxLayout(avatar_row)
         avatar_layout.setContentsMargins(0, 0, 0, 0)
         self.avatar_preview_label = QLabel()
@@ -70,18 +62,11 @@ class AccountSection(_SettingsScrollPage):
         self.reset_avatar_button.setObjectName("reset_avatar_button")
         self.reset_avatar_button.clicked.connect(actions.reset_avatar_requested)
         avatar_layout.addWidget(self.avatar_preview_label)
-        avatar_layout.addWidget(self.change_avatar_button)
-        avatar_layout.addWidget(self.reset_avatar_button)
-        avatar_layout.addStretch()
+        avatar_layout.addWidget(SettingsActionGroup((self.change_avatar_button, self.reset_avatar_button)), 1)
         form.addRow(_("Avatar"), avatar_row)
-        card.content_layout.addLayout(form)
         page.layout().addWidget(card)
 
-        security = CardFrame(object_name="settings_content_frame")
-        security.content_layout.addWidget(_section_title(_("Sign-in and security")))
-        security.content_layout.addWidget(
-            _secondary_label(_("Changing password will reset the recovery key."))
-        )
+        security = _action_card(_("Sign-in and security"), _("Changing password will reset the recovery key."))
         self.change_password_button = QPushButton(_("Change password"))
         self.change_password_button.setObjectName("change_password_button")
         self.change_password_button.setProperty("variant", "outline")
@@ -114,11 +99,7 @@ class AccountSection(_SettingsScrollPage):
         ):
             set_button_icon(button, icon)
         page.layout().addWidget(security)
-        self.account_administration_frame = CardFrame(object_name="settings_content_frame")
-        self.account_administration_frame.content_layout.addWidget(_section_title(_("User administration")))
-        self.account_administration_frame.content_layout.addWidget(
-            _secondary_label(_("Manage all user accounts in this database."))
-        )
+        self.account_administration_frame = _action_card(_("User administration"), _("Manage all user accounts in this database."))
         self.account_administration_frame.content_layout.addWidget(self.manage_users_button)
         self.manage_users_button.setEnabled(False)
         self.account_administration_frame.hide()

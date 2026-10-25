@@ -289,6 +289,8 @@ are appended after component styles to preserve their selector priority.
 Ancestor-property changes refresh only the affected widget tree, not the global
 application stylesheet.
 
+Settings page structure is shared through `settings/sections/layouts.py`: scroll pages, transparent containers, adaptive field groups, half-width inputs, and wrapping action groups. Section modules bind their own controls and signals without maintaining separate layout algorithms. Forms and section headings reuse `settings/sections/common.py`; saved preference and workflow ownership is unchanged.
+
 Background option saves reuse validated image frames and coalesce consecutive
 changes without blocking the controls. Image imports and removal remain serialized
 with pending option saves. Opacity updates retain the current animation frame and

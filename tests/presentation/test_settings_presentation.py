@@ -450,6 +450,9 @@ class SettingsPresentationTests(unittest.TestCase):
         page = SettingsPage(model)
         page.refresh()
         original = model.load().value.custom_color
+        original_icon = page.custom_color_button.icon().cacheKey()
+        page.refresh()
+        self.assertEqual(page.custom_color_button.icon().cacheKey(), original_icon)
         with patch("worklogger.presentation.settings.page.choose_custom_color", return_value=QColor()):
             page._choose_custom_color()
         self.assertEqual(model.load().value.custom_color, original)
@@ -458,6 +461,8 @@ class SettingsPresentationTests(unittest.TestCase):
         self.assertEqual(model.load().value.custom_color, "#654321")
         self.assertEqual(model.load().value.theme, "custom")
         self.assertFalse(page.custom_color_button.isHidden())
+        self._app.processEvents()
+        self.assertNotEqual(page.custom_color_button.icon().cacheKey(), original_icon)
 
     def test_account_uses_login_id_and_action_icons_and_admin_permissions(self):
         page = SettingsPage(_view_model(MemorySettingsRepository()))

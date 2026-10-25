@@ -36,17 +36,16 @@ from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _hours_input,
     _add_half_width_row,
-    _SettingsScrollPage,
     _switch_line,
     _secondary_label,
 )
-from worklogger.presentation.settings.sections.field_group import SettingsFieldGroup
+from worklogger.presentation.settings.sections.layouts import SettingsFieldGroup, SettingsScrollPage
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.work_schedule import WorkScheduleEditor
 
 
-class GeneralSection(_SettingsScrollPage):
+class GeneralSection(SettingsScrollPage):
     control_names = (
         "default_break_input",
         "holiday_country_combo",

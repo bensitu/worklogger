@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QVBoxLayout,
-    QWidget,
 )
 
 from worklogger.config.constants import (
@@ -23,13 +22,13 @@ from worklogger.presentation.settings.sections.common import (
     _language_label,
     _secondary_label,
     _switch_line,
-    _SettingsScrollPage,
 )
 from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.settings.sections.layouts import SettingsContainer, SettingsScrollPage
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
-class AppearanceSection(_SettingsScrollPage):
+class AppearanceSection(SettingsScrollPage):
     control_names = (
         "background_settings",
         "custom_color_button",
@@ -85,8 +84,7 @@ class AppearanceSection(_SettingsScrollPage):
         self.minimal_switch.toggled.connect(
             lambda enabled: actions.set_bool(MINIMAL_MODE_SETTING_KEY, enabled)
         )
-        self.minimal_view_row = QWidget()
-        self.minimal_view_row.setObjectName("settings_switch_row_widget")
+        self.minimal_view_row = SettingsContainer("minimal_view_option_widget")
         minimal_layout = QVBoxLayout(self.minimal_view_row)
         minimal_layout.setContentsMargins(0, 0, 0, 0)
         minimal_layout.setSpacing(6)

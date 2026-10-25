@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
-    QGridLayout,
     QLabel,
     QLineEdit,
 )
@@ -22,15 +21,17 @@ from worklogger.presentation.settings.sections.common import (
     _connect_text,
     _secondary_label,
     _section_title,
-    _SettingsScrollPage,
+    _action_card,
+    _settings_form,
     _switch_line,
     _text_line_edit,
 )
-from worklogger.presentation.widgets import CardFrame, SwitchButton
+from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.settings.sections.layouts import SettingsFieldGroup, SettingsScrollPage
 from worklogger.presentation.widgets.icons import ui_icon
 
 
-class NetworkSection(_SettingsScrollPage):
+class NetworkSection(SettingsScrollPage):
     control_names = (
         "proxy_address_line_edit",
         "proxy_credentials_status_label",
@@ -46,8 +47,7 @@ class NetworkSection(_SettingsScrollPage):
     def __init__(self, actions: SectionActions):
         super().__init__()
         page = self
-        card = CardFrame(object_name="settings_content_frame")
-        card.content_layout.addWidget(_section_title(_("Web proxy")))
+        card = _action_card(_("Web proxy"))
         self.proxy_enabled_switch = SwitchButton()
         self.proxy_enabled_switch.toggled.connect(
             lambda enabled: actions.set_bool(NETWORK_PROXY_ENABLED_SETTING_KEY, enabled)
@@ -60,15 +60,10 @@ class NetworkSection(_SettingsScrollPage):
         self.proxy_runtime_status_label = _secondary_label("")
         card.content_layout.addWidget(self.proxy_runtime_status_label)
 
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(18)
-        grid.setVerticalSpacing(10)
-        grid.setColumnStretch(0, 3)
-        grid.setColumnStretch(1, 1)
-        self.proxy_address_line_edit = _text_line_edit("network_address_line_edit")
-        self.proxy_port_line_edit = _text_line_edit("network_port_line_edit")
-        self.proxy_username_line_edit = _text_line_edit("network_username_line_edit")
-        self.proxy_password_line_edit = _text_line_edit("network_password_line_edit")
+        self.proxy_address_line_edit = _text_line_edit("proxy_address_line_edit")
+        self.proxy_port_line_edit = _text_line_edit("proxy_port_line_edit")
+        self.proxy_username_line_edit = _text_line_edit("proxy_username_line_edit")
+        self.proxy_password_line_edit = _text_line_edit("proxy_password_line_edit")
         self.proxy_password_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.proxy_password_visibility_action = self.proxy_password_line_edit.addAction(
             ui_icon("eye"),
@@ -78,7 +73,7 @@ class NetworkSection(_SettingsScrollPage):
         self.proxy_password_visibility_action.triggered.connect(
             actions.toggle_proxy_password
         )
-        self.proxy_domain_line_edit = _text_line_edit("network_domain_line_edit")
+        self.proxy_domain_line_edit = _text_line_edit("proxy_domain_line_edit")
         _connect_text(
             self.proxy_address_line_edit,
             lambda: actions.set_text(
@@ -109,20 +104,16 @@ class NetworkSection(_SettingsScrollPage):
                 NETWORK_PROXY_DOMAIN_SETTING_KEY, self.proxy_domain_line_edit.text()
             ),
         )
-        grid.addWidget(QLabel(_("Address")), 0, 0)
-        grid.addWidget(QLabel(_("Port")), 0, 1)
-        grid.addWidget(self.proxy_address_line_edit, 1, 0)
-        grid.addWidget(self.proxy_port_line_edit, 1, 1)
-        grid.addWidget(
-            _section_title(_("Authentication information (optional)")), 2, 0, 1, 2
-        )
-        grid.addWidget(QLabel(_("Username")), 3, 0, 1, 2)
-        grid.addWidget(self.proxy_username_line_edit, 4, 0, 1, 2)
-        grid.addWidget(QLabel(_("Password")), 5, 0, 1, 2)
-        grid.addWidget(self.proxy_password_line_edit, 6, 0, 1, 2)
-        grid.addWidget(QLabel(_("Domain")), 7, 0, 1, 2)
-        grid.addWidget(self.proxy_domain_line_edit, 8, 0, 1, 2)
-        card.content_layout.addLayout(grid)
+        card.content_layout.addWidget(SettingsFieldGroup([
+            ("address", QLabel(_("Address")), self.proxy_address_line_edit),
+            ("port", QLabel(_("Port")), self.proxy_port_line_edit),
+        ], weights={"address": 3, "port": 1}))
+        card.content_layout.addWidget(_section_title(_("Authentication information (optional)")))
+        form = _settings_form()
+        form.addRow(_("Username"), self.proxy_username_line_edit)
+        form.addRow(_("Password"), self.proxy_password_line_edit)
+        form.addRow(_("Domain"), self.proxy_domain_line_edit)
+        card.content_layout.addLayout(form)
         self.proxy_credentials_status_label = _secondary_label("")
         self.proxy_credentials_status_label.setObjectName(
             "proxy_credentials_status_label"

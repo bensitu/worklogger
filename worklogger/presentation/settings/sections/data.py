@@ -13,13 +13,13 @@ from worklogger.presentation.settings.sections.common import (
     _action_card,
     _add_action_buttons,
     _secondary_label,
-    _SettingsScrollPage,
 )
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.settings.sections.cloud_backup import CloudBackupPanel
+from worklogger.presentation.settings.sections.layouts import SettingsScrollPage
 
 
-class DataSection(_SettingsScrollPage):
+class DataSection(SettingsScrollPage):
     control_names = (
         "data_directory_input",
         "open_data_directory_button",

@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSlider,
     QVBoxLayout,
-    QWidget,
 )
 
 from worklogger.domain.settings.background import BackgroundState
@@ -22,6 +21,7 @@ from worklogger.presentation.settings.sections.common import (
 )
 from worklogger.presentation.widgets import CardFrame, SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
+from worklogger.presentation.settings.sections.layouts import SettingsActionGroup, SettingsContainer
 
 
 class BackgroundSettings(CardFrame):
@@ -34,8 +34,7 @@ class BackgroundSettings(CardFrame):
         self.enabled_switch = SwitchButton()
         self.enabled_switch.setAccessibleName(_("Enable background image"))
         self.content_layout.addWidget(_switch_line(_("Enable background image"), self.enabled_switch))
-        self.options_widget = QWidget()
-        self.options_widget.setObjectName("settings_switch_row_widget")
+        self.options_widget = SettingsContainer("background_image_options_widget")
         options_layout = QVBoxLayout(self.options_widget)
         options_layout.setContentsMargins(0, 0, 0, 0)
         options_layout.setSpacing(12)
@@ -44,8 +43,7 @@ class BackgroundSettings(CardFrame):
         self.image_label = _secondary_label(_("No background image"))
         options_layout.addWidget(self.image_label)
 
-        opacity_row = QWidget()
-        opacity_row.setObjectName("settings_switch_row_widget")
+        opacity_row = SettingsContainer("background_opacity_row_widget")
         opacity_layout = QHBoxLayout(opacity_row)
         opacity_layout.setContentsMargins(0, 0, 0, 0)
         opacity_layout.addWidget(QLabel(_("Image opacity")))
@@ -62,16 +60,12 @@ class BackgroundSettings(CardFrame):
         opacity_layout.addWidget(self.opacity_slider, 1)
         opacity_layout.addWidget(self.opacity_label)
 
-        buttons = QHBoxLayout()
         self.upload_button = QPushButton(_("Upload image"))
         set_button_icon(self.upload_button, "upload")
         self.remove_button = QPushButton(_("Remove image"))
         self.remove_button.setProperty("variant", "danger")
         set_button_icon(self.remove_button, "trash")
-        buttons.addWidget(self.upload_button)
-        buttons.addWidget(self.remove_button)
-        buttons.addStretch(1)
-        options_layout.addLayout(buttons)
+        options_layout.addWidget(SettingsActionGroup((self.upload_button, self.remove_button)))
         options_layout.addWidget(opacity_row)
         self.status_label = _secondary_label("")
         self.status_label.hide()

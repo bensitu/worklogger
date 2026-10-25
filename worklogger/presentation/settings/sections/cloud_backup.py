@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from PySide6.QtCore import QLocale, QTime, Signal, Qt
 from PySide6.QtWidgets import (QComboBox, QLabel,
-    QLineEdit, QPushButton, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
+    QLineEdit, QPushButton, QSpinBox, QTimeEdit, QVBoxLayout)
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
 from worklogger.infrastructure.i18n import _, get_language
@@ -13,7 +13,7 @@ from worklogger.presentation.settings.sections.common import _card_with_form, _a
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
-from worklogger.presentation.settings.sections.field_group import SettingsFieldGroup
+from worklogger.presentation.settings.sections.layouts import SettingsContainer, SettingsFieldGroup
 
 
 def _number(minimum, maximum):
@@ -23,7 +23,7 @@ def _number(minimum, maximum):
     return field
 
 
-class CloudBackupPanel(QWidget):
+class CloudBackupPanel(SettingsContainer):
     busy_changed = Signal(bool)
     clear_credentials_requested = Signal()
     save_requested = Signal(object, object)
@@ -33,8 +33,7 @@ class CloudBackupPanel(QWidget):
     local_restore_requested = Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setObjectName("cloud_backup_panel_widget")
+        super().__init__("cloud_backup_panel_widget", parent)
         self._loading, self._dirty, self._busy, self._configured = True, False, False, False
         self._available, self._ready = True, False
         self._blocking = False

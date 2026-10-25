@@ -16,6 +16,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Changed
 
+- Settings share responsive forms, consistent input styles, and action groups that wrap for narrow windows and longer translations.
 - Dropdowns and numeric or date/time inputs require focus before the mouse wheel changes their values, preventing accidental edits while scrolling pages.
 - AI text polishing now opens an editable, side-by-side review before replacing time-record, note, or report text. Additional instructions support repeated polishing; cancelling or a failed request preserves the existing text.
 - Analytics export filenames identify the selected month, quarter, or year. Export menu actions include file-format icons.

@@ -1,12 +1,9 @@
-"""Ai settings controls."""
+"""AI settings controls."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QFormLayout,
-    QHBoxLayout,
-    QLabel,
     QLineEdit,
     QPushButton,
     QSpinBox,
@@ -32,16 +29,18 @@ from worklogger.presentation.settings.sections.actions import SectionActions
 from worklogger.presentation.settings.sections.common import (
     _add_action_buttons,
     _secondary_label,
-    _section_title,
-    _SettingsScrollPage,
+    _action_card,
+    _settings_form,
+    _add_half_width_row,
     _switch_line,
 )
 from worklogger.presentation.widgets.processing_progress import ProcessingProgress
-from worklogger.presentation.widgets import CardFrame, SwitchButton
+from worklogger.presentation.widgets import SwitchButton
+from worklogger.presentation.settings.sections.layouts import SettingsScrollPage
 from worklogger.presentation.widgets.icons import set_button_icon
 
 
-class AISection(_SettingsScrollPage):
+class AISection(SettingsScrollPage):
     control_names = (
         "external_processing_progress",
         "ai_calendar_switch",
@@ -68,19 +67,14 @@ class AISection(_SettingsScrollPage):
         super().__init__()
         page = self
 
-        external = CardFrame(object_name="settings_content_frame")
-        external.content_layout.addWidget(_section_title(_("External Model")))
+        external = _action_card(_("External Model"))
         self.external_model_enabled_switch = SwitchButton()
         self.external_model_enabled_switch.toggled.connect(lambda enabled: actions.set_bool(EXTERNAL_MODEL_ENABLED_SETTING_KEY, enabled))
         external.content_layout.addWidget(_switch_line(_("Use external model"), self.external_model_enabled_switch))
         external.content_layout.addWidget(_secondary_label(_("Selected text and permitted context are sent to this provider when external processing is enabled.")))
         self.external_runtime_status_label = _secondary_label("")
         external.content_layout.addWidget(self.external_runtime_status_label)
-        form = QFormLayout()
-        form.setSpacing(12)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        form.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        form = _settings_form()
         self.external_api_key_line_edit = QLineEdit()
         self.external_api_key_line_edit.setObjectName("external_api_key_line_edit")
         self.external_api_key_line_edit.setEchoMode(QLineEdit.EchoMode.Password)
@@ -133,45 +127,32 @@ class AISection(_SettingsScrollPage):
         external.content_layout.addWidget(self.external_processing_progress)
         page.layout().addWidget(external)
 
-        local = CardFrame(object_name="settings_content_frame")
-        local.content_layout.addWidget(_section_title(_("Local Model")))
-        local_row = QHBoxLayout()
-        local_row.setContentsMargins(0, 0, 0, 0)
-        local_row.addWidget(QLabel(_("Enable local model")))
-        local_row.addStretch(1)
+        local = _action_card(_("Local Model"))
         self.local_model_enabled_switch = SwitchButton()
         self.local_model_enabled_switch.toggled.connect(
             lambda enabled: actions.set_bool(LOCAL_MODEL_ENABLED_SETTING_KEY, enabled)
         )
-        local_row.addWidget(self.local_model_enabled_switch)
-        local.content_layout.addLayout(local_row)
+        local.content_layout.addWidget(_switch_line(_("Enable local model"), self.local_model_enabled_switch))
         local.content_layout.addWidget(
             _secondary_label(
                 _("Local text processing does not send content to an external service.")
             )
         )
-        self.local_model_status_label = QLabel(
+        self.local_model_status_label = _secondary_label(
             _("Manage downloaded and imported GGUF models.")
         )
-        self.local_model_status_label.setWordWrap(True)
         self.local_model_status_label.setTextFormat(Qt.TextFormat.PlainText)
         self.local_model_status_label.setObjectName("local_model_status_label")
-        self.local_model_status_label.setProperty("role", "secondary")
         local.content_layout.addWidget(self.local_model_status_label)
         self.local_runtime_status_label = _secondary_label("")
         local.content_layout.addWidget(self.local_runtime_status_label)
-        context_form = QFormLayout()
-        context_form.setSpacing(12)
-        context_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        context_form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        context_form = _settings_form()
         self.local_context_limit_label = _secondary_label(_("Unknown"))
         self.local_context_limit_label.setObjectName("local_context_limit_label")
         context_form.addRow(_("Model context limit"), self.local_context_limit_label)
         self.local_context_spin_box = QSpinBox()
         apply_numeric_input_padding(self.local_context_spin_box)
         self.local_context_spin_box.setObjectName("local_context_spin_box")
-        self.local_context_spin_box.setMinimumWidth(160)
-        self.local_context_spin_box.setMaximumWidth(200)
         self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS)
         self.local_context_spin_box.setSingleStep(512)
         self.local_context_spin_box.setValue(DEFAULT_RUNTIME_CONTEXT_TOKENS)
@@ -180,7 +161,7 @@ class AISection(_SettingsScrollPage):
         self.local_context_spin_box.setAccessibleName(_("Runtime context"))
         self.local_context_spin_box.setToolTip(_("Larger context windows increase memory use and may prevent the model from loading."))
         self.local_context_spin_box.valueChanged.connect(lambda value: actions.set_number(LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, value))
-        context_form.addRow(_("Runtime context"), self.local_context_spin_box)
+        _add_half_width_row(context_form, _("Runtime context"), self.local_context_spin_box)
         local.content_layout.addLayout(context_form)
         self.local_context_status_label = _secondary_label("")
         self.local_context_status_label.setObjectName("local_context_status_label")
@@ -195,8 +176,7 @@ class AISection(_SettingsScrollPage):
         _add_action_buttons(local, self.manage_local_models_button, columns=1)
         page.layout().addWidget(local)
 
-        privacy = CardFrame(object_name="settings_content_frame")
-        privacy.content_layout.addWidget(_section_title(_("AI Privacy")))
+        privacy = _action_card(_("AI Privacy"))
         self.ai_enabled_switch = SwitchButton()
         self.ai_enabled_switch.toggled.connect(
             lambda enabled: actions.set_bool(AI_ASSIST_ENABLED_SETTING_KEY, enabled)
