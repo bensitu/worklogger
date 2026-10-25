@@ -67,6 +67,7 @@ from worklogger.infrastructure.security.key_store import (
 from worklogger.presentation.auth import AuthController, AuthSession
 from worklogger.presentation.auth.controller import RememberSessionStore
 from worklogger.presentation.job_runner import QtJobRunner
+from worklogger.presentation.input_behavior import install_input_behavior
 from worklogger.presentation.theme import (
     configure_application_style,
     install_bundled_fonts,
@@ -214,6 +215,7 @@ def _startup_failure(exc):
 def _application(argv: Sequence[str] | None) -> QApplication:
     existing = QApplication.instance()
     if existing is not None:
+        install_input_behavior(existing)
         configure_application_style()
         install_bundled_fonts()
         apply_application_icon()
@@ -226,6 +228,7 @@ def _application(argv: Sequence[str] | None) -> QApplication:
     application.setApplicationName(APP_NAME)
     application.setOrganizationName(APP_NAME)
     application.setApplicationVersion(APP_VERSION)
+    install_input_behavior(application)
     configure_application_style()
     install_bundled_fonts()
     apply_application_icon()

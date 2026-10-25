@@ -465,6 +465,8 @@ backups, and application-side identity requests after sign-in. They do not chang
 the operating system or browser proxy; authentication before account selection
 uses direct HTTPS. See [network routing](configuration.md#network) for boundaries.
 
+Dropdowns and numeric or date/time inputs accept wheel changes only after receiving focus through a click or keyboard navigation. Hovering over an unfocused input scrolls its surrounding page without changing the saved value. Expanded dropdown lists remain scrollable.
+
 **Settings > General > Application behavior** separates the tray icon from window actions. Windows and supported Linux desktops use a system tray icon; macOS uses a menu bar icon. With the icon enabled, choose whether closing the main window exits the application or keeps it running in the background. Independently choose whether minimizing hides the window through that icon. With hiding disabled, minimizing follows the operating system's normal behavior, including the Dock on macOS.
 
 Existing accounts retain the previous defaults: with the icon enabled, closing and minimizing hide the window. These preferences are account-specific and remain local to the device; personal cloud restores do not replace them. No database conversion is needed for these additional preferences.
