@@ -9,7 +9,6 @@ from functools import lru_cache
 
 from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.infrastructure.ai.generation_options import ExternalModelProfile, external_model_profiles
-from worklogger.infrastructure.files import file_fingerprint
 
 LOGGER = logging.getLogger(__name__)
 CONFIG_FILENAME = "worklogger.config.json"
@@ -97,21 +96,26 @@ def _integer_configuration(value, key, configuration_type, bounds):
 def load_runtime_configuration(path=None):
     path = Path(path) if path is not None else configuration_path()
     try:
-        status = path.stat()
+        with path.open("rb") as stream:
+            data = stream.read(MAX_CONFIG_BYTES + 1)
+    except FileNotFoundError:
+        LOGGER.warning("runtime_configuration_missing")
+        return RuntimeConfiguration()
     except OSError:
-        return _read_runtime_configuration(path)
-    return _cached_runtime_configuration(path.resolve(), file_fingerprint(status))
+        return _invalid_runtime_configuration()
+    # File timestamps can remain unchanged after rapid same-size edits.
+    return _cached_runtime_configuration(path.resolve(), data)
+
+
+def _invalid_runtime_configuration():
+    LOGGER.warning("runtime_configuration_invalid")
+    return RuntimeConfiguration(features=DeploymentFeatures(
+        ai=False, cloud_backup=False, self_registration=False, oidc=False), valid=False)
 
 
 @lru_cache(maxsize=16)
-def _cached_runtime_configuration(path, fingerprint):
-    return _read_runtime_configuration(path)
-
-
-def _read_runtime_configuration(path):
+def _cached_runtime_configuration(path, data):
     try:
-        with path.open("rb") as stream:
-            data = stream.read(MAX_CONFIG_BYTES + 1)
         if len(data) > MAX_CONFIG_BYTES:
             raise ValueError("runtime_configuration_too_large")
         value = json.loads(data.decode("utf-8-sig"))
@@ -152,10 +156,5 @@ def _read_runtime_configuration(path):
         })
         return RuntimeConfiguration(features=features, external_model_profiles=profiles,
             cloud_backup=backup, ai=ai, local_models=local_models, pagination=pagination)
-    except FileNotFoundError:
-        LOGGER.warning("runtime_configuration_missing")
-        return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
-        LOGGER.warning("runtime_configuration_invalid")
-        return RuntimeConfiguration(features=DeploymentFeatures(
-            ai=False, cloud_backup=False, self_registration=False, oidc=False), valid=False)
+        return _invalid_runtime_configuration()

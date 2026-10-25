@@ -24,11 +24,15 @@ class RuntimeConfigurationTests(unittest.TestCase):
         self.path.write_text('{"features":{"ai":false}}', encoding="utf-8")
         first = load_runtime_configuration(self.path)
         self.assertIs(load_runtime_configuration(self.path), first)
+        status = self.path.stat()
+        self.path.write_text('{"features":{"ai":true }}', encoding="utf-8")
+        with patch.object(Path, "stat", return_value=status):
+            self.assertTrue(load_runtime_configuration(self.path).features.ai)
         replacement = self.path.with_suffix(".replacement")
-        replacement.write_text('{"features":{"ai":true }}', encoding="utf-8")
+        replacement.write_text('{"features":{"ai":false}}', encoding="utf-8")
         self.assertEqual(replacement.stat().st_size, self.path.stat().st_size)
         replacement.replace(self.path)
-        self.assertTrue(load_runtime_configuration(self.path).features.ai)
+        self.assertFalse(load_runtime_configuration(self.path).features.ai)
         self.path.unlink()
         self.assertTrue(load_runtime_configuration(self.path).features.ai)
 

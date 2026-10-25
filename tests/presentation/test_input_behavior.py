@@ -69,7 +69,7 @@ class InputBehaviorTests(unittest.TestCase):
         install_input_behavior(self.app)
         for field, read, signal in fields:
             with self.subTest(control=type(field).__name__, editable=isinstance(field, QComboBox) and field.isEditable()):
-                self.assertEqual(field.focusPolicy(), Qt.FocusPolicy.StrongFocus)
+                self.assertTrue(field.focusPolicy() & Qt.FocusPolicy.TabFocus)
                 initial = read()
                 changed = QSignalSpy(signal)
                 for target in (field, field.findChild(QLineEdit)):

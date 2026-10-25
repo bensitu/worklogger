@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 import unittest
 from datetime import datetime, timedelta, timezone
 from dataclasses import replace
@@ -20,8 +19,6 @@ from worklogger.config.constants import (
     AI_PRIVACY_INCLUDE_CALENDAR_SETTING_KEY,
     DARK_MODE_SETTING_KEY,
     DEFAULT_BREAK_HOURS_SETTING_KEY,
-    ENABLE_MENU_BAR_SETTING_KEY,
-    ENABLE_TRAY_SETTING_KEY,
     LOCAL_MODEL_ENABLED_SETTING_KEY,
     MINIMAL_MODE_SETTING_KEY,
     MONTHLY_TARGET_HOURS_SETTING_KEY,
@@ -38,6 +35,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _, available_languages, get_language, set_language
 from worklogger.infrastructure.calendar.holidays_provider import detect_country, supported_holiday_regions, validate_holiday_region
 from worklogger.presentation.settings import SettingsDialog, SettingsPage
+from worklogger.presentation.platform_integration import residency_setting_key
 from worklogger.presentation.settings_capabilities import SettingsCapabilities
 from worklogger.presentation.viewmodels import SettingsViewModel
 from worklogger.presentation.widgets import SwitchButton
@@ -77,8 +75,6 @@ def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
 
 class SettingsPresentationTests(unittest.TestCase):
     def test_window_preferences_persist_independently_and_unavailable_trays_preserve_choices(self):
-        from worklogger.presentation.platform_integration import residency_setting_key
-
         for platform in ("win32", "darwin", "linux"):
             key = residency_setting_key(platform)
             with (self.subTest(platform=platform),
@@ -872,11 +868,7 @@ class SettingsPresentationTests(unittest.TestCase):
         dialog.recent_context_switch.set_checked(False)
         if dialog.residency_switch is not None:
             dialog.residency_switch.set_checked(True)
-            residency_key = (
-                ENABLE_TRAY_SETTING_KEY
-                if sys.platform.startswith("win")
-                else ENABLE_MENU_BAR_SETTING_KEY
-            )
+            residency_key = residency_setting_key()
             self.assertEqual(repository.values[(1, residency_key)], "1")
 
         self.assertEqual(repository.values[(1, THEME_SETTING_KEY)], "green")
