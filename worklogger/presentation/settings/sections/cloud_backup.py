@@ -3,9 +3,9 @@
 from dataclasses import fields
 from uuid import uuid4
 
-from PySide6.QtCore import QLocale, QSize, QTime, Signal, Qt
-from PySide6.QtWidgets import (QComboBox, QGridLayout, QLabel, QLayout,
-    QLineEdit, QPushButton, QSizePolicy, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
+from PySide6.QtCore import QLocale, QTime, Signal, Qt
+from PySide6.QtWidgets import (QComboBox, QLabel,
+    QLineEdit, QPushButton, QSpinBox, QTimeEdit, QVBoxLayout, QWidget)
 
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials
 from worklogger.infrastructure.i18n import _, get_language
@@ -13,6 +13,7 @@ from worklogger.presentation.settings.sections.common import _card_with_form, _a
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.numeric_input import apply_numeric_input_padding
+from worklogger.presentation.settings.sections.field_group import SettingsFieldGroup
 
 
 def _number(minimum, maximum):
@@ -20,66 +21,6 @@ def _number(minimum, maximum):
     apply_numeric_input_padding(field)
     field.setRange(minimum, maximum)
     return field
-
-
-class _BackupFieldGroup(QWidget):
-    def __init__(self, rows):
-        super().__init__()
-        self.setObjectName("cloud_backup_field_group_widget")
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self._grid = QGridLayout(self)
-        self._grid.setContentsMargins(0, 0, 0, 0)
-        self._grid.setHorizontalSpacing(12)
-        self._grid.setVerticalSpacing(8)
-        self._grid.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
-        self._containers = {}
-        self._signature = None
-        for name, label, field in rows:
-            container = QWidget(self)
-            container.setObjectName("cloud_backup_field_widget")
-            layout = QVBoxLayout(container)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(8)
-            label.setWordWrap(True)
-            label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            layout.addWidget(label)
-            field.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            layout.addWidget(field)
-            layout.addStretch(1)
-            self._containers[name] = container
-        self.reflow()
-
-    def minimumSizeHint(self):
-        return QSize(max(container.minimumSizeHint().width() for container in self._containers.values()),
-                     self._grid.minimumSize().height())
-
-    def set_field_visible(self, name, visible):
-        self._containers[name].setVisible(visible)
-
-    def sync_visibility(self):
-        self.setVisible(any(not container.isHidden() for container in self._containers.values()))
-        self.reflow()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.reflow()
-
-    def reflow(self):
-        visible = tuple(name for name, container in self._containers.items() if not container.isHidden())
-        minimum = max(160, self.minimumSizeHint().width())
-        columns = max(1, min(len(visible), (self.width() + 12) // (minimum + 12)))
-        signature = visible, columns
-        if signature == self._signature:
-            return
-        self._signature = signature
-        while self._grid.count():
-            self._grid.takeAt(0)
-        for column in range(self._grid.columnCount()):
-            self._grid.setColumnStretch(column, 0)
-        for index, name in enumerate(visible):
-            self._grid.addWidget(self._containers[name], index // columns, index % columns)
-            self._grid.setColumnStretch(index % columns, 1)
-        self.updateGeometry()
 
 
 class CloudBackupPanel(QWidget):
@@ -161,7 +102,7 @@ class CloudBackupPanel(QWidget):
                 card.form_layout.addRow(self._switch_rows[name])
             elif name in grouped:
                 names = grouped[name]
-                group = _BackupFieldGroup([(key, *self._rows[key]) for key in names])
+                group = SettingsFieldGroup([(key, *self._rows[key]) for key in names])
                 self._field_groups.append(group)
                 self._group_for_field.update((key, group) for key in names)
                 card.form_layout.addRow(group)
@@ -172,7 +113,7 @@ class CloudBackupPanel(QWidget):
         self.local_restore_button = QPushButton(_("Restore local recovery copy"))
         self.clear_credentials_button = QPushButton(_("Remove saved credentials"))
         self.clear_credentials_button.setProperty("variant", "outline")
-        set_button_icon(self.clear_credentials_button, "trash-2")
+        set_button_icon(self.clear_credentials_button, "trash")
         self.clear_credentials_button.clicked.connect(self._clear_credentials)
         for button, icon in ((self.save_button, "save"), (self.test_button, "link"),
                              (self.upload_button, "upload"), (self.restore_button, "download")):

@@ -61,6 +61,22 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                             self.assertEqual(sum(button.isChecked() for button in group.buttons()), 1)
                         self.capture(editor, f"{language}-work-schedule-{theme}-{dark}")
                         self.capture(editor.parentWidget(), f"{language}-work-schedule-form-{theme}-{dark}")
+                        for width in (740, 1100):
+                            page.resize(width, 760)
+                            for _pass in range(4):
+                                self.app.processEvents()
+                            scroll = page.category_stack.currentWidget()
+                            self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+                            for field in (page.target_mode_combo, page.manage_entry_types_button,
+                                          page.manage_work_modes_button, page.manage_projects_button):
+                                self.assertEqual(field.width(), field.parentWidget().form_layout.contentsRect().width())
+                            reminders = (page.default_break_input, page.timer_reminder_input,
+                                         page.continuous_timer_reminder_input)
+                            for field in reminders:
+                                self.assertLessEqual(field.width(), 180)
+                            if width == 1100:
+                                self.assertEqual(len({field.y() for field in reminders}), 1)
+                            self.capture(scroll.content_widget, f"{language}-general-{theme}-{dark}-{width}")
                     finally:
                         page.hide()
                         page.deleteLater()

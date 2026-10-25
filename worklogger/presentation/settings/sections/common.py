@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -95,27 +96,22 @@ def _secondary_label(text: str) -> QLabel:
     return label
 
 
-def _switch_line(label: str, switch: SwitchButton) -> QWidget:
+def _control_line(label: str, control: QWidget) -> QWidget:
     row = QWidget()
-    row.setObjectName("settings_switch_row_widget")
+    row.setObjectName("settings_control_row_widget")
     layout = QHBoxLayout(row)
     layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(16)
     text = QLabel(label)
     text.setWordWrap(True)
+    text.setBuddy(control)
     layout.addWidget(text, 1)
-    layout.addStretch(1)
-    layout.addWidget(switch)
+    layout.addWidget(control)
     return row
 
 
-def _switch_row(switch: SwitchButton) -> QWidget:
-    row = QWidget()
-    row.setObjectName("settings_switch_row_widget")
-    layout = QHBoxLayout(row)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.addWidget(switch)
-    layout.addStretch(1)
-    return row
+def _switch_line(label: str, switch: SwitchButton) -> QWidget:
+    return _control_line(label, switch)
 
 
 def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
@@ -126,7 +122,8 @@ def _hours_input(minimum: float, maximum: float, step: float) -> QDoubleSpinBox:
     spin.setRange(minimum, maximum)
     spin.setSingleStep(step)
     spin.setMinimumWidth(120)
-    spin.setFixedWidth(320)
+    spin.setMaximumWidth(180)
+    spin.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     return spin
 
 

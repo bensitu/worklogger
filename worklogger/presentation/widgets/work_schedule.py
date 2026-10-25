@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QLocale, QSignalBlocker, Qt, Signal
 from PySide6.QtWidgets import (QButtonGroup, QComboBox, QGridLayout, QHBoxLayout,
-    QLabel, QPushButton, QRadioButton, QToolButton, QVBoxLayout, QWidget)
+    QLabel, QPushButton, QRadioButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget)
 
 from worklogger.domain.settings.work_schedule import WorkSchedule
 from worklogger.infrastructure.i18n import _, get_language
@@ -15,7 +15,7 @@ class WorkScheduleEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("work_schedule_editor_widget")
-        self.setFixedWidth(320)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._saved = WorkSchedule()
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)

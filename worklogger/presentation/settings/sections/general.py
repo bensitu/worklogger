@@ -6,7 +6,9 @@ from collections.abc import Mapping
 
 from PySide6.QtWidgets import (
     QComboBox,
+    QLabel,
     QPushButton,
+    QSizePolicy,
 )
 
 from worklogger.config.constants import (
@@ -30,8 +32,10 @@ from worklogger.presentation.settings.sections.common import (
     _card_with_form,
     _hours_input,
     _SettingsScrollPage,
-    _switch_row,
+    _control_line,
+    _switch_line,
 )
+from worklogger.presentation.settings.sections.field_group import SettingsFieldGroup
 from worklogger.presentation.widgets import SwitchButton
 from worklogger.presentation.widgets.icons import set_button_icon
 from worklogger.presentation.widgets.work_schedule import WorkScheduleEditor
@@ -70,7 +74,7 @@ class GeneralSection(_SettingsScrollPage):
         self.standard_hours_input.valueChanged.connect(
             lambda value: actions.set_number(STANDARD_WORK_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Daily standard hours (h)"), self.standard_hours_input)
+        form.addRow(_control_line(_("Daily standard hours (h)"), self.standard_hours_input))
 
         self.work_schedule_editor = WorkScheduleEditor()
         self.work_schedule_editor.schedule_changed.connect(lambda value: actions.set_text(WORK_SCHEDULE_SETTING_KEY, value))
@@ -80,7 +84,6 @@ class GeneralSection(_SettingsScrollPage):
         card = _card_with_form(_("Hours goal"))
         form = card.form_layout
         self.target_mode_combo = QComboBox()
-        self.target_mode_combo.setFixedWidth(320)
         self.target_mode_combo.setAccessibleName(_("Goal calculation"))
         self.target_mode_combo.addItem(_("From work schedule"), "schedule")
         self.target_mode_combo.addItem(_("Custom target"), "manual")
@@ -90,7 +93,8 @@ class GeneralSection(_SettingsScrollPage):
         self.monthly_target_input.valueChanged.connect(
             lambda value: actions.set_number(MONTHLY_TARGET_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Monthly target (h)"), self.monthly_target_input)
+        self._monthly_target_row = _control_line(_("Monthly target (h)"), self.monthly_target_input)
+        form.addRow(self._monthly_target_row)
         self._target_form = form
         self.target_mode_combo.currentIndexChanged.connect(self._update_target_visibility)
         self.target_mode_combo.currentIndexChanged.connect(
@@ -105,7 +109,6 @@ class GeneralSection(_SettingsScrollPage):
         self.default_break_input.valueChanged.connect(
             lambda value: actions.set_number(DEFAULT_BREAK_HOURS_SETTING_KEY, value)
         )
-        form.addRow(_("Default break (h)"), self.default_break_input)
 
         self.timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
         self.continuous_timer_reminder_input = _hours_input(0.0, 16.0, 0.5)
@@ -115,7 +118,11 @@ class GeneralSection(_SettingsScrollPage):
             field.setKeyboardTracking(False)
             field.setAccessibleName(caption)
             field.valueChanged.connect(lambda value, key=key: actions.set_number(key, value))
-            form.addRow(caption, field)
+        form.addRow(SettingsFieldGroup([
+            ("default_break", QLabel(_("Default break (h)")), self.default_break_input),
+            ("long_timer", QLabel(_("Long timer reminder (h)")), self.timer_reminder_input),
+            ("continuous_timer", QLabel(_("Continuous work timer reminder (h)")), self.continuous_timer_reminder_input),
+        ]))
 
         page.layout().addWidget(card)
         card = _card_with_form(_("Classification"))
@@ -123,7 +130,6 @@ class GeneralSection(_SettingsScrollPage):
 
         self.manage_entry_types_button = QPushButton(_("Manage entry types"))
         self.manage_entry_types_button.setObjectName("manage_entry_types_button")
-        self.manage_entry_types_button.setFixedWidth(320)
         self.manage_entry_types_button.setProperty("variant", "outline")
         self.manage_entry_types_button.setEnabled(False)
         set_button_icon(self.manage_entry_types_button, "settings")
@@ -132,7 +138,6 @@ class GeneralSection(_SettingsScrollPage):
 
         self.manage_work_modes_button = QPushButton(_("Manage work arrangements"))
         self.manage_work_modes_button.setObjectName("manage_work_modes_button")
-        self.manage_work_modes_button.setFixedWidth(320)
         self.manage_work_modes_button.setProperty("variant", "outline")
         self.manage_work_modes_button.setEnabled(False)
         set_button_icon(self.manage_work_modes_button, "settings")
@@ -141,7 +146,6 @@ class GeneralSection(_SettingsScrollPage):
 
         self.manage_projects_button = QPushButton(_("Manage projects"))
         self.manage_projects_button.setObjectName("manage_projects_button")
-        self.manage_projects_button.setFixedWidth(320)
         self.manage_projects_button.setProperty("variant", "outline")
         self.manage_projects_button.setEnabled(False)
         set_button_icon(self.manage_projects_button, "settings")
@@ -156,10 +160,9 @@ class GeneralSection(_SettingsScrollPage):
         self.holidays_switch.toggled.connect(
             lambda enabled: actions.set_bool(SHOW_HOLIDAYS_SETTING_KEY, enabled)
         )
-        form.addRow(_("Public holidays"), _switch_row(self.holidays_switch))
+        form.addRow(_switch_line(_("Public holidays"), self.holidays_switch))
 
         self.holiday_country_combo = QComboBox()
-        self.holiday_country_combo.setFixedWidth(320)
         self.holiday_country_combo.addItem(
             _("System region") + f" ({system_country or '-'})", ""
         )
@@ -168,13 +171,14 @@ class GeneralSection(_SettingsScrollPage):
         self.holiday_country_combo.currentIndexChanged.connect(
             actions.holiday_country_changed
         )
-        form.addRow(_("Holiday country"), self.holiday_country_combo)
         self.holiday_subdivision_combo = QComboBox()
-        self.holiday_subdivision_combo.setFixedWidth(320)
         self.holiday_subdivision_combo.currentIndexChanged.connect(
             actions.holiday_subdivision_changed
         )
-        form.addRow(_("State / province"), self.holiday_subdivision_combo)
+        form.addRow(SettingsFieldGroup([
+            ("country", QLabel(_("Holiday country")), self.holiday_country_combo),
+            ("subdivision", QLabel(_("State / province")), self.holiday_subdivision_combo),
+        ]))
 
         self.note_markers_switch = SwitchButton()
         self.note_markers_switch.setVisible(False)
@@ -188,18 +192,18 @@ class GeneralSection(_SettingsScrollPage):
                 SHOW_OVERNIGHT_INDICATOR_SETTING_KEY, enabled
             )
         )
-        form.addRow(_("Overnight indicator"), _switch_row(self.overnight_switch))
+        form.addRow(_switch_line(_("Overnight indicator"), self.overnight_switch))
 
         self.week_start_switch = SwitchButton()
         self.week_start_switch.toggled.connect(
             lambda enabled: actions.set_bool(WEEK_START_MONDAY_SETTING_KEY, enabled)
         )
-        form.addRow(_("Start week on Monday"), _switch_row(self.week_start_switch))
+        form.addRow(_switch_line(_("Start week on Monday"), self.week_start_switch))
         self.recent_context_switch = SwitchButton()
         self.recent_context_switch.toggled.connect(
             lambda enabled: actions.set_bool(SHOW_RECENT_CONTEXT_SETTING_KEY, enabled)
         )
-        form.addRow(_("Show recent context"), _switch_row(self.recent_context_switch))
+        form.addRow(_switch_line(_("Show recent context"), self.recent_context_switch))
         page.layout().addWidget(card)
 
         self.residency_switch: SwitchButton | None = None
@@ -215,9 +219,14 @@ class GeneralSection(_SettingsScrollPage):
                 if actions.residency_key == ENABLE_TRAY_SETTING_KEY
                 else _("Enable menu bar")
             )
-            form.addRow(label, _switch_row(self.residency_switch))
+            form.addRow(_switch_line(label, self.residency_switch))
             page.layout().addWidget(card)
+        for control in (self.target_mode_combo, self.manage_entry_types_button,
+                        self.manage_work_modes_button, self.manage_projects_button):
+            control.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         page.layout().addStretch(1)
 
     def _update_target_visibility(self, *_args):
-        self._target_form.setRowVisible(self.monthly_target_input, self.target_mode_combo.currentData() == "manual")
+        visible = self.target_mode_combo.currentData() == "manual"
+        self._target_form.setRowVisible(self._monthly_target_row, visible)
+        self.monthly_target_input.setVisible(visible)
