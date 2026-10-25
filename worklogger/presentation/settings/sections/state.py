@@ -273,6 +273,7 @@ class SettingsSectionState:
     def _update_local_model_controls(self):
         self._update_local_context()
         enabled = self.local_model_enabled_switch.is_checked()
+        self.local_model_name_label.setEnabled(enabled)
         self.manage_local_models_button.setEnabled(
             enabled and self._capabilities.model_management and self._model_management_available)
         self.manage_local_models_button.setToolTip(

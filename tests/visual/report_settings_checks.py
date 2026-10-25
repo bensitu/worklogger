@@ -8,6 +8,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QFormLayout
+from PySide6.QtGui import QPalette
 from tests.presentation.test_settings_presentation import MemorySettingsRepository, _view_model
 from tests.presentation.test_shell_pages import ReportsViewModel
 from tests.presentation.qt_support import dispose_test_windows
@@ -630,6 +631,20 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                         self.assertEqual(control.value(), 131072)
                         self.assertIn("131,072", page.local_context_status_label.text())
                         self.capture(page, f"{language}-context-{'dark' if dark else 'light'}")
+                        model_name = page.local_model_name_label.text()
+                        page.local_model_enabled_switch.click()
+                        page.refresh()
+                        self.app.processEvents()
+                        name_label = page.local_model_name_label
+                        self.assertFalse(name_label.isEnabled())
+                        self.assertEqual(name_label.text(), model_name)
+                        self.assertEqual(name_label.palette().color(
+                            QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText).name(),
+                            engine.palette(dark=dark).disabled_text)
+                        page.local_model_enabled_switch.click()
+                        self.app.processEvents()
+                        self.assertTrue(name_label.isEnabled())
+                        self.assertEqual(name_label.text(), model_name)
                     finally:
                         page.hide()
                         page.deleteLater()
