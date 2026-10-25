@@ -7,7 +7,7 @@ from datetime import date
 import json
 import logging
 from worklogger.app.queries.note_queries import GetDailyNoteQuery
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES, DailyNote, NoteHistoryFilter, NoteHistoryPage
 from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
 from worklogger.domain.notes.repositories import DailyNoteRepository

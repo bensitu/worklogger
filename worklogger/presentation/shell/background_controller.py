@@ -6,7 +6,7 @@ from shiboken6 import isValid
 from worklogger.domain.shared.errors import CancellationError, InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.images.background import prepare_background
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.presentation.job_runner import shared_job_runner
 
 

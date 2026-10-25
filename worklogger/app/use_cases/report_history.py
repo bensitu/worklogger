@@ -1,6 +1,6 @@
 """Paged report summaries and owned report selection."""
 
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.failures import storage_boundary
 from worklogger.domain.reporting.history import ReportHistoryFilter
 from worklogger.domain.reporting.repositories import ReportRepository
 from worklogger.domain.shared.errors import NotFoundError, ValidationError

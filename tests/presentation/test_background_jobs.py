@@ -24,6 +24,38 @@ def _app() -> QApplication:
 
 
 class BackgroundJobTests(unittest.TestCase):
+    def test_job_and_callback_failures_hide_payloads_and_do_not_block_other_completions(self):
+        runner = QtJobRunner()
+        results, callback_calls = [], []
+
+        def fail(_token):
+            raise RuntimeError("Private work record content")
+
+        def fail_callback(_result):
+            callback_calls.append(True)
+            raise ValueError("Private callback content")
+
+        try:
+            with self.assertLogs("worklogger.presentation.job_runner", level="ERROR") as captured:
+                runner.submit("load_records", fail, on_complete=results.append)
+                runner.submit("load_summary", lambda _token: 1, on_complete=fail_callback)
+                runner.submit("load_calendar", lambda _token: 42, on_complete=results.append)
+                deadline = time.monotonic() + 3
+                while (len(results) < 2 or not callback_calls) and time.monotonic() < deadline:
+                    self._app.processEvents()
+                    time.sleep(0.001)
+            self.assertEqual(len(results), 2)
+            failure = next(result for result in results if not result.ok)
+            self.assertEqual(failure.error.code, "background_job_failed")
+            self.assertEqual(failure.error.details, {"reason": "RuntimeError"})
+            self.assertEqual(next(result.value for result in results if result.ok), 42)
+            messages = "\n".join(captured.output)
+            self.assertIn("background_job_failed: RuntimeError", messages)
+            self.assertIn("background_job_callback_failed: ValueError", messages)
+            self.assertNotIn("Private", messages)
+        finally:
+            self.assertTrue(runner.shutdown(wait=True))
+
     def test_forced_shutdown_requires_a_delayed_option_and_explicit_confirmation(self):
         from worklogger.presentation.widgets.shutdown_progress import BackgroundTaskShutdownDialog
         dialog = BackgroundTaskShutdownDialog()

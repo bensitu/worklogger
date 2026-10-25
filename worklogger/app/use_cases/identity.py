@@ -23,7 +23,7 @@ from worklogger.domain.auth.policies import remember_token_expires_at, remember_
 from worklogger.app.job_runner import CancellationToken
 from worklogger.domain.shared.errors import AuthenticationError, AuthorizationError, InfrastructureError, ValidationError, CancellationError
 from worklogger.domain.shared.result import Result
-from worklogger.app.use_cases._errors import storage_boundary, infrastructure_failure
+from worklogger.app.failures import storage_boundary, infrastructure_failure
 from worklogger.app.use_cases.auth import verify_password_attempt
 
 

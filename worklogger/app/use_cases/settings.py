@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from collections.abc import Callable
 from typing import Protocol

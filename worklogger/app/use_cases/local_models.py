@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 from collections.abc import Callable
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.failures import storage_boundary
 
 from worklogger.app.commands.local_model_commands import (
     DeleteLocalModelCommand,

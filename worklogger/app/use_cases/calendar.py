@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from pathlib import Path
 from datetime import date
@@ -10,7 +10,7 @@ from typing import Protocol
 from collections.abc import Callable
 
 from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.failures import storage_boundary
 from worklogger.app.queries.calendar_queries import (
     GetCalendarEventsForRangeQuery,
     GetHolidaysForRangeQuery,

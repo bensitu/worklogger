@@ -1,6 +1,6 @@
 """Account-specific project management and safe record associations."""
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from dataclasses import replace
 from uuid import uuid4

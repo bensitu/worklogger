@@ -34,11 +34,13 @@ pending overview results before applying a newer state.
 Domain code must not import Qt, storage, or infrastructure.
 Application handlers depend on contracts, not concrete widgets or adapters.
 
-Unexpected adapter failures use `infrastructure_failure` to record the operation
+Unexpected adapter failures use `app/failures.py` and its `infrastructure_failure` helper to record the operation
 code and exception type without logging exception messages or business payloads.
 Validation and conflict results retain their distinct application contracts.
 Infrastructure implements those contracts. Presentation handles interaction and
 state display; business calculations belong to the domain/application layers.
+
+Background job execution and completion callbacks use the same safe failure summary. They retain the operation code and exception type without logging exception messages, tracebacks, or work-record contents; a failed completion does not interrupt other jobs. Presentation depends on the shared failure boundary rather than a private use-case module.
 
 ## Composition and Lifecycle
 

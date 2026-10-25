@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import uuid
 from time import monotonic
 from weakref import ref
@@ -16,11 +15,9 @@ from worklogger.app.job_runner import (
     JobCallback,
     JobHandle,
 )
-from worklogger.domain.shared.errors import CancellationError, InfrastructureError
+from worklogger.domain.shared.errors import CancellationError
 from worklogger.domain.shared.result import Result
-
-LOGGER = logging.getLogger(__name__)
-
+from worklogger.app.failures import infrastructure_failure
 
 def shared_job_runner() -> QtJobRunner:
     application = QCoreApplication.instance()
@@ -157,22 +154,15 @@ class QtJobRunner(QObject):
             return
         try:
             callback(result)
-        except Exception:
-            LOGGER.exception("background_job_callback_failed", extra={"job_id": job_id})
+        except Exception as error:
+            infrastructure_failure("background_job_callback_failed", error, logger_name=__name__)
 
 
 def _run_job(job: JobCallable[object], token: CancellationToken) -> Result[object]:
     try:
         value = job(token)
-    except Exception as exc:
-        LOGGER.exception("background_job_failed")
-        return Result.failure(
-            InfrastructureError(
-                "background_job_failed",
-                "background_job_failed",
-                {"reason": type(exc).__name__},
-            )
-        )
+    except Exception as error:
+        return Result.failure(infrastructure_failure("background_job_failed", error, logger_name=__name__))
     if isinstance(value, Result):
         return value
     return Result.success(value)

@@ -1,6 +1,6 @@
 """Account-owned timesheet exports that never save or replace report drafts."""
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from datetime import datetime
 from pathlib import Path

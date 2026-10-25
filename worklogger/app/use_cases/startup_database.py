@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Protocol
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.domain.shared.errors import AuthorizationError, ValidationError
 from worklogger.domain.shared.result import Result
 

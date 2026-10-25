@@ -25,6 +25,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Background job and completion failures retain safe diagnostic codes without logging private exception payloads or blocking other completed requests.
 - Report, analytics, identity, and template dialogs perform storage and export work through the shared desktop job runner, keeping the interface responsive and preserving edits when an operation fails.
 - AI context applies note-sharing permissions to associated historical entries, using the same deduplication rules as report generation.
 - Sign-in throttling provides consistent lockout responses for unknown IDs with bounded storage. External AI responses support structured text parts, and local model imports check available disk space before and during copying.

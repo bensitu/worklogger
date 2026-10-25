@@ -9,7 +9,7 @@ from worklogger.domain.calendar.repositories import HolidayProvider
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.settings.values import setting_bool
 from worklogger.domain.settings.work_schedule import WorkSchedule
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 """Account-scoped first-use guidance preferences."""
 
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.failures import storage_boundary
 from worklogger.config.constants import GETTING_STARTED_PENDING_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.shared.result import Result

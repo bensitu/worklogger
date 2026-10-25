@@ -1,6 +1,6 @@
 """Bounded account-owned project summaries for any selected date range."""
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 import math
 from worklogger.domain.analytics.projects import context_summaries

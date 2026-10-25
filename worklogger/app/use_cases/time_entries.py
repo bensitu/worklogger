@@ -27,7 +27,7 @@ from worklogger.domain.worklog.rules import entry_interval, normalize_work_log
 from worklogger.app.entry_selection import EntrySelectionResolver
 from worklogger.app.ports import EntryTypeOperations, ProjectOperations, WorkModeOperations
 from worklogger.app.time_entry_state import RecordingState
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.app.use_cases.manual_entries import ManualEntryWriter
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.replacement import EntryReplacement

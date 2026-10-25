@@ -84,7 +84,7 @@ class LoggingInfrastructureTests(unittest.TestCase):
                     logger.exception("credential_storage_failed")
                 logger.error("safe diagnostic")
                 logger.error("Invalid numeric value: %d", "private malformed payload")
-                from worklogger.app.use_cases._errors import infrastructure_failure
+                from worklogger.app.failures import infrastructure_failure
                 failure = infrastructure_failure("worklog_save_failed", OSError("private storage payload"), logger_name="worklogger.test")
                 self.assertEqual(failure.details, {"reason": "OSError"})
                 logger.error('Authorization: Basic encoded-basic-secret')

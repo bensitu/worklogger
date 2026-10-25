@@ -1,6 +1,6 @@
 """Account background import and preferences."""
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from typing import Protocol
 

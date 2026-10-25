@@ -1,4 +1,4 @@
-"""Safe infrastructure boundaries for application operations."""
+"""Safe error translation shared by application and presentation operations."""
 
 from functools import wraps
 import logging

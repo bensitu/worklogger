@@ -1,6 +1,6 @@
 """Account-scoped profile reads and optimistic display-name updates."""
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 from worklogger.domain.auth.models import User
 from worklogger.domain.auth.profile import normalize_display_name

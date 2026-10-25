@@ -13,7 +13,7 @@ from worklogger.app.queries.report_queries import (
     GetReportForPeriodQuery,
     ListReportsQuery,
 )
-from worklogger.app.use_cases._errors import infrastructure_failure, storage_boundary
+from worklogger.app.failures import infrastructure_failure, storage_boundary
 from worklogger.app.use_cases.report_generation import GeneratedReport as GeneratedReport
 from worklogger.app.use_cases.report_generation import GenerateReportHandler as GenerateReportHandler
 from worklogger.domain.reporting.models import Report

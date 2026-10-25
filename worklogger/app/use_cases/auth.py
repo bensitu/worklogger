@@ -40,7 +40,7 @@ from worklogger.domain.shared.errors import (
     ValidationError,
 )
 from worklogger.domain.shared.result import Result
-from worklogger.app.use_cases._errors import storage_boundary
+from worklogger.app.failures import storage_boundary
 
 
 @dataclass(frozen=True)

@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from worklogger.app.job_runner import CancellationToken
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkModeValue

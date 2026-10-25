@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QObject
 
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.i18n import _
 from worklogger.presentation.job_runner import owned_callback

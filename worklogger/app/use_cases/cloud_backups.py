@@ -14,7 +14,7 @@ from worklogger.domain.cloud_backup import BackupCredentials, BackupOverview, Ba
 from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.cloud_backup_ports import BackupArchive, BackupObjectStore, PersonalDataStore
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 
 
 @dataclass(frozen=True)

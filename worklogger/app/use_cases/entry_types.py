@@ -4,7 +4,7 @@ from uuid import uuid4
 from worklogger.domain.worklog.models import CustomEntryType, EntryType
 from worklogger.domain.shared.result import Result
 from worklogger.domain.shared.errors import ValidationError
-from worklogger.app.use_cases._errors import infrastructure_failure
+from worklogger.app.failures import infrastructure_failure
 from typing import Generic
 from worklogger.domain.worklog.type_repository import ClassificationRepository, Definition
 
