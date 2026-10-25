@@ -61,6 +61,7 @@ class BackupService(Protocol):
 
 class UpdateChecker(Protocol):
     def check_latest_version(self, current_version: str) -> Result[str | None]:
+        """Return a newer supported release, or None when no update is available."""
         ...
 
 

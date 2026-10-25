@@ -423,12 +423,12 @@ class AppWindowTests(unittest.TestCase):
         self.assertFalse(window.status_label.isHidden())
         self.warning.assert_not_called()
 
-    def test_app_window_exposes_account_label_and_logout_signal(self) -> None:
+    def test_app_window_exposes_sidebar_profile_and_logout_signal(self) -> None:
         window = _window(MemoryWorkLogRepository(), account_name="alice")
         logouts: list[bool] = []
         window.logout_requested.connect(lambda: logouts.append(True))
 
-        self.assertEqual(window.account_label.text(), "Signed in: alice")
+        self.assertEqual(window.sidebar.profile_name_label.text(), "alice")
         self.assertFalse(hasattr(window, "logout_button"))
 
         window._request_logout()

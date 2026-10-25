@@ -13,6 +13,16 @@ from worklogger.infrastructure.update import GitHubReleaseUpdateChecker
 
 
 class HTTPInfrastructureTests(unittest.TestCase):
+    def test_external_responses_extract_text_parts_without_serializing_metadata(self):
+        content = [{"type": "text", "text": "First paragraph"},
+                   {"type": "image_url", "image_url": {"url": "excluded"}},
+                   {"type": "text", "text": "Second paragraph"}]
+        response = io.BytesIO(json.dumps({"choices": [{"message": {"content": content}}]}).encode())
+        result = OpenAICompatibleGateway(api_key="synthetic", opener=lambda *_a, **_k: response).generate(
+            AIRequest(({"role": "user", "content": "Source"},), "model", 30))
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value.text, "First paragraph\nSecond paragraph")
+
     def test_slow_response_chunks_observe_the_deadline_and_cancellation(self):
         from worklogger.app.job_runner import CancellationToken
 

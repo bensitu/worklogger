@@ -57,7 +57,10 @@ def _timezone_countries() -> dict[str, str]:
     mapping = dict(TZ_COUNTRY)
     for line in files("tzdata.zoneinfo").joinpath("zone.tab").read_text(encoding="utf-8").splitlines():
         if line and not line.startswith("#"):
-            country, _coordinates, zone, *_comment = line.split("\t")
+            parts = line.split("\t")
+            if len(parts) < 3:
+                continue
+            country, _coordinates, zone, *_comment = parts
             mapping[zone] = country
     return mapping
 

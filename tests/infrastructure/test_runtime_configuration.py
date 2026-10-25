@@ -20,6 +20,17 @@ from worklogger.presentation.shell.app_window import AppWindowConfig
 
 
 class RuntimeConfigurationTests(unittest.TestCase):
+    def test_configuration_cache_observes_replacements_and_deletion(self):
+        self.path.write_text('{"features":{"ai":false}}', encoding="utf-8")
+        first = load_runtime_configuration(self.path)
+        self.assertIs(load_runtime_configuration(self.path), first)
+        replacement = self.path.with_suffix(".replacement")
+        replacement.write_text('{"features":{"ai":true}}', encoding="utf-8")
+        replacement.replace(self.path)
+        self.assertTrue(load_runtime_configuration(self.path).features.ai)
+        self.path.unlink()
+        self.assertTrue(load_runtime_configuration(self.path).features.ai)
+
     def setUp(self):
         self.directory = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self.path = self.directory / CONFIG_FILENAME

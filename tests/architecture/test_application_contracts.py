@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from datetime import date
 import unittest
 
-from worklogger.app.event_bus import EventBus, WorkLogSaved
 from worklogger.app.job_runner import CancellationToken
 from worklogger.config.feature_flags import FeatureFlag, FeatureFlags
 from worklogger.domain.shared.errors import ValidationError
@@ -26,18 +24,6 @@ class ApplicationContractTests(unittest.TestCase):
             Result(ok=True, error=error)
         with self.assertRaises(ValueError):
             Result(ok=False)
-
-    def test_event_bus_publish_and_unsubscribe(self) -> None:
-        bus = EventBus()
-        received: list[WorkLogSaved] = []
-        unsubscribe = bus.subscribe(WorkLogSaved, received.append)
-        event = WorkLogSaved(user_id=1, day=date(2026, 5, 13))
-
-        bus.publish(event)
-        unsubscribe()
-        bus.publish(event)
-
-        self.assertEqual(received, [event])
 
     def test_cancellation_token_is_cooperative(self) -> None:
         token = CancellationToken()

@@ -9,8 +9,10 @@ from worklogger.domain.auth.policies import lockout_until_for_failure_count, use
 from worklogger.infrastructure.database.connection import SQLiteConnectionFactory
 from worklogger.infrastructure.repositories._mapping import parse_datetime
 
-_STALE_ATTEMPTS = ("last_failed_at<? OR NOT EXISTS (SELECT 1 FROM users WHERE "
-                   "users.username_key=login_attempts.username OR char(0)||'recovery:'||users.username_key=login_attempts.username)")
+_STALE_ATTEMPTS = "last_failed_at<?"
+_UNKNOWN_ATTEMPTS = ("NOT EXISTS (SELECT 1 FROM users WHERE users.username_key=login_attempts.username "
+                     "OR char(0)||'recovery:'||users.username_key=login_attempts.username)")
+_MAX_UNKNOWN_ATTEMPTS = 1024
 
 
 class SQLiteLoginFailureRepository:
@@ -57,9 +59,6 @@ class SQLiteLoginFailureRepository:
         username = username_key(username)
         now = self._clock()
         with self._connection_factory.transaction(write=True) as connection:
-            column = "username_key"
-            if not connection.execute(f"SELECT 1 FROM users WHERE {column}=?", (username,)).fetchone():
-                return 0, None
             row = connection.execute(
                 "SELECT failed_count, last_failed_at FROM login_attempts WHERE username=?",
                 (self._prefix + username,),
@@ -79,6 +78,8 @@ class SQLiteLoginFailureRepository:
                 """,
                 (self._prefix + username, failed_count, locked_until_raw, now.isoformat(timespec="seconds")),
             )
+            connection.execute("DELETE FROM login_attempts WHERE username IN (SELECT username FROM login_attempts WHERE "
+                + _UNKNOWN_ATTEMPTS + " ORDER BY last_failed_at DESC, rowid DESC LIMIT -1 OFFSET ?)", (_MAX_UNKNOWN_ATTEMPTS,))
         return failed_count, locked_until
 
     def clear_failures(self, username: str) -> None:

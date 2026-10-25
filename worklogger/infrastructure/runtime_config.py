@@ -5,6 +5,7 @@ import logging
 import sys
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
+from functools import lru_cache
 
 from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.infrastructure.ai.generation_options import ExternalModelProfile, external_model_profiles
@@ -95,6 +96,19 @@ def _integer_configuration(value, key, configuration_type, bounds):
 def load_runtime_configuration(path=None):
     path = Path(path) if path is not None else configuration_path()
     try:
+        status = path.stat()
+    except OSError:
+        return _read_runtime_configuration(path)
+    return _cached_runtime_configuration(path.resolve(), status.st_mtime_ns, status.st_ctime_ns, status.st_size)
+
+
+@lru_cache(maxsize=16)
+def _cached_runtime_configuration(path, modified, changed, size):
+    return _read_runtime_configuration(path)
+
+
+def _read_runtime_configuration(path):
+    try:
         with path.open("rb") as stream:
             data = stream.read(MAX_CONFIG_BYTES + 1)
         if len(data) > MAX_CONFIG_BYTES:
@@ -103,6 +117,8 @@ def load_runtime_configuration(path=None):
         if not isinstance(value, dict) or not isinstance(value.get("features", {}), dict):
             raise TypeError("runtime_configuration_invalid")
         flags = {}
+        if set(value.get("features", {})) - {field.name for field in fields(DeploymentFeatures)}:
+            LOGGER.warning("runtime_configuration_unknown_feature")
         for field in fields(DeploymentFeatures):
             enabled = value.get("features", {}).get(field.name, field.default)
             if type(enabled) is not bool:
@@ -136,6 +152,7 @@ def load_runtime_configuration(path=None):
         return RuntimeConfiguration(features=features, external_model_profiles=profiles,
             cloud_backup=backup, ai=ai, local_models=local_models, pagination=pagination)
     except FileNotFoundError:
+        LOGGER.warning("runtime_configuration_missing")
         return RuntimeConfiguration()
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         LOGGER.warning("runtime_configuration_invalid")

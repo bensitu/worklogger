@@ -149,7 +149,11 @@ def _extract_text(data: object) -> str:
     if not isinstance(first, dict):
         return ""
     message = first.get("message")
-    if isinstance(message, dict):
-        return str(message.get("content") or "").strip()
-    return str(first.get("text") or "").strip()
+    content = message.get("content") if isinstance(message, dict) else first.get("text")
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        return "\n".join(part["text"] for part in content if isinstance(part, dict)
+                         and part.get("type") in {"text", "output_text"} and isinstance(part.get("text"), str)).strip()
+    return ""
 

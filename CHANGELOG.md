@@ -22,6 +22,8 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Sign-in throttling provides consistent lockout responses for unknown IDs with bounded storage. External AI responses support structured text parts, and local model imports check available disk space before and during copying.
+- Deployment configuration is cached while unchanged and reloaded after file replacement. Unused event dispatch and hidden account controls have been removed without changing stored data.
 - Daily summaries preserve timed work when standalone notes are present. Invalid analytics periods and unusable record boundaries produce actionable errors rather than uncaught exceptions.
 - Browser authorization and local model transfers no longer occupy interactive AI workers. History pagination retains queued requests, sign-in clears the password field on success, and analytics exports retain the last successfully loaded data after a refresh failure.
 - Cloud credentials can be removed explicitly, turning off automatic backup without deleting remote files. Restore completion reloads application data even if its settings panel was closed.

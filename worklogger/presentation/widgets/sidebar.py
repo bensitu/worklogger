@@ -40,7 +40,7 @@ class SidebarWidget(QFrame):
         self.profile_name_label.setText(name)
         self.profile_name_label.setToolTip(name)
         self.profile_role_label.setText(_("Admin") if role == "Admin" else _("User") if role == "User" else role)
-        if self.profile_avatar_label.pixmap() is None:
+        if self.profile_avatar_label.pixmap() is None or self.profile_avatar_label.pixmap().isNull():
             self.profile_avatar_label.setText(_initials(name))
 
     def set_active_route(self, route: str) -> None:

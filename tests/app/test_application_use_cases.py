@@ -14,7 +14,6 @@ from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.commands.settings_commands import (
     SetSettingCommand,
 )
-from worklogger.app.event_bus import EventBus, SettingsChanged, WorkLogSaved
 from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
 from worklogger.app.queries.settings_queries import GetSettingQuery
@@ -253,24 +252,6 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertEqual(result.error.code, "setting_value_invalid")
         self.assertIsNone(repository.get(1, "theme"))
 
-    def test_event_delivery_isolates_subscriber_failures_and_supports_unsubscribe(self):
-        bus = EventBus()
-        delivered = []
-
-        def failed(event):
-            raise RuntimeError("subscriber_unavailable")
-
-        bus.subscribe(WorkLogSaved, failed)
-        unsubscribe = bus.subscribe(WorkLogSaved, delivered.append)
-        event = WorkLogSaved(1, date(2026, 4, 20))
-        with self.assertLogs("worklogger.app.event_bus", level="ERROR"):
-            bus.publish(event)
-        unsubscribe()
-        unsubscribe()
-        with self.assertLogs("worklogger.app.event_bus", level="ERROR"):
-            bus.publish(event)
-        self.assertEqual(delivered, [event])
-
     def test_auth_register_login_remember_change_and_reset(self) -> None:
         credentials = MemoryAuthRepository()
         failures = MemoryLoginFailures()
@@ -325,13 +306,10 @@ class ApplicationUseCaseTests(unittest.TestCase):
         self.assertEqual(credentials.dummy_password, "secret123")
         self.assertGreater(result.error.details["seconds"], 0)
 
-    def test_settings_handlers_set_get_clear_and_publish_events(self) -> None:
+    def test_settings_handlers_read_write_and_validate_values(self) -> None:
         repository = MemorySettingsRepository()
-        bus = EventBus()
-        events: list[SettingsChanged] = []
-        bus.subscribe(SettingsChanged, events.append)
 
-        set_result = SetSettingHandler(repository, bus).handle(
+        set_result = SetSettingHandler(repository).handle(
             SetSettingCommand(user_id=1, key="theme", value="blue")
         )
         self.assertTrue(set_result.ok)
@@ -347,8 +325,6 @@ class ApplicationUseCaseTests(unittest.TestCase):
             self.assertIsNone(repository.get(1, key))
         self.assertTrue(SetSettingHandler(repository).handle(SetSettingCommand(1, "show_holidays", " true ")).ok)
         self.assertEqual(repository.get(1, "show_holidays"), "1")
-
-        self.assertGreaterEqual(len(events), 1)
 
     def test_report_and_analytics_handlers_stay_behind_repositories(self) -> None:
         reports = MemoryReportRepository()

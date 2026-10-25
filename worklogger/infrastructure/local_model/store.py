@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import json
 import math
 import os
@@ -103,16 +104,26 @@ class JsonLocalModelStore:
             if not has_gguf_header(source):
                 return Result.failure(ValidationError("local_model_file_must_be_gguf", "local_model_file_must_be_gguf"))
             self._models_dir.mkdir(parents=True, exist_ok=True)
+            if source.stat().st_size > shutil.disk_usage(self._models_dir).free:
+                return Result.failure(ValidationError("local_model_disk_full", "local_model_disk_full"))
             filename = safe_model_filename(source.name)
             with tempfile.TemporaryDirectory(prefix=".import-", dir=self._models_dir) as directory:
                 temporary = Path(directory) / filename
                 copied = hashlib.sha256()
                 with source.open("rb") as reader, temporary.open("xb") as writer:
                     before = os.fstat(reader.fileno())
+                    remaining = before.st_size
+                    next_space_check = 0
                     for chunk in iter(lambda: reader.read(1024 * 1024), b""):
                         check_download_cancelled(is_cancelled)
+                        if next_space_check <= 0:
+                            if remaining > shutil.disk_usage(self._models_dir).free:
+                                raise ValueError("local_model_disk_full")
+                            next_space_check = 8 * 1024 * 1024
                         writer.write(chunk)
                         copied.update(chunk)
+                        remaining -= len(chunk)
+                        next_space_check -= len(chunk)
                     writer.flush()
                     os.fsync(writer.fileno())
                     after = os.fstat(reader.fileno())
@@ -140,6 +151,10 @@ class JsonLocalModelStore:
             return Result.success(entry)
         except InterruptedError:
             return Result.failure(CancellationError("job_cancelled", "job_cancelled"))
+        except ValueError as error:
+            if str(error) == "local_model_disk_full":
+                return Result.failure(ValidationError("local_model_disk_full", "local_model_disk_full"))
+            return Result.failure(InfrastructureError("local_model_import_failed", "local_model_import_failed"))
         except Exception as exc:
             return Result.failure(
                 InfrastructureError(

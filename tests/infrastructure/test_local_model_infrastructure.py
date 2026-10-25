@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import hashlib
 from dataclasses import fields
 import json
@@ -328,6 +330,10 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"demo")
             store = JsonLocalModelStore(Path(directory) / "models")
 
+            with patch("worklogger.infrastructure.local_model.store.shutil.disk_usage", return_value=SimpleNamespace(free=1)):
+                rejected = store.import_model(source)
+            self.assertEqual(rejected.error.code, "local_model_disk_full")
+            self.assertEqual(list(store.models_dir.glob(".import-*")), [])
             imported = store.import_model(source)
 
             self.assertTrue(imported.ok)

@@ -81,7 +81,7 @@ class CalendarDayButton(QPushButton):
         hovered = enabled and self.underMouse()
         border_color = style.hover_border if hovered else style.border
         border_width = 2 if hovered else style.border_width
-        foreground = style.foreground if cell.in_month or not enabled else "#8a8f9c"
+        foreground = style.foreground if cell.in_month or not enabled else current_colors().muted_text
         rect = QRectF(1, 1, self.width() - 2, self.height() - 2)
         painter.setPen(QPen(QColor(border_color), border_width))
         painter.setBrush(QColor(style.background))

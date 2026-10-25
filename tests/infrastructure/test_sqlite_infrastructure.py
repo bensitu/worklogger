@@ -573,7 +573,15 @@ class SQLiteInfrastructureTests(unittest.TestCase):
         with patch.object(self.factory, "transaction", side_effect=AssertionError("unexpected write transaction")):
             failures = SQLiteLoginFailureRepository(self.factory, clock=lambda: now)
             failures.prune()
-        self.assertEqual(failures.record_failure("unknown"), (0, None))
+        self.assertEqual(failures.record_failure("unknown"), (1, None))
+        for _ in range(4):
+            failures.record_failure("unknown")
+        self.assertIsNotNone(failures.lockout_until("unknown"))
+        with patch("worklogger.infrastructure.repositories.login_failures_sqlite._MAX_UNKNOWN_ATTEMPTS", 2):
+            for name in ("missing-one", "missing-two", "missing-three"):
+                failures.record_failure(name)
+        with self.factory.connection() as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM login_attempts").fetchone()[0], 2)
         for _ in range(4):
             failures.record_failure("alice")
         now += timedelta(days=2)

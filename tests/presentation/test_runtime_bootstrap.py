@@ -695,7 +695,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(runtime.ok, runtime.error)
             assert runtime.value is not None
             self.assertEqual(runtime.value.user.username, "local")
-            self.assertEqual(runtime.value.window.account_label.text(), "Signed in: local")
+            self.assertEqual(runtime.value.window.sidebar.profile_name_label.text(), "local")
             self.assertIsNotNone(runtime.value.job_runner)
             settings_workflow = getattr(runtime.value.window, "_settings_workflow")
             notes_workflow = runtime.value.window._notes_workflow
@@ -864,7 +864,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             self.assertTrue(runtime.ok, runtime.error)
             assert runtime.value is not None
             self.assertEqual(runtime.value.user.username, "alice")
-            self.assertEqual(runtime.value.window.account_label.text(), "Signed in: alice")
+            self.assertEqual(runtime.value.window.sidebar.profile_name_label.text(), "alice")
             self.assertIsNotNone(runtime.value.auth_session)
             assert runtime.value.auth_session is not None
             self.assertIsNone(runtime.value.auth_session.recovery_key)

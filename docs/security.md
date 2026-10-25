@@ -199,3 +199,5 @@ Review dependencies and native binaries before distribution.
 See [database](database.md), [testing](testing.md), and [packaging](packaging.md).
 
 Password confirmation for password changes and external identity changes uses the same failure counter and temporary lockout as password sign-in.
+
+Failed sign-in attempts use the same temporary lockout response for existing and unknown IDs. Unknown-ID records are limited to 1,024 entries; failure records expire after seven days.

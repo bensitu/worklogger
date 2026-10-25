@@ -182,6 +182,15 @@ class S3BackupStore(ConditionalObjectStore):
         self.client, self.bucket, self.prefix = client, configuration.bucket, configuration.prefix
 
     def _call(self, method, key, **kwargs):
+        for attempt in range(3):
+            try:
+                return self._call_once(method, key, **kwargs)
+            except ConnectionError:
+                if method == "put_object" or attempt == 2:
+                    raise
+                sleep(0.25 * 2 ** attempt)
+
+    def _call_once(self, method, key, **kwargs):
         from botocore.exceptions import BotoCoreError, ClientError, SSLError
         _key(key)
         try:

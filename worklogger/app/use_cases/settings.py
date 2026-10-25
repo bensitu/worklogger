@@ -8,7 +8,6 @@ from collections.abc import Callable
 from typing import Protocol
 
 from worklogger.app.commands.settings_commands import SetSettingCommand
-from worklogger.app.event_bus import EventBus, SettingsChanged
 from worklogger.app.ports import KeyStore
 from worklogger.app.queries.settings_queries import GetSettingQuery
 from worklogger.config.constants import (
@@ -90,12 +89,10 @@ class SetSettingHandler:
     def __init__(
         self,
         repository: SettingsRepository,
-        event_bus: EventBus | None = None,
         *,
         holiday_region_validator: Callable[[str], str] | None = None,
     ) -> None:
         self._repository = repository
-        self._event_bus = event_bus
         self._holiday_region_validator = holiday_region_validator
 
     def handle(self, command: SetSettingCommand) -> Result[None]:
@@ -115,10 +112,6 @@ class SetSettingHandler:
             self._repository.set(command.user_id, key, value)
         except Exception as error:
             return Result.failure(infrastructure_failure('settings_save_failed', error, logger_name=__name__))
-        if self._event_bus is not None:
-            self._event_bus.publish(
-                SettingsChanged(user_id=command.user_id, key=key, value=value)
-            )
         return Result.success(None)
 
 

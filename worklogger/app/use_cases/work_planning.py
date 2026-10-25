@@ -9,6 +9,7 @@ from worklogger.domain.calendar.repositories import HolidayProvider
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.settings.values import setting_bool
 from worklogger.domain.settings.work_schedule import WorkSchedule
+from worklogger.app.use_cases._errors import infrastructure_failure
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,8 @@ class WorkPlanningService:
                     raise ValueError("holiday_provider_unavailable")
                 entries = self._holidays.list_for_range(country, start, end, subdivision=subdivision or None)
                 holidays = tuple(entry.day for entry in entries)
-            except Exception:
+            except Exception as error_detail:
+                infrastructure_failure("work_plan_holidays_failed", error_detail, logger_name=__name__)
                 return WorkPlanSummary(None, manual_target if mode == "manual" else None, mode, error)
         planned = schedule.planned_days(start, end, holidays=holidays)
         return WorkPlanSummary(planned, planned * standard_hours if mode == "schedule" else manual_target, mode)

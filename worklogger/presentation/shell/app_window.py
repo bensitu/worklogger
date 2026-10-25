@@ -398,8 +398,6 @@ class AppWindow(QMainWindow):
         self.previous_month_button = self.calendar_page.previous_month_button
         self.today_button = self.calendar_page.today_button
         self.next_month_button = self.calendar_page.next_month_button
-        self.account_label = QLabel(self._account_text())
-        self.account_label.setObjectName("account_label")
         self.notes_button = self.calendar_page.notes_button
         self.reports_button = self.sidebar.button("reports")
         self.analytics_button = self.sidebar.button("analytics")
@@ -412,7 +410,6 @@ class AppWindow(QMainWindow):
         self.status_label.hide()
 
         self.notes_button.setVisible(self._notes_workflow is not None)
-        self.account_label.setVisible(False)
         if self._notes_workflow is None:
             self.notes_button.setVisible(False)
         main_layout.addWidget(self.status_label)
@@ -548,18 +545,9 @@ class AppWindow(QMainWindow):
             show = QMessageBox.warning if error else QMessageBox.information
             show(self, _("WorkLogger"), message)
 
-    def _account_text(self) -> str:
-        account_name = str(self._config.account_name or "").strip()
-        return (
-            _("Signed in: {username}").format(username=account_name)
-            if account_name
-            else ""
-        )
-
     def apply_user_profile(self, user):
         self._config = replace(self._config, account_name=user.effective_display_name)
         self.sidebar.set_profile(user.effective_display_name, self._config.account_role)
-        self.account_label.setText(self._account_text())
 
     def _request_logout(self) -> None:
         if not self._confirm_discard_changes_if_needed():
