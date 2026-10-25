@@ -260,6 +260,10 @@ class NotesTemplatesInfrastructureTests(unittest.TestCase):
             self.assertEqual(approved.count("100% complete"), 1)
             self.assertNotIn("Quick Logs", approved)
             self.assertNotIn("## Calendar events", approved)
+            notes.save(DailyNote(user.id, day, "Approved memo\n" + quick_log_reference(previous)), sharing=NoteSharing(False, False))
+            private = report.handle(command).value.content
+            self.assertNotIn("Approved memo", private)
+            self.assertNotIn("100% complete", private)
 
     def test_note_storage_migration_conflicts_deletion_and_export_preserve_content(self):
         with tempfile.TemporaryDirectory() as directory:

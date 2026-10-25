@@ -148,8 +148,9 @@ class LoginWithRememberTokenHandler:
 
 
 class ChangePasswordHandler:
-    def __init__(self, credentials: AuthCredentialRepository) -> None:
+    def __init__(self, credentials: AuthCredentialRepository, failures: LoginFailureRepository | None = None) -> None:
         self._credentials = credentials
+        self._failures = failures
 
     @storage_boundary("auth_state_failed")
     def handle(self, command: ChangePasswordCommand) -> Result[str]:
@@ -166,15 +167,15 @@ class ChangePasswordHandler:
             )
         except (TypeError, ValueError) as exc:
             return Result.failure(ValidationError(str(exc), str(exc)))
-        recovery_key = self._credentials.change_password(
-            command.user_id,
-            current_password,
-            new_password,
-        )
-        if recovery_key is None:
+        user = self._credentials.get_by_id(command.user_id)
+        if user is None:
             return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
+        checked = verify_password_attempt(self._credentials, self._failures, user.username, current_password,
+            lambda: self._credentials.change_password(command.user_id, current_password, new_password))
+        if not checked.ok:
+            return checked
         self._credentials.set_remember_token(command.user_id, None, None)
-        return Result.success(recovery_key)
+        return checked
 
 
 class ResetPasswordHandler:
@@ -365,6 +366,21 @@ def _locked_seconds(failures, username):
     if until is None:
         return 0
     return max(0, math.ceil((until.replace(tzinfo=until.tzinfo or timezone.utc) - datetime.now(timezone.utc)).total_seconds()))
+
+
+def verify_password_attempt(credentials, failures, username, password, verify):
+    remaining = _locked_seconds(failures, username)
+    if remaining:
+        credentials.verify_dummy_password(password)
+        return Result.failure(AuthenticationError("account_locked", "account_locked", {"seconds": remaining}))
+    value = verify()
+    if value is None:
+        if failures is not None:
+            failures.record_failure(username)
+        return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
+    if failures is not None:
+        failures.clear_failures(username)
+    return Result.success(value)
 
 
 class RevokeRememberedSessionHandler:

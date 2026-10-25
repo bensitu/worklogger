@@ -31,6 +31,15 @@ from worklogger.infrastructure.security import PBKDF2PasswordHasher
 
 
 class DataPortabilityInfrastructureTests(unittest.TestCase):
+    def test_large_daily_notes_round_trip_through_csv(self):
+        from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES
+        content = "=" + "x" * (MAX_NOTE_CONTENT_BYTES - 1)
+        source = Path(self._tempdir.name) / "notes.csv"
+        self.assertTrue(WorkLogCsvExporter().export_work_logs(source, (WorkLog(1, date(2026, 5, 1), note=content),)).ok)
+        parsed = WorkLogCsvImporter().parse(source, 1)
+        self.assertTrue(parsed.ok, parsed.error)
+        self.assertEqual(parsed.value.rows[0].note, content)
+
     def test_cancelled_import_parsing_and_preview_do_not_change_records(self):
         from worklogger.app.commands.calendar_commands import ImportCalendarEventsCommand
         from worklogger.app.job_runner import CancellationToken

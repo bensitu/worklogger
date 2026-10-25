@@ -74,6 +74,8 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 setup_logging(log_path, debug=True)
                 logger = logging.getLogger("worklogger.test")
                 logger.error("password=synthetic-secret token=sensitive-value")
+                for name in ("secret", "secret_key", "access_key", "session_token", "bearer_token", "passphrase", "private_key", "cookie"):
+                    logger.error("%s=private-cloud-credential", name)
                 logger.error("password=secret containing spaces; request_id=retained")
                 logger.error("remember_token_load_failed")
                 try:
@@ -95,6 +97,7 @@ class LoggingInfrastructureTests(unittest.TestCase):
                 self.assertIn("safe diagnostic", content)
                 self.assertIn("Log message formatting failed", content)
                 self.assertNotIn("private malformed payload", content)
+                self.assertNotIn("private-cloud-credential", content)
                 self.assertIn("remember_token_load_failed", content)
                 self.assertIn("credential_storage_failed", content)
                 self.assertIn("ValueError", content)

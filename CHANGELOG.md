@@ -22,6 +22,8 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- The first account receives administrator access when created through browser sign-in. Password confirmation for sensitive account changes respects sign-in lockouts.
+- Large daily notes can be imported from exported CSV files. Report generation respects note-sharing choices for associated historical entries, and diagnostics redact additional cloud credential fields.
 - Repeated AI polishing separates additional editing requests from source text and supports explicit formatting changes. Unchanged responses are explained without overwriting the previous result or manual edits.
 - AI connection checks propagate cancellation to the request. Settings ignore outdated model status results and remain usable if a background job cannot start.
 - Background opacity changes no longer flash the settings controls or restart animations. Consecutive changes retain the latest selection while saving.

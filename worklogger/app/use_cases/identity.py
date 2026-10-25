@@ -24,6 +24,7 @@ from worklogger.app.job_runner import CancellationToken
 from worklogger.domain.shared.errors import AuthenticationError, AuthorizationError, InfrastructureError, ValidationError, CancellationError
 from worklogger.domain.shared.result import Result
 from worklogger.app.use_cases._errors import storage_boundary, infrastructure_failure
+from worklogger.app.use_cases.auth import verify_password_attempt
 
 
 class IdentityProviderClient(Protocol):
@@ -83,17 +84,19 @@ class LinkIdentityHandler:
         providers: tuple[IdentityProviderClient, ...],
         auth: AuthCredentialRepository | None = None,
         enabled: bool = True,
+        failures=None,
     ) -> None:
         self._repository = repository
         self._providers = {provider.provider_id: provider for provider in providers}
         self._auth = auth
         self._enabled = enabled
+        self._failures = failures
 
     @storage_boundary("identity_link_failed")
     def handle(self, command: LinkIdentityCommand, *, cancellation=None) -> Result[LinkedIdentity]:
         if not self._enabled:
             return _disabled()
-        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation)
+        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation, self._failures)
         if not authorized.ok:
             return authorized
         provider = self._provider(command.provider)
@@ -156,11 +159,12 @@ class LinkIdentityHandler:
 
 class UnlinkIdentityHandler:
     def __init__(self, repository: IdentityRepository, auth: AuthCredentialRepository | None = None,
-                 *, providers: tuple[IdentityProviderClient, ...] = (), enabled: bool = True) -> None:
+                 *, providers: tuple[IdentityProviderClient, ...] = (), enabled: bool = True, failures=None) -> None:
         self._repository = repository
         self._auth = auth
         self._providers = {provider.provider_id: provider for provider in providers}
         self._enabled = enabled
+        self._failures = failures
 
     @storage_boundary("identity_unlink_failed")
     def handle(self, command: UnlinkIdentityCommand, *, cancellation=None) -> Result[None]:
@@ -174,7 +178,7 @@ class UnlinkIdentityHandler:
         user = self._auth.get_by_id(command.user_id) if self._auth else None
         if len(identities) == 1 and (user is None or not user.local_password_enabled):
             return Result.failure(ValidationError("identity_last_login_method", "identity_last_login_method"))
-        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation)
+        authorized = _authorize_change(command, self._auth, self._repository, self._providers, cancellation, self._failures)
         if not authorized.ok:
             return authorized
         if cancellation and cancellation.is_cancelled():
@@ -274,7 +278,7 @@ def _provider_missing_error() -> ValidationError:
     return ValidationError("identity_provider_missing", "identity_provider_missing")
 
 
-def _authorize_change(command, auth, identities, providers, cancellation):
+def _authorize_change(command, auth, identities, providers, cancellation, failures):
     if cancellation and cancellation.is_cancelled():
         return _cancelled()
     user = auth.get_by_id(command.user_id) if auth is not None else None
@@ -283,8 +287,11 @@ def _authorize_change(command, auth, identities, providers, cancellation):
     if user.local_password_enabled:
         if not command.current_password:
             return Result.failure(ValidationError("current_password_required", "current_password_required"))
-        verified = auth.verify_user(user.username, command.current_password)
-        if verified is None or verified.id != user.id:
+        verified = verify_password_attempt(auth, failures, user.username, command.current_password,
+                                          lambda: auth.verify_user(user.username, command.current_password))
+        if not verified.ok:
+            return verified
+        if verified.value.id != user.id:
             return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
     else:
         linked = next((row for row in identities.list_for_user(user.id)

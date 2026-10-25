@@ -49,12 +49,32 @@ class SQLiteUserManagementTests(unittest.TestCase):
             connection.execute("DROP TRIGGER reject_identity")
         user, linked = self.auth.create_identity_account("person", profile)
         self.assertFalse(user.local_password_enabled)
-        self.assertFalse(user.is_admin)
+        self.assertTrue(user.is_admin)
         self.assertEqual(linked.user_id, user.id)
         repeated = self.auth.create_identity_account("another_name", profile)
         self.assertEqual(repeated[0].id, user.id)
         self.assertEqual(repeated[1].id, linked.id)
         self.assertEqual(self.auth.user_count(), 1)
+        later = self.auth.register_user("later", "example-password", recovery_key="recovery")
+        self.assertFalse(later.is_admin)
+
+    def test_password_changes_and_identity_changes_share_password_lockouts(self):
+        from worklogger.app.commands.auth_commands import ChangePasswordCommand
+        from worklogger.app.commands.identity_commands import LinkIdentityCommand
+        from worklogger.app.use_cases.auth import ChangePasswordHandler
+        from worklogger.app.use_cases.identity import LinkIdentityHandler
+        from worklogger.infrastructure.repositories.login_failures_sqlite import SQLiteLoginFailureRepository
+        user = self.auth.register_user("person", "example-password", recovery_key="recovery")
+        failures = SQLiteLoginFailureRepository(self.factory)
+        changes = ChangePasswordHandler(self.auth, failures)
+        for _ in range(5):
+            result = changes.handle(ChangePasswordCommand(user.id, "incorrect", "new-password"))
+            self.assertEqual(result.error.code, "invalid_credentials")
+        self.assertEqual(changes.handle(ChangePasswordCommand(user.id, "example-password", "new-password")).error.code,
+                         "account_locked")
+        result = LinkIdentityHandler(repository=None, providers=(), auth=self.auth, failures=failures).handle(
+            LinkIdentityCommand(user.id, "google", "example-password"))
+        self.assertEqual(result.error.code, "account_locked")
 
     def test_recovery_attempts_are_independent_of_password_lockouts_and_preserve_credentials(self):
         from worklogger.app.commands.auth_commands import ResetPasswordCommand

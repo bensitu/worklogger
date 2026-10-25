@@ -83,6 +83,7 @@ from worklogger.infrastructure.backup.object_stores import backup_store
 from worklogger.infrastructure.backup.personal_data import SQLitePersonalData
 from worklogger.infrastructure.backup.recovery import PersonalRecoveryStore
 from worklogger.infrastructure.security.key_store import SystemCredentialStore
+from worklogger.infrastructure.repositories.login_failures_sqlite import SQLiteLoginFailureRepository
 
 
 def build_settings_workflow(
@@ -130,7 +131,7 @@ def build_settings_workflow(
         if features.enable_update_check
         else None,
         job_runner=job_runner,
-        identity_workflow=_build_identity_workflow(user, repositories, auth_repository, job_runner=job_runner,
+        identity_workflow=_build_identity_workflow(user, repositories, auth_repository, connection_factory=connection_factory, job_runner=job_runner,
             opener=handlers.network_transport.opener(public_only=True, allow_redirects=False) if handlers.network_transport else None)
         if runtime_configuration.features.oidc else None,
         local_models_workflow=build_local_models_workflow(
@@ -234,10 +235,11 @@ def _build_identity_workflow(
     user: User,
     repositories: RuntimeRepositories,
     auth_repository: RuntimeAuthRepository | None,
-    *, job_runner=None, opener=None,
+    *, connection_factory, job_runner=None, opener=None,
 ) -> IdentityWorkflowController:
     configuration = IdentityConfigurationStore()
     providers = identity_providers(configuration=configuration, opener=opener)
+    failures = SQLiteLoginFailureRepository(connection_factory)
     return IdentityWorkflowController(
         IdentityManagementViewModel(
             user_id=user.id,
@@ -248,9 +250,10 @@ def _build_identity_workflow(
                 repository=repositories.identities,
                 providers=providers,
                 auth=auth_repository,
+                failures=failures,
             ),
             unlink_handler=UnlinkIdentityHandler(
-                repositories.identities, auth_repository, providers=providers
+                repositories.identities, auth_repository, providers=providers, failures=failures
             ),
         ), configuration=configuration, job_runner=job_runner,
     )

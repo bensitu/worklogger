@@ -122,6 +122,9 @@ class MemoryReportRepository:
 
 
 class MemoryAuthRepository:
+    def get_by_id(self, user_id):
+        return next((row[0] for row in self.users.values() if row[0].id == user_id), None)
+
     def verify_dummy_password(self, password):
         self.dummy_password = password
 

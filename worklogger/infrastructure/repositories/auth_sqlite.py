@@ -130,10 +130,11 @@ class SQLiteAuthRepository:
                     raise ValueError("identity_user_missing")
                 return self._user_from_row(row), linked
             try:
+                is_admin = int(connection.execute("SELECT 1 FROM users LIMIT 1").fetchone() is None)
                 cursor = connection.execute(
                     "INSERT INTO users(username,username_key,password_hash,password_salt,is_admin,"
-                    "must_change_password,created_at,password_changed_at,local_password_enabled) VALUES(?,?,?,?,0,0,?,?,0)",
-                    (username, username_key(username), material.hash_hex, material.salt_hex, now, now))
+                    "must_change_password,created_at,password_changed_at,local_password_enabled) VALUES(?,?,?,?,?,0,?,?,0)",
+                    (username, username_key(username), material.hash_hex, material.salt_hex, is_admin, now, now))
             except sqlite3.IntegrityError as exc:
                 if getattr(exc, "sqlite_errorname", "") == "SQLITE_CONSTRAINT_UNIQUE":
                     raise ValueError("username_exists") from exc

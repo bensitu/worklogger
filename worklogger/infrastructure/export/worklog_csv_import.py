@@ -19,6 +19,9 @@ from worklogger.infrastructure.i18n import get_language
 from worklogger.infrastructure.export.csv_text import decode_text
 from worklogger.domain.worklog.models import decode_work_mode
 
+# The file-size bound also limits individual fields, including encoded daily notes.
+csv.field_size_limit(max(csv.field_size_limit(), 10 * 1024 * 1024))
+
 
 class WorkLogCsvImporter:
     def __init__(self, *, max_bytes: int = 10 * 1024 * 1024, max_rows: int = 50_000, encoding: str | None = None) -> None:

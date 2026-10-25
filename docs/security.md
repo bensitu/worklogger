@@ -197,3 +197,5 @@ Use parameterized SQL, bounded file/network reads, atomic writes, and explicit
 account ownership. Maintain supported-data migration/rollback coverage.
 Review dependencies and native binaries before distribution.
 See [database](database.md), [testing](testing.md), and [packaging](packaging.md).
+
+Password confirmation for password changes and external identity changes uses the same failure counter and temporary lockout as password sign-in.
