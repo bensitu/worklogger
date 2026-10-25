@@ -9,6 +9,7 @@ from functools import lru_cache
 
 from worklogger.config.constants import DEFAULT_CLOUD_BACKUP_STARTUP_DELAY_SECONDS
 from worklogger.infrastructure.ai.generation_options import ExternalModelProfile, external_model_profiles
+from worklogger.infrastructure.files import file_fingerprint
 
 LOGGER = logging.getLogger(__name__)
 CONFIG_FILENAME = "worklogger.config.json"
@@ -99,11 +100,11 @@ def load_runtime_configuration(path=None):
         status = path.stat()
     except OSError:
         return _read_runtime_configuration(path)
-    return _cached_runtime_configuration(path.resolve(), status.st_mtime_ns, status.st_ctime_ns, status.st_size)
+    return _cached_runtime_configuration(path.resolve(), file_fingerprint(status))
 
 
 @lru_cache(maxsize=16)
-def _cached_runtime_configuration(path, modified, changed, size):
+def _cached_runtime_configuration(path, fingerprint):
     return _read_runtime_configuration(path)
 
 

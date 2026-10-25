@@ -258,6 +258,13 @@ AI service selection is account-scoped. Explicit external selection uses its
 configured endpoint and credentials; local selection uses a verified model and
 native backend. Failed requests do not silently choose another provider.
 
+`infrastructure/local_model/metadata.py` owns bounded catalog reads, catalog caching,
+and atomic catalog and availability-manifest persistence. `JsonLocalModelStore`
+coordinates model file transfers, verification, and metadata updates. Model verification,
+native engine reuse, and deployment configuration caching share file fingerprints
+that include file identity and modification metadata, so replacing a file invalidates
+the associated cache without scanning unrelated model entries.
+
 `settings/workflows/text_processing.py` owns AI configuration delivery, local
 model status, and connection checks. Model status requests reject superseded
 results per settings surface. Connection checks pass the job cancellation token

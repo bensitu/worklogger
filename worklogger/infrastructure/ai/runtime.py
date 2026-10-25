@@ -20,6 +20,7 @@ from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.ai.local import LocalModelGateway
 from worklogger.infrastructure.ai.execution import InferenceControl
 from worklogger.infrastructure.ai.runtime_options import engine_options, is_apple_silicon
+from worklogger.infrastructure.files import file_fingerprint
 
 LOGGER = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ class LocalInferenceRuntime:
                 requested_context = runtime_context_preference(self._settings.get(
                     self._user_id, LOCAL_MODEL_CONTEXT_TOKENS_SETTING_KEY, str(DEFAULT_RUNTIME_CONTEXT_TOKENS)))
                 context = effective_runtime_context(requested_context, entry.context_length)
-                key = (entry.id, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size, entry.sha256, context)
+                key = (entry.id, file_fingerprint(stat), entry.sha256, context)
                 if self._engine_key != key:
                     self._close_engine()
                     factory = self._engine_factory

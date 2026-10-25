@@ -6,6 +6,11 @@ import os
 import tempfile
 
 
+def file_fingerprint(status: os.stat_result) -> tuple[int, int, int, int, int]:
+    """Identify a file and its current metadata for cache invalidation."""
+    return status.st_dev, status.st_ino, status.st_mtime_ns, status.st_ctime_ns, status.st_size
+
+
 @contextmanager
 def atomic_destination(destination: Path, *, overwrite: bool = True):
     destination = Path(destination)

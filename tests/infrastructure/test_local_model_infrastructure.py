@@ -320,9 +320,15 @@ class LocalModelInfrastructureTests(unittest.TestCase):
                 self.assertTrue(store.verify_model(entry.id).value.verified)
                 self.assertTrue(store.verify_model(entry.id).value.verified)
                 self.assertEqual(hashing.call_count, 1)
-                (Path(directory) / "models" / entry.filename).write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"changed model")
+                model = store.model_path(entry.id)
+                replacement = model.with_suffix(".replacement")
+                replacement.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"other")
+                replacement.replace(model)
                 self.assertFalse(store.verify_model(entry.id).value.verified)
                 self.assertEqual(hashing.call_count, 2)
+                model.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"changed model")
+                self.assertFalse(store.verify_model(entry.id).value.verified)
+                self.assertEqual(hashing.call_count, 3)
 
     def test_import_model_creates_catalog_manifest_and_verifies_sha(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
