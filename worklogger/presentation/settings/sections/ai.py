@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QLineEdit,
     QLabel,
     QPushButton,
@@ -141,12 +142,17 @@ class AISection(SettingsScrollPage):
         summary_layout = QVBoxLayout(model_summary)
         summary_layout.setContentsMargins(0, 0, 0, 0)
         summary_layout.setSpacing(FIELD_SPACING // 2)
-        summary_layout.addWidget(_secondary_label(_("Current model")))
+        model_heading = QHBoxLayout()
+        model_heading.setContentsMargins(0, 0, 0, 0)
+        model_heading.setSpacing(FIELD_SPACING)
+        model_heading.addWidget(_secondary_label(_("Current model")), 0, Qt.AlignmentFlag.AlignTop)
         self.local_model_name_label = QLabel(_("No model selected."))
         self.local_model_name_label.setWordWrap(True)
+        self.local_model_name_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         self.local_model_name_label.setTextFormat(Qt.TextFormat.PlainText)
         self.local_model_name_label.setObjectName("local_model_name_label")
-        summary_layout.addWidget(self.local_model_name_label)
+        model_heading.addWidget(self.local_model_name_label, 1)
+        summary_layout.addLayout(model_heading)
         self.local_runtime_status_label = _secondary_label("")
         summary_layout.addWidget(self.local_runtime_status_label)
         local.content_layout.addWidget(model_summary)

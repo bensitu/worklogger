@@ -122,6 +122,7 @@ class SettingsPage(QWidget, SettingsSectionState):
         configure_application_style()
         install_bundled_fonts()
         self._build_ui()
+        self.local_model_enabled_switch.toggled.connect(self._update_local_context)
         self.cloud_backup_panel.busy_changed.connect(lambda busy: self.set_busy("cloud_backup", busy))
         self._apply_capabilities()
 

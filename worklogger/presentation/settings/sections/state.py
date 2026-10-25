@@ -289,7 +289,7 @@ class SettingsSectionState:
         with QSignalBlocker(self.local_context_spin_box):
             self.local_context_spin_box.setRange(MIN_RUNTIME_CONTEXT_TOKENS, MAX_RUNTIME_CONTEXT_TOKENS)
             self.local_context_spin_box.setValue(requested)
-        self.local_context_spin_box.setEnabled(valid_limit)
+        self.local_context_spin_box.setEnabled(valid_limit and self.local_model_enabled_switch.is_checked())
         self.local_context_model_limit_label.setText(
             _("Model maximum: {count} tokens.").format(count=format(limit, ",")) if valid_limit else "")
         self.local_context_model_limit_label.setVisible(valid_limit)

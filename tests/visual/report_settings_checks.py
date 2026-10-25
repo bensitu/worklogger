@@ -610,6 +610,7 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                     page = SettingsPage(_view_model(repository))
                     try:
                         page.refresh()
+                        page.set_local_model_status(ready=True, name="Qwen2.5-1.5B-Instruct Q4_K_M")
                         page.set_local_model_context_limit(32768)
                         page.category_nav.set_category("ai")
                         page.resize(880, 680)
