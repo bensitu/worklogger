@@ -74,8 +74,16 @@ class ReportSettingsLayoutChecks(unittest.TestCase):
                                          page.continuous_timer_reminder_input)
                             for field in reminders:
                                 self.assertLessEqual(field.width(), 180)
-                            if width == 1100:
-                                self.assertEqual(len({field.y() for field in reminders}), 1)
+                            self.assertEqual(len({field.x() for field in reminders}), 1)
+                            self.assertLess(reminders[0].geometry().bottom(), reminders[1].y())
+                            self.assertLess(reminders[1].geometry().bottom(), reminders[2].y())
+                            self.assertIs(page.recent_context_switch.parentWidget().parentWidget(),
+                                          page.manage_projects_button.parentWidget())
+                            for field in (*reminders, page.standard_hours_input, page.monthly_target_input):
+                                form = field.parentWidget().form_layout
+                                label = form.labelForField(field)
+                                self.assertLess(label.geometry().bottom(), field.y())
+                                self.assertEqual(label.x(), field.x())
                             self.capture(scroll.content_widget, f"{language}-general-{theme}-{dark}-{width}")
                     finally:
                         page.hide()
