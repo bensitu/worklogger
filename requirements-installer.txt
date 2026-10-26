@@ -1,0 +1,2 @@
+# Tools required by the verified native dependency installer and build scripts.
+packaging==26.3

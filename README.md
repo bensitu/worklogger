@@ -110,7 +110,10 @@ These commands run the checked-out branch. To run a published version from sourc
 Source runs and packaged applications use different default data locations.
 Check the active location before testing with existing data.
 
-Local AI is optional for source runs. Install its verified platform dependency with `python scripts/install_native_dependencies.py` using the same virtual environment. See [local model setup](docs/local-models.md).
+Local AI is optional for source runs. Using the same virtual environment, install
+the installer tools with `python -m pip install -r requirements-installer.txt`,
+then run `python scripts/install_native_dependencies.py` for the verified native
+dependency. See [local model setup](docs/local-models.md).
 
 ## License
 

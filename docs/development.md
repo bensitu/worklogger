@@ -25,13 +25,22 @@ Other distributions use different package names. For headless checks, set
 For packaging, install `requirements-build.txt`, then run
 `python scripts/install_native_dependencies.py`. Every distribution includes
 the pinned native inference backend and its dependencies. Source development
-can omit the backend when local inference is not used.
+can omit the backend when local inference is not used. To enable it without the
+build tools, use the same virtual environment to run:
+
+```sh
+python -m pip install -r requirements-installer.txt
+python scripts/install_native_dependencies.py
+```
+
+`requirements-build.txt` includes the same pinned installer tools with `-r`.
 Install `requirements-dev.txt` for contributor lint tooling; it is not a runtime
 or release-build dependency.
 
-The runtime, native inference, and build lists have separate responsibilities.
+The runtime, native inference, installer, and build lists have separate responsibilities.
 Generated JSON locks identify target environments, input fingerprints,
 packages, and wheel hashes; companion TXT files install those exact wheels.
+Included requirements files are also fingerprinted and their pins verified.
 Do not merge them into normal runtime dependencies. The approved native artifacts
 are listed separately in `requirements/native-artifacts.json`.
 See [packaging](packaging.md).

@@ -3,11 +3,17 @@
 ## Setup
 
 Local rewriting requires the optional native inference dependency in the Python
-environment that starts WorkLogger:
+environment that starts WorkLogger. Install its pinned installer tools first,
+using that same environment:
 
 ```sh
+python -m pip install -r requirements-installer.txt
 python scripts/install_native_dependencies.py
 ```
+
+The tools are separate from normal runtime dependencies. Build environments
+already include them through `requirements-build.txt`; they do not install the
+native backend or download model weights by themselves.
 
 The installer verifies approved CPU wheels on Windows/Linux and compiles a Metal
 backend from verified source on macOS ARM64. Native compilation on macOS requires

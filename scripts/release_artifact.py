@@ -18,7 +18,7 @@ import logging
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from scripts.lock_environment import digest, verify_lock, target
+from scripts.lock_environment import digest, read_requirement_files, verify_lock, target
 from scripts.build_resources import bundled_resources
 from worklogger.__about__ import APP_VERSION
 from worklogger.infrastructure.files import atomic_destination
@@ -27,7 +27,10 @@ from worklogger.infrastructure.logging import SensitiveDataFilter
 
 def source_digest():
     paths = set((ROOT / "worklogger").rglob("*.py")) | set((ROOT / "scripts").rglob("*.py"))
-    paths |= {ROOT / "WorkLogger.spec", ROOT / "LICENSE", ROOT / "requirements.txt", ROOT / "requirements-build.txt", ROOT / "requirements-ai.txt"}
+    paths |= {ROOT / "WorkLogger.spec", ROOT / "LICENSE"}
+    paths |= set(read_requirement_files(ROOT / name for name in (
+        "requirements.txt", "requirements-build.txt", "requirements-ai.txt",
+    )))
     paths |= {Path(source) for source, _destination in bundled_resources(ROOT)}
     value = hashlib.sha256()
     for path in sorted(paths):

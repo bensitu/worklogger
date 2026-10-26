@@ -392,8 +392,11 @@ and `zh_TW`.
 logging for the same true values listed above.
 `WORKLOGGER_MODEL_CATALOG_URL` supplies an HTTPS URL for model catalog refresh.
 Provider registration overrides are described in [browser sign-in](identity-signin.md).
-Tray residency uses the Windows/macOS platform mapping when Qt reports a tray
-service. On other platforms, closing the main window exits normally; saved timer
-state remains available after signing in again.
+Windows and supported Linux desktops use a tray icon; macOS uses a menu bar icon.
+When Qt reports an available tray service and the account enables its icon, the
+account's close-window preference determines whether closing exits or keeps the
+application resident. Minimizing has a separate hide-to-tray preference. Without
+an available icon, closing exits and minimizing uses the system default. Saved
+timer state remains available after signing in again.
 Build and test environment options belong in [packaging](packaging.md) and
 [testing](testing.md), not ordinary account configuration.

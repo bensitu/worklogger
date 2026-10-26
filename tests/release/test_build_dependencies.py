@@ -93,7 +93,9 @@ class BuildDependencyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             requirements = root / "requirements-ai.txt"
-            requirements.write_text("llama-cpp-python==0.3.36\n", encoding="utf-8")
+            requirements.write_text("-r requirements-installer.txt\nllama-cpp-python==0.3.36\n", encoding="utf-8")
+            tools = root / "requirements-installer.txt"
+            tools.write_text("packaging==26.3\n", encoding="utf-8")
             manifest = root / "requirements/native-artifacts.json"
             manifest.parent.mkdir()
             manifest.write_bytes(b'{"version":"0.3.36"}\r\n')
@@ -109,9 +111,33 @@ class BuildDependencyTests(unittest.TestCase):
                 captured = lock_environment.capture_lock(root / "target.lock.json", [requirements], wheels)
                 manifest.write_bytes(b'{"version":"0.3.36"}\n')
                 verified = lock_environment.verify_lock(root / "target.lock.json", installed={"llama-cpp-python": "0.3.36"})
+                self.assertIn("requirements-installer.txt", captured["inputs"])
+                tools.write_text("packaging==0.0.0\n", encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "Dependency input changed: requirements-installer.txt"):
+                    lock_environment.verify_lock(root / "target.lock.json", installed={"llama-cpp-python": "0.3.36"})
             self.assertEqual(captured, verified)
             self.assertEqual(captured["packages"][0]["wheel"], wheel.name)
             self.assertEqual(captured["packages"][0]["sha256"], lock_environment.digest(wheel))
+
+    def test_requirement_includes_validate_installed_pins_and_reject_cycles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            requirements = root / "build/requirements.txt"
+            requirements.parent.mkdir()
+            requirements.write_text("-r ../tools.txt\nsample==1.0\n", encoding="utf-8")
+            tools = root / "tools.txt"
+            tools.write_text("installer==2.0\n", encoding="utf-8")
+            versions = {"pip": "1.0", "setuptools": "1.0", "sample": "1.0", "installer": "2.0"}
+            with (patch.object(lock_environment.metadata, "version", side_effect=versions.__getitem__),
+                  patch.object(lock_environment.metadata, "distribution", side_effect=lambda name:
+                      SimpleNamespace(version=versions[name], requires=()))):
+                self.assertEqual(lock_environment.dependency_closure([requirements]), versions)
+                tools.write_text("installer==3.0\n", encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "Installed version does not match installer"):
+                    lock_environment.dependency_closure([requirements])
+            tools.write_text("-r build/requirements.txt\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "include cycle"):
+                lock_environment.read_requirement_files([requirements])
 
     def test_native_runtime_verification_initializes_and_releases_backend(self):
         for model in ("", "verification.gguf"):

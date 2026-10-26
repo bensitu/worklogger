@@ -35,17 +35,41 @@ def input_digest(path):
     return digest(path)
 
 
-def dependency_closure(requirement_files):
-    pending = ["pip", "setuptools"]
-    for path in requirement_files:
+def read_requirement_files(requirement_files):
+    inputs = {}
+    visiting = set()
+
+    def visit(path):
+        path = Path(path).resolve()
+        if path in visiting:
+            raise ValueError("Requirement files contain an include cycle")
+        if path in inputs:
+            return
+        visiting.add(path)
+        requirements = []
         for line in path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith("#"):
-                requirement = Requirement(line)
-                if requirement.marker is None or requirement.marker.evaluate({"extra": ""}):
-                    if metadata.version(requirement.name) not in requirement.specifier:
-                        raise ValueError(f"Installed version does not match {requirement.name}")
-                    pending.append(requirement.name)
+                if line.startswith("-r "):
+                    visit(path.parent / line[3:].strip())
+                else:
+                    requirements.append(Requirement(line))
+        visiting.remove(path)
+        inputs[path] = tuple(requirements)
+
+    for path in requirement_files:
+        visit(path)
+    return inputs
+
+
+def dependency_closure(requirement_files):
+    pending = ["pip", "setuptools"]
+    for requirements in read_requirement_files(requirement_files).values():
+        for requirement in requirements:
+            if requirement.marker is None or requirement.marker.evaluate({"extra": ""}):
+                if metadata.version(requirement.name) not in requirement.specifier:
+                    raise ValueError(f"Installed version does not match {requirement.name}")
+                pending.append(requirement.name)
     result = {}
     while pending:
         name = canonicalize_name(pending.pop())
@@ -102,7 +126,8 @@ def capture_lock(output, requirement_files, wheel_directory):
         if len(matches) != 1:
             raise ValueError(f"Expected one target wheel for {name}")
         packages.append({"name": name, "version": version, "wheel": matches[0].name, "sha256": digest(matches[0])})
-    inputs = {path.relative_to(ROOT).as_posix(): input_digest(path) for path in requirement_files}
+    inputs = {path.relative_to(ROOT).as_posix(): input_digest(path)
+              for path in read_requirement_files(requirement_files)}
     native_manifest = ROOT / "requirements/native-artifacts.json"
     if native_manifest.exists():
         inputs[native_manifest.relative_to(ROOT).as_posix()] = input_digest(native_manifest)

@@ -100,7 +100,8 @@ class GitHubReleaseTests(unittest.TestCase):
             target = {"system": system, "machine": machine, "python": "3.14.8", "implementation": "CPython"}
             packages = [{"name": "llama-cpp-python", "version": "0.3.36", "sha256": "b" * 64}]
             inputs = {}
-            for filename in ("requirements.txt", "requirements-build.txt", "requirements-ai.txt", "requirements/native-artifacts.json"):
+            for filename in ("requirements.txt", "requirements-build.txt", "requirements-installer.txt",
+                             "requirements-ai.txt", "requirements/native-artifacts.json"):
                 data = (release_assets.ROOT / filename).read_bytes()
                 inputs[filename] = hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
             lock = folder / "target.lock.json"

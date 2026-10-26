@@ -54,10 +54,12 @@ Build on the target operating system and architecture in a clean environment.
 `requirements.txt` supplies runtime dependencies, `requirements-build.txt`
 supplies the pinned installer and build tools, and `requirements-ai.txt` supplies
 the native inference dependencies required in every distribution.
+Build requirements include `requirements-installer.txt`, which pins the shared
+native-installer tools without adding them to normal runtime dependencies.
 
 Generated target locks contain the exact Python/OS/architecture,
-input hashes, package versions, and wheel hashes. The adjacent TXT is the
-hash-pinned installation file. Use a lock matching the actual target; do not
+input hashes (including `-r` files), package versions, and wheel hashes. The adjacent
+TXT is the hash-pinned installation file. Use a lock matching the actual target; do not
 reuse Windows wheels or a lock from another Python version.
 
 Resolved dependency hashes verify the downloaded wheel set, not an independent

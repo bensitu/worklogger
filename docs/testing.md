@@ -124,7 +124,7 @@ suite remains active, so stalled native calls and event-loop waits can be locate
 These diagnostics do not change test outcomes or extend job timeouts.
 CI additionally runs calendar, daylight-saving, language preference, and gettext
 checks on Linux with `TZ=America/New_York` and `WORKLOGGER_LANG=ja_JP`. Dependency
-vulnerability checks use Python 3.11 and 3.14 to cover both supported Qt dependency
+vulnerability checks use Python 3.11 through 3.14 to cover both supported Qt dependency
 selections. The documented temporary DiskCache exception remains in effect.
 
 ## Qt and Visual Checks
