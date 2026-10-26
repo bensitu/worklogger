@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from itertools import product
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -113,9 +114,9 @@ class WidgetRenderingTests(unittest.TestCase):
         original_style, original_palette = app.styleSheet(), app.palette()
         engine = ThemeEngine()
         try:
-            for button_type in (QPushButton, QToolButton):
+            for button_type, icon_name in product((QPushButton, QToolButton), ("file-text", "palette")):
                 button = button_type()
-                set_button_icon(button, "file-text", format_label="MD" if button_type is QToolButton else "")
+                set_button_icon(button, icon_name, format_label="MD" if button_type is QToolButton else "")
                 for theme, dark in (("blue", False), ("blue", True), ("green", False), ("green", True)):
                     app.setPalette(engine.qt_palette(theme, dark=dark))
                     app.setStyleSheet(engine.application_stylesheet(theme, dark=dark))
@@ -131,7 +132,8 @@ class WidgetRenderingTests(unittest.TestCase):
                                 self.assertEqual(expected, "#ffffff" if variant == "primary" else colors.danger if variant == "danger" else colors.text)
                             self.assertEqual(button.font().weight(), QFont.Weight.DemiBold if variant == "primary" else
                                              QFont.Weight.Normal if variant == "ghost" else QFont.Weight.Medium)
-                            image = button.icon().pixmap(QSize(20, 20), QIcon.Mode.Normal if enabled else QIcon.Mode.Disabled).toImage()
+                            size = QSize(96, 96) if icon_name == "palette" else QSize(20, 20)
+                            image = button.icon().pixmap(size, QIcon.Mode.Normal if enabled else QIcon.Mode.Disabled).toImage()
                             opaque_colors = {image.pixelColor(x, y).name() for x in range(image.width()) for y in range(image.height())
                                 if image.pixelColor(x, y).alpha() == 255}
                             self.assertEqual(opaque_colors, {expected})

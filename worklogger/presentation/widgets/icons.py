@@ -21,6 +21,7 @@ from worklogger.presentation.theme.context import current_colors
 def _renderer(name: str, color: str) -> QSvgRenderer:
     tree = ElementTree.parse(asset_path(f"icons/ui/{name}.svg"))
     tree.getroot().set("stroke", color)
+    tree.getroot().set("color", color)
     return QSvgRenderer(QByteArray(ElementTree.tostring(tree.getroot())))
 
 
