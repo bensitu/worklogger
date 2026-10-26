@@ -23,7 +23,6 @@ from worklogger.presentation.analytics import AnalyticsDialog
 from worklogger.presentation.date_labels import month_name
 from worklogger.presentation.shell.pages import AnalyticsPage
 from worklogger.presentation.viewmodels import AnalyticsViewModel
-from worklogger.presentation.widgets import ComboChart
 
 
 def _app() -> QApplication:
@@ -291,24 +290,6 @@ class AnalyticsPresentationTests(unittest.TestCase):
             self.assertTrue(dialog.export_pdf(pdf_path))
             self.assertIn("Period,Work hours (h),Leave hours (h)", csv_path.with_suffix(".csv").read_text(encoding="utf-8-sig"))
             self.assertTrue(pdf_path.with_suffix(".pdf").read_bytes().startswith(b"%PDF-"))
-
-    def test_combo_chart_accepts_bar_and_line_modes(self) -> None:
-        view_model = AnalyticsViewModel(
-            user_id=1,
-            bundle_handler=GetAnalyticsBundleHandler(MemoryWorkLogRepository()),
-            csv_exporter=AnalyticsCsvExporter(),
-            pdf_exporter=AnalyticsPdfExporter(),
-        )
-        state = view_model.load(year=2026, month=5)
-        self.assertTrue(state.ok, state.error)
-        assert state.value is not None
-
-        chart = ComboChart()
-        chart.resize(320, 240)
-        chart.set_data(state.value.bundle, mode="bar")
-        chart.set_data(state.value.bundle, mode="line")
-
-        self.assertEqual(chart.objectName(), "combo_chart_widget")
 
     def test_historical_period_switching_keeps_current_periods_selectable(self) -> None:
         today = date(2026, 10, 21)

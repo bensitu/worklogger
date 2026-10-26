@@ -202,8 +202,6 @@ class WidgetRenderingTests(unittest.TestCase):
         self.assertTrue(linux_icon.exists())
         self.assertTrue(asset_path("icons/worklogger.webp").exists())
         self.assertTrue(asset_path("images/avatar.webp").exists())
-        self.assertTrue(asset_path("images/avatar.webp").exists())
-        self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
         self.assertTrue(asset_path("images/worklogger_login_image.webp").exists())
 
     def test_all_bundled_action_icons_render_for_enabled_and_disabled_controls(self):
