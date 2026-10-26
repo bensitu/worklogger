@@ -56,6 +56,7 @@ class SettingsPage(QWidget, SettingsSectionState):
     backup_requested = Signal()
     check_records_requested = Signal()
     records_recovered = Signal()
+    data_imported = Signal()
     open_data_directory_requested = Signal()
     change_password_requested = Signal()
     export_csv_requested = Signal()

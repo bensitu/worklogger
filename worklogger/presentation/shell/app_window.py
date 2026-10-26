@@ -449,6 +449,7 @@ class AppWindow(QMainWindow):
             ("entry_types_changed", self.entry_panel.refresh_entry_types),
             ("projects_changed", self.entry_panel.refresh_projects),
             ("records_recovered", lambda: self._entries_changed(self._selected_day)),
+            ("data_imported", self._records_associated),
             ("ai_availability_changed", self.refresh_ai_availability),
         ):
             signal = getattr(page, name, None)

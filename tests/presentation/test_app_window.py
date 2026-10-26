@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QWidget, QMessageBox
+from PySide6.QtWidgets import QApplication, QWidget, QMessageBox, QLabel
 
 from worklogger.app.queries.work_log_queries import GetMonthRecordsQuery
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
@@ -239,6 +239,83 @@ def _window(
 
 
 class AppWindowTests(unittest.TestCase):
+    def test_successful_imports_refresh_calendar_without_replacing_manual_drafts(self):
+        from pathlib import Path
+        from worklogger.app.job_runner import CancellationToken, JobHandle
+        from worklogger.domain.auth.models import User
+        from worklogger.presentation.settings import SettingsWorkflowController
+        from tests.presentation.test_settings_workflow import (
+            FakeAuthViewModel, FakeDataManagementViewModel, MemorySettingsRepository,
+            _settings_view_model,
+        )
+
+        class DeferredRunner:
+            def __init__(self):
+                self.jobs = []
+
+            def submit(self, name, operation, *, on_complete):
+                self.jobs.append((operation, on_complete))
+                return JobHandle(name, lambda: None)
+
+            def finish(self):
+                while self.jobs:
+                    operation, complete = self.jobs.pop(0)
+                    complete(operation(CancellationToken()))
+
+        for asynchronous in (False, True):
+            for kind in ("csv", "ics"):
+                with self.subTest(asynchronous=asynchronous, kind=kind):
+                    records = MemoryWorkLogRepository()
+                    calendar = MemoryCalendarRepository()
+                    day = date(2026, 4, 20)
+
+                    class Imports(FakeDataManagementViewModel):
+                        def import_csv(self, source, **options):
+                            records.save(WorkLog(1, day, "09:00", "10:00", note="Imported work"))
+                            return super().import_csv(source, **options)
+
+                        def import_ics(self, source, **options):
+                            calendar.events = (CalendarEvent(1, 1, day, "Imported meeting"),)
+                            return super().import_ics(source, **options)
+
+                    runner = DeferredRunner() if asynchronous else None
+                    workflow = SettingsWorkflowController(
+                        settings_view_model=_settings_view_model(MemorySettingsRepository()),
+                        auth_view_model=FakeAuthViewModel(), user=User(1, "sample"),
+                        data_management_view_model=Imports(), job_runner=runner,
+                        csv_source_provider=lambda _parent: Path("records.csv"),
+                        ics_source_provider=lambda _parent: Path("calendar.ics"),
+                        csv_confirmation=lambda _parent, _preview: "matching_periods",
+                        notify_success=lambda *_args: None, notify_error=lambda *_args: None,
+                    )
+                    window = _window(records, settings_workflow=workflow)
+                    self.addCleanup(window.deleteLater)
+                    window._calendar_view_model._calendar_events_handler = GetCalendarEventsForRangeHandler(calendar)
+                    window.refresh()
+                    page = window.settings_page
+                    window.entry_panel.start_input.setText("11:00")
+                    window.entry_panel.content_input.setPlainText("Unsaved manual draft")
+                    getattr(page, "import_" + kind + "_button").click()
+                    if runner is not None:
+                        self.assertTrue(page.is_busy)
+                        runner.finish()
+                    self.assertFalse(page.is_busy)
+                    cell = next(cell for cell in window.calendar_view.state.cells if cell.day == day)
+                    if kind == "csv":
+                        self.assertEqual(cell.worked_hours, 1)
+                        self.assertEqual([entry.note for entry in window.entry_panel.view_model.entries], ["Imported work"])
+                    else:
+                        self.assertEqual(cell.event_count, 1)
+                        labels = window.calendar_page.records_widget.findChildren(QLabel)
+                        self.assertTrue(any("Imported meeting" in label.text() for label in labels))
+                    self.assertEqual(window.selected_day, day)
+                    self.assertEqual(window.current_month, day.replace(day=1))
+                    self.assertEqual(window.entry_panel.start_input.text(), "11:00")
+                    self.assertEqual(window.entry_panel.content_input.toPlainText(), "Unsaved manual draft")
+                    self.assertTrue(window.has_unsaved_changes)
+                    window.entry_panel.discard_changes()
+                    window.close()
+
     def test_both_views_pause_date_polling_when_hidden_and_stop_on_close(self):
         for minimal in (False, True):
             with self.subTest(minimal=minimal):

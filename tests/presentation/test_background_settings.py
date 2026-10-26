@@ -122,6 +122,31 @@ class BackgroundSettingsTests(unittest.TestCase):
         self.assertTrue(self.controls.enabled_switch.isChecked())
         self.assertTrue(self.controls.upload_button.isEnabled())
 
+    def test_reopening_appearance_retries_a_failed_initial_background_load(self):
+        failure = Result.failure(InfrastructureError("background_storage_failed", "background_storage_failed"))
+        with patch.object(self.service, "load", return_value=failure) as load:
+            window = _window(MemoryWorkLogRepository(), settings_workflow=self.window._settings_workflow,
+                             background_service=self.service, background_images_available=True)
+            self.addCleanup(window.deleteLater)
+            self.addCleanup(window.close)
+            window.open_settings()
+            window.show()
+            self.app.processEvents()
+            controls = window.settings_page.background_settings
+            self.assertFalse(controls.enabled_switch.isEnabled())
+            attempts = load.call_count
+            self.app.processEvents()
+            self.assertEqual(load.call_count, attempts)
+        page = window.settings_page
+        page.category_nav.set_category("general")
+        page.category_nav.set_category("appearance")
+        self.app.processEvents()
+        self.assertTrue(controls.enabled_switch.isEnabled())
+        self.assertTrue(controls.status_label.isHidden())
+        controls.enabled_switch.click()
+        self.assertTrue(self.service.load().value.enabled)
+        self.assertTrue(controls.upload_button.isEnabled())
+
     def test_cancelled_picker_does_not_change_preferences(self):
         self.controls.enabled_switch.setChecked(True)
         with patch("worklogger.presentation.settings.sections.background.QFileDialog.getOpenFileName",

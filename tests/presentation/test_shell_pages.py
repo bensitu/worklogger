@@ -377,6 +377,32 @@ class ShellPagesTests(unittest.TestCase):
         self.assertTrue(any("Planning" in label.text() for label in labels))
         self.assertTrue(window.entry_panel.time_tabs.tabBar().isVisibleTo(window.calendar_page))
 
+    def test_history_period_navigation_is_independent_of_calendar_route_refresh(self):
+        calendar_day = date(2026, 4, 20)
+
+        class Model(ReportsViewModel):
+            def load_history_report(self, report_id):
+                day = date(2026, 4, 19)
+                return Result.success(ReportEditorState(1, "daily", day, day, "Saved history",
+                                                       saved=True, report_id=report_id))
+
+        page = ReportsPage(Model(), calendar_day, job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        page._select_history_item(ReportHistoryDisplayItem(
+            42, 1, "daily", date(2026, 4, 19), date(2026, 4, 19), "History", saved=True))
+        page.refresh(calendar_day)
+        self.assertEqual(page._states["daily"].period_start, date(2026, 4, 19))
+        page.next_period_button.click()
+        self.assertEqual(page._states["daily"].period_start, calendar_day)
+        page.next_period_button.click()
+        page.refresh(calendar_day)
+        self.assertEqual(page._states["daily"].period_start, date(2026, 4, 21))
+        page.previous_period_button.click()
+        self.assertEqual(page._states["daily"].period_start, calendar_day)
+        page.refresh(date(2026, 5, 1))
+        self.assertEqual(page._states["daily"].period_start, date(2026, 5, 1))
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.app = QApplication.instance() or QApplication([])

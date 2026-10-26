@@ -315,6 +315,8 @@ class DataSettingsWorkflow:
                     "Backup succeeded, but its timestamp could not be saved."
                 )
         if dialog is not None and isValid(dialog):
+            if result.value.action in {"import_csv", "import_ics"}:
+                dialog.data_imported.emit()
             _set_status(dialog, message, "data")
             self._notify_success(dialog, title, message)
         return True

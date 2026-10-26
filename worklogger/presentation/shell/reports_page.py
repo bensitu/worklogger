@@ -175,11 +175,12 @@ class ReportsPage(QWidget):
             self.editor.setPlainText(self._saved_content.get(self._rendered_type, ""))
         return bool(confirmed)
 
-    def refresh(self, selected_day: date | None = None) -> bool:
+    def refresh(self, selected_day: date | None = None, *, calendar_sync: bool = True) -> bool:
         if not self.confirm_leave():
             return False
-        if selected_day is not None and selected_day != self._calendar_day:
-            self._calendar_day = selected_day
+        if selected_day is not None and (not calendar_sync or selected_day != self._calendar_day):
+            if calendar_sync:
+                self._calendar_day = selected_day
             self._selected_day = selected_day
         if self._view_model is None:
             self._set_status(_("Reports are not configured."), error=True)
@@ -406,7 +407,7 @@ class ReportsPage(QWidget):
         except (TypeError, ValueError):
             self._set_error(ValidationError("report_period_invalid", "report_period_invalid"))
             return
-        self.refresh(target)
+        self.refresh(target, calendar_sync=False)
 
     def _open_templates(self) -> None:
         if self._view_model is None or self.is_busy:

@@ -98,6 +98,13 @@ class BackgroundSettings(CardFrame):
         self.enabled_switch.setEnabled(available and self._loaded)
         self.opacity_slider.setEnabled(available and self._state.enabled)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        controller = self._controller
+        if (not self._loaded and controller is not None and controller.available
+                and not controller.is_busy):
+            controller.reload()
+
     def _sync_state(self):
         self.options_widget.setVisible(self._state.enabled)
         with QSignalBlocker(self.enabled_switch), QSignalBlocker(self.opacity_slider):
