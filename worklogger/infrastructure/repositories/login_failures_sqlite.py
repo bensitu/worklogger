@@ -40,19 +40,31 @@ class SQLiteLoginFailureRepository:
                 "SELECT locked_until,last_failed_at FROM login_attempts WHERE username=?",
                 (self._prefix + username,),
             ).fetchone()
-        locked_until = parse_datetime(row["locked_until"]) if row else None
+        locked_until = self._deadline(row)
         if locked_until is None:
             return None
-        failed_at = parse_datetime(row["last_failed_at"])
-        if failed_at is not None:
-            locked_until = min(locked_until, failed_at + timedelta(minutes=30))
         if locked_until <= self._clock():
             with self._connection_factory.transaction(write=True) as connection:
-                connection.execute(
-                    "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
+                row = connection.execute(
+                    "SELECT locked_until,last_failed_at FROM login_attempts WHERE username=?",
                     (self._prefix + username,),
-                )
-            return None
+                ).fetchone()
+                locked_until = self._deadline(row)
+                if locked_until is not None and locked_until <= self._clock():
+                    connection.execute(
+                        "UPDATE login_attempts SET locked_until=NULL WHERE username=?",
+                        (self._prefix + username,),
+                    )
+                    return None
+        return locked_until
+
+    @staticmethod
+    def _deadline(row):
+        locked_until = parse_datetime(row["locked_until"]) if row else None
+        if locked_until is not None:
+            failed_at = parse_datetime(row["last_failed_at"])
+            if failed_at is not None:
+                locked_until = min(locked_until, failed_at + timedelta(minutes=30))
         return locked_until
 
     def record_failure(self, username: str) -> tuple[int, datetime | None]:

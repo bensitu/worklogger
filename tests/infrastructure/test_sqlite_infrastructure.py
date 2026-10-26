@@ -77,6 +77,34 @@ class MemoryKeyringBackend:
 
 
 class SQLiteInfrastructureTests(unittest.TestCase):
+    def test_expired_lock_cleanup_preserves_a_newer_failure_lock(self):
+        now = datetime(2026, 10, 27, tzinfo=timezone.utc)
+        for recovery in (False, True):
+            with self.subTest(recovery=recovery):
+                key = ("\0recovery:" if recovery else "") + "sample"
+                with self.factory.transaction() as connection:
+                    connection.execute("INSERT INTO login_attempts VALUES(?,?,?,?)", (
+                        key, 4, (now - timedelta(seconds=1)).isoformat(),
+                        (now - timedelta(minutes=1)).isoformat()))
+                writer = SQLiteLoginFailureRepository(self.factory, clock=lambda: now, recovery=recovery)
+                refreshed = []
+
+                def clock():
+                    if not refreshed:
+                        refreshed.append(writer.record_failure("sample")[1])
+                    return now
+
+                reader = SQLiteLoginFailureRepository(self.factory, clock=clock, recovery=recovery)
+                deadline = reader.lockout_until("sample")
+                self.assertIsNotNone(deadline)
+                self.assertEqual(deadline, refreshed[0])
+                self.assertGreater(deadline, now)
+                with self.factory.connection() as connection:
+                    stored = connection.execute("SELECT failed_count,locked_until FROM login_attempts WHERE username=?",
+                                                (key,)).fetchone()
+                self.assertEqual(stored["failed_count"], 5)
+                self.assertEqual(datetime.fromisoformat(stored["locked_until"]), deadline)
+
     def test_password_verification_rejects_malformed_stored_values(self):
         hasher = PBKDF2PasswordHasher(iterations=1000)
         password = hasher.hash_password("synthetic-password")
