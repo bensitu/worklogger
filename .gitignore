@@ -24,7 +24,7 @@ dist/
 dist_*/
 dist_x86/
 dist_arm/
-release/
+/release/
 *.exe
 *.dmg
 *.app

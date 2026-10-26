@@ -82,6 +82,8 @@ Never mutate a personal database or send paid provider requests in the default s
 | `tests/app/` | Use cases and service contracts |
 | `tests/infrastructure/` | Persistence, credentials, files, networking |
 | `tests/presentation/` | View models, signals, workflows, jobs |
+| `tests/rendering/` | CI-discovered theme, image, icon, and font compatibility |
+| `tests/release/` | Build inputs, dependency installation, distribution integrity, and publication |
 | `tests/architecture/` | Dependency boundaries and application contracts |
 | `tests/i18n/` | Catalog extraction and localization |
 | `tests/visual/` | Opt-in layout/rendering checks |
@@ -105,8 +107,18 @@ python scripts/build.py --check
 git diff --check
 ```
 
-Default discovery includes functional Qt tests but excludes visual modules,
-whose names do not begin with `test`. Run the smallest relevant scope first.
+Default discovery includes functional Qt tests and the dedicated rendering and
+release directories. Their modules retain `test_*.py` names and run in the same
+CI matrix as the other tests. Visual modules remain opt-in because their names
+do not begin with `test`. Run the smallest relevant scope first:
+
+```sh
+python -m unittest discover -s tests/rendering -t . -v
+python -m unittest discover -s tests/release -t . -v
+```
+
+Evaluate business behavior, rendering compatibility, and distribution coverage
+separately; moving a test does not remove its assertions or CI coverage.
 CI prints individual test names and thread stacks every five minutes while the
 suite remains active, so stalled native calls and event-loop waits can be located.
 These diagnostics do not change test outcomes or extend job timeouts.
