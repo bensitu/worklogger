@@ -114,8 +114,9 @@ class AiAssistDialog(QDialog):
         self._set_busy(True)
         self.status_label.setText(_("Sending..."))
         self._pending_handle = JobHandle(job_id="ai_chat_pending", cancel=self._processing_task.cancel)
-        started = self._processing_task.run("ai_chat", lambda _token: self._view_model.send(
-            state, message, selected_day=selected_day, period_type="daily"), on_complete=self._complete_send)
+        started = self._processing_task.run("ai_chat", lambda token: self._view_model.send(
+            state, message, selected_day=selected_day, period_type="daily", cancellation_token=token),
+            on_complete=self._complete_send)
         if not started:
             self._pending_handle = None
             self._set_busy(False)

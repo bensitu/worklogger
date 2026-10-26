@@ -6,12 +6,14 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication
 
 from worklogger.app.commands.ai_commands import SendAiChatMessageCommand
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
 from worklogger.app.use_cases.ai import AiChatHandler, AiChatResult, AiContextResult
-from worklogger.app.job_runner import JobHandle
+from worklogger.app.job_runner import CancellationToken, JobHandle
+from worklogger.app.ports import AIResponse
 from worklogger.domain.shared.result import Result
 from worklogger.presentation.ai import AiAssistDialog
 from tests.job_runner import ImmediateJobRunner
@@ -29,7 +31,7 @@ class FakeChatHandler:
     def __init__(self) -> None:
         self.commands: list[SendAiChatMessageCommand] = []
 
-    def handle(self, command: SendAiChatMessageCommand) -> Result[AiChatResult]:
+    def handle(self, command: SendAiChatMessageCommand, cancellation_token=None) -> Result[AiChatResult]:
         self.commands.append(command)
         return Result.success(
             AiChatResult(
@@ -52,6 +54,14 @@ class FakeContextHandler:
         return Result.success(AiContextResult("built context"))
 
 
+class DeferredRunner:
+    def submit(self, name, work, *, on_complete):
+        self.work = work
+        self.complete = on_complete
+        self.token = CancellationToken()
+        return JobHandle(job_id=name, cancel=self.token.cancel)
+
+
 class AiAssistPresentationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -67,12 +77,6 @@ class AiAssistPresentationTests(unittest.TestCase):
         self.assertIsNone(dialog.last_error)
 
     def test_pending_request_prevents_dialog_close(self) -> None:
-        class DeferredRunner:
-            def submit(self, name, work, *, on_complete):
-                self.work = work
-                self.complete = on_complete
-                return JobHandle(job_id=name, cancel=lambda: None)
-
         runner = DeferredRunner()
         dialog = AiAssistDialog(
             AiAssistViewModel(user_id=1, chat_handler=FakeChatHandler()),
@@ -89,6 +93,87 @@ class AiAssistPresentationTests(unittest.TestCase):
         self.assertTrue(dialog.send_button.isEnabled())
         dialog.close()
         self.assertFalse(dialog.isVisible())
+
+    def test_cancellation_skips_context_and_generation_at_request_boundaries(self):
+        for stage in ("before_context", "during_context"):
+            with self.subTest(stage=stage):
+                token = CancellationToken()
+                chat = FakeChatHandler()
+
+                class Context(FakeContextHandler):
+                    def handle(self, query):
+                        result = super().handle(query)
+                        token.cancel()
+                        return result
+
+                context = Context()
+                model = AiAssistViewModel(user_id=1, chat_handler=chat, context_handler=context)
+                state = model.initial_state()
+                if stage == "before_context":
+                    token.cancel()
+                result = model.send(state, "Summarize", selected_day=date(2026, 5, 4),
+                                    cancellation_token=token)
+                self.assertEqual(result.error.code, "ai_chat_cancelled")
+                self.assertEqual(len(context.queries), int(stage == "during_context"))
+                self.assertEqual(chat.commands, [])
+                self.assertEqual(state.history, ())
+
+    def test_dialog_cancellation_reaches_gateway_and_ignores_its_late_reply(self):
+        runner = DeferredRunner()
+
+        class Gateway:
+            def generate(self, request):
+                self.request = request
+                dialog.processing_progress.cancel_button.click()
+                return Result.success(AIResponse("Late reply", "test"))
+
+        gateway = Gateway()
+        model = AiAssistViewModel(user_id=1, chat_handler=AiChatHandler(gateway))
+        dialog = AiAssistDialog(model, date(2026, 5, 4), job_runner=runner)
+        self.addCleanup(dialog.deleteLater)
+        finished = QSignalSpy(dialog._processing_task.finished)
+        initial_state = dialog.state
+        dialog.message_input.setText("Keep this question")
+        self.assertTrue(dialog.send_current_message())
+        result = runner.work(runner.token)
+        self.assertIs(gateway.request.cancellation_token, runner.token)
+        self.assertTrue(runner.token.is_cancelled())
+        self.assertEqual(result.error.code, "ai_chat_cancelled")
+        self.assertEqual(finished.count(), 1)
+        dialog.message_input.setText("Next question")
+        runner.complete(result)
+        self.assertEqual(finished.count(), 1)
+        self.assertEqual(dialog.state, initial_state)
+        self.assertEqual(dialog.transcript.toPlainText(), "")
+        self.assertEqual(dialog.message_input.text(), "Next question")
+        self.assertIsNone(dialog._pending_handle)
+        self.assertIsNone(dialog.last_error)
+        self.assertTrue(dialog.send_button.isEnabled())
+        self.assertTrue(dialog.close_button.isEnabled())
+
+    def test_optional_chat_token_rejects_success_returned_after_cancellation(self):
+        class Chat(FakeChatHandler):
+            def handle(self, command, cancellation_token=None):
+                self.token = cancellation_token
+                result = super().handle(command, cancellation_token)
+                if cancellation_token is not None:
+                    cancellation_token.cancel()
+                return result
+
+        for token in (None, CancellationToken()):
+            with self.subTest(token_supplied=token is not None):
+                chat = Chat()
+                model = AiAssistViewModel(user_id=1, chat_handler=chat)
+                state = model.initial_state()
+                result = (model.send(state, "Summarize") if token is None else
+                          model.send(state, "Summarize", cancellation_token=token))
+                self.assertIs(chat.token, token)
+                if token is None:
+                    self.assertTrue(result.ok)
+                    self.assertEqual(result.value.history[-1]["content"], "reply")
+                else:
+                    self.assertEqual(result.error.code, "ai_chat_cancelled")
+                self.assertEqual(state.history, ())
 
     def test_rejected_request_start_leaves_the_dialog_usable(self):
         from unittest.mock import patch

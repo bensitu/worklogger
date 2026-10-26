@@ -6,15 +6,18 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
 
+from worklogger.app.job_runner import CancellationToken
 from worklogger.app.commands.ai_commands import SendAiChatMessageCommand
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
 from worklogger.app.use_cases.ai import AiChatResult, AiContextResult
-from worklogger.domain.shared.errors import ValidationError
+from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
 class AiChatHandlerProtocol(Protocol):
-    def handle(self, command: SendAiChatMessageCommand) -> Result[AiChatResult]:
+    def handle(
+        self, command: SendAiChatMessageCommand, cancellation_token: CancellationToken | None = None,
+    ) -> Result[AiChatResult]:
         ...
 
 
@@ -58,7 +61,10 @@ class AiAssistViewModel:
         context: str = "",
         selected_day: date | None = None,
         period_type: str = "daily",
+        cancellation_token: CancellationToken | None = None,
     ) -> Result[AiChatState]:
+        if cancellation_token is not None and cancellation_token.is_cancelled():
+            return Result.failure(CancellationError("ai_chat_cancelled", "ai_chat_cancelled"))
         if self._context_handler is not None and selected_day is not None:
             built = self._context_handler.handle(
                 BuildAiContextQuery(
@@ -67,6 +73,8 @@ class AiAssistViewModel:
                     period_type=period_type,
                 )
             )
+            if cancellation_token is not None and cancellation_token.is_cancelled():
+                return Result.failure(CancellationError("ai_chat_cancelled", "ai_chat_cancelled"))
             if not built.ok or built.value is None:
                 return Result.failure(
                     built.error or ValidationError("ai_context_failed", "ai_context_failed")
@@ -79,8 +87,10 @@ class AiAssistViewModel:
                 history=state.history,
                 context=context,
                 language=self._language,
-            )
+            ), cancellation_token=cancellation_token,
         )
+        if cancellation_token is not None and cancellation_token.is_cancelled():
+            return Result.failure(CancellationError("ai_chat_cancelled", "ai_chat_cancelled"))
         if not result.ok or result.value is None:
             return Result.failure(result.error or ValidationError("ai_chat_failed", "ai_chat_failed"))
         return Result.success(AiChatState(user_id=self._user_id, history=result.value.history))

@@ -268,7 +268,8 @@ class NoteEditorDialog(QDialog):
             self._set_error(InfrastructureError("note_save_failed", "note_save_failed"))
 
     def _persist_draft(self):
-        if self._state is None or self._busy or self._draft_busy:
+        if self._state is None or self._busy or self._draft_busy or self._state.draft_unavailable:
+            # Preserve unreadable drafts until an explicit save or discard action.
             return
         state, content, sharing, version = self._state, self.editor.toPlainText(), self._sharing(), self._version
         self._draft_busy = True
@@ -316,7 +317,10 @@ class NoteEditorDialog(QDialog):
             self._sync_history_selection()
             return
         state, content, sharing = self._state, self.editor.toPlainText(), self._sharing()
+        preserve_draft = state.draft_unavailable and not self.has_unsaved_changes
         def load():
+            if preserve_draft:
+                return self._view_model.load(day)
             saved = self._view_model.save_draft(state, content, sharing)
             return self._view_model.load(day) if saved.ok else saved
         self._run("load_note", load, self.set_state)
@@ -412,7 +416,8 @@ class NoteEditorDialog(QDialog):
     def _request_close(self):
         if self._busy:
             return
-        if self._state is None:
+        if self._state is None or (self._state.draft_unavailable and not self.has_unsaved_changes):
+            self._draft_timer.stop()
             QDialog.reject(self)
             return
         if self.has_unsaved_changes and self._confirm_discard_changes is not None:

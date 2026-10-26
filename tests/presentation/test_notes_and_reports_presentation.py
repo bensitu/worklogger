@@ -11,6 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import QDate, QLocale, Qt
+from PySide6.QtTest import QSignalSpy, QTest
 
 from tests.app.test_notes_and_reports_use_cases import (
     MemoryCalendarRepository,
@@ -21,7 +22,7 @@ from tests.app.test_notes_and_reports_use_cases import (
 )
 from worklogger.app.commands.report_commands import SaveReportCommand
 from worklogger.app.queries.report_queries import GetReportForPeriodQuery
-from worklogger.app.use_cases.ai import RewriteTextHandler
+from worklogger.app.use_cases.ai import RewriteTextHandler, RewriteTextResult
 from worklogger.app.use_cases.notes import DailyNotesService
 from worklogger.app.use_cases.reports import (
     GenerateReportHandler,
@@ -43,6 +44,7 @@ from worklogger.infrastructure.database import MigrationRunner, SQLiteConnection
 from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteDailyNoteRepository, SQLiteQuickLogRepository, SQLiteSettingsRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from worklogger.domain.notes.models import DailyNote, NoteHistoryFilter
+from worklogger.domain.notes.preferences import note_draft_key, note_sharing_key
 from worklogger.infrastructure.i18n import get_language
 
 
@@ -153,6 +155,175 @@ class NotesReportsPresentationTests(unittest.TestCase):
         notes, quick = SQLiteDailyNoteRepository(factory), SQLiteQuickLogRepository(factory)
         service = DailyNotesService(user_id=user.id, notes=notes, settings=SQLiteSettingsRepository(factory), previous_entries=quick)
         return NoteEditorViewModel(service, markdown_exporter=MarkdownExporter(), rewrite_handler=RewriteTextHandler()), notes, quick, factory
+
+    def test_unreadable_drafts_survive_unchanged_close_escape_and_navigation(self):
+        model, notes, _quick, _factory = self._note_model()
+        day, other_day = date(2026, 5, 14), date(2026, 5, 15)
+        notes.save(DailyNote(model.service.user_id, day, "Saved note"))
+        notes.save(DailyNote(model.service.user_id, other_day, "Other note"))
+        key = note_draft_key(day)
+        raw = '{"content":"Recoverable text","expected_content":7}'
+        for action in ("close_button", "escape", "window_close", "navigate"):
+            with self.subTest(action=action):
+                model.service.settings.set(model.service.user_id, key, raw)
+                dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+                self.addCleanup(dialog.deleteLater)
+                self.assertTrue(dialog.refresh())
+                self.assertTrue(dialog._state.draft_unavailable)
+                self.assertFalse(dialog.has_unsaved_changes)
+                finished = QSignalSpy(dialog.finished)
+                dialog.show()
+                with patch.object(QMessageBox, "question") as question:
+                    if action == "close_button":
+                        dialog.close_button.click()
+                    elif action == "escape":
+                        QTest.keyClick(dialog, Qt.Key.Key_Escape)
+                    elif action == "window_close":
+                        dialog.close()
+                    else:
+                        dialog.history_list.setCurrentRow(0)
+                        self.assertEqual(dialog.editor.toPlainText(), "Other note")
+                    question.assert_not_called()
+                self.assertEqual(finished.count(), int(action != "navigate"))
+                self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+                self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Saved note")
+                dialog.history_browser.stop()
+                dialog._draft_timer.stop()
+
+    def test_unreadable_drafts_survive_autosave_export_and_text_review(self):
+        model, notes, _quick, factory = self._note_model()
+        day = date(2026, 5, 14)
+        notes.save(DailyNote(model.service.user_id, day, "Saved note"))
+        notes.save(DailyNote(model.service.user_id, date(2026, 5, 15), "Other note"))
+        key = note_draft_key(day)
+        raw = '{"content":"Recoverable text","expected_content":7}'
+        model.service.settings.set(model.service.user_id, key, raw)
+        handler = Mock(available=True)
+        handler.handle.return_value = Result.success(RewriteTextResult("Polished note"))
+        model._rewrite_handler = handler
+        dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+        self.addCleanup(dialog.deleteLater)
+        self.assertTrue(dialog.refresh())
+        dialog.editor.setPlainText("New edits")
+        dialog.report_checkbox.setChecked(True)
+        dialog._draft_timer.timeout.emit()
+        self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+        target = Path(factory.database_path).parent / "note.md"
+        with patch("worklogger.presentation.notes.dialog.show_information"):
+            dialog.export_markdown(target)
+        self.assertEqual(target.read_text(encoding="utf-8"), "New edits")
+        self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+        for outcome in ("cancel", "failure", "accept"):
+            with self.subTest(outcome=outcome):
+                handler.handle.return_value = (Result.failure(InfrastructureError("ai_request_failed", "ai_request_failed"))
+                    if outcome == "failure" else Result.success(RewriteTextResult("Polished note")))
+                with patch("worklogger.presentation.notes.dialog.show_warning"):
+                    dialog.rewrite_button.click()
+                if outcome == "cancel":
+                    dialog._rewrite_task.review_dialog.cancel_button.click()
+                elif outcome == "accept":
+                    dialog._rewrite_task.review_dialog.use_button.click()
+                dialog._draft_timer.timeout.emit()
+                self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+                self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Saved note")
+        self.assertEqual(dialog.editor.toPlainText(), "Polished note")
+        self.assertTrue(dialog.has_unsaved_changes)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            dialog.history_list.setCurrentRow(0)
+        finished = QSignalSpy(dialog.finished)
+        with patch.object(QMessageBox, "exec", return_value=QMessageBox.StandardButton.Cancel):
+            dialog.reject()
+        self.assertEqual(finished.count(), 0)
+        self.assertEqual(dialog._day, day)
+        self.assertEqual(dialog.editor.toPlainText(), "Polished note")
+        self.assertTrue(dialog.report_checkbox.isChecked())
+        self.assertTrue(dialog.has_unsaved_changes)
+        self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+        dialog._draft_timer.stop()
+        dialog.history_browser.stop()
+
+    def test_explicit_note_actions_resolve_unreadable_drafts(self):
+        model, notes, _quick, _factory = self._note_model()
+        day = date(2026, 5, 14)
+        key = note_draft_key(day)
+        raw = '{"content":"Recoverable text","expected_content":7}'
+        other_day = date(2026, 5, 15)
+        notes.save(DailyNote(model.service.user_id, other_day, "Other note"))
+        for action in ("save", "reload", "discard", "keep", "navigate_keep"):
+            with self.subTest(action=action):
+                notes.save(DailyNote(model.service.user_id, day, "Saved note"))
+                model.service.settings.set(model.service.user_id, key, raw)
+                dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+                self.addCleanup(dialog.deleteLater)
+                self.assertTrue(dialog.refresh())
+                saved = QSignalSpy(dialog.saved)
+                dialog.editor.setPlainText("New edits")
+                dialog.report_checkbox.setChecked(not dialog.report_checkbox.isChecked())
+                sharing = dialog._sharing()
+                if action == "save":
+                    with patch("worklogger.presentation.notes.dialog.show_information"):
+                        dialog.save_button.click()
+                    self.assertEqual(saved.count(), 1)
+                    self.assertFalse(dialog._state.draft_unavailable)
+                    self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "New edits")
+                    self.assertEqual(model.load(day).value.saved_sharing, sharing)
+                    self.assertIsNone(model.service.settings.get(model.service.user_id, key))
+                    dialog.editor.setPlainText("Next draft")
+                    dialog._persist_draft()
+                    self.assertEqual(model.load(day).value.content, "Next draft")
+                elif action == "reload":
+                    with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                        dialog.reload_button.click()
+                    self.assertEqual(dialog.editor.toPlainText(), "Saved note")
+                    self.assertFalse(dialog._state.draft_unavailable)
+                    self.assertIsNone(model.service.settings.get(model.service.user_id, key))
+                elif action == "navigate_keep":
+                    with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+                        dialog.history_list.setCurrentRow(0)
+                    self.assertEqual(dialog._day, other_day)
+                    self.assertEqual(model.load(day).value.content, "New edits")
+                    self.assertEqual(model.load(day).value.sharing, sharing)
+                else:
+                    answer = QMessageBox.StandardButton.Save if action == "keep" else QMessageBox.StandardButton.Discard
+                    with patch.object(QMessageBox, "exec", return_value=answer):
+                        dialog.reject()
+                    self.assertEqual(notes.get_for_day(model.service.user_id, day).content, "Saved note")
+                    if action == "keep":
+                        self.assertEqual(model.load(day).value.content, "New edits")
+                        self.assertEqual(model.load(day).value.sharing, sharing)
+                    else:
+                        self.assertIsNone(model.service.settings.get(model.service.user_id, key))
+                dialog._draft_timer.stop()
+                dialog.history_browser.stop()
+
+    def test_unreadable_draft_edits_retain_note_and_sharing_conflict_checks(self):
+        model, notes, _quick, _factory = self._note_model()
+        for conflict in ("content", "sharing"):
+            with self.subTest(conflict=conflict):
+                day = date(2026, 5, 14 if conflict == "content" else 15)
+                notes.save(DailyNote(model.service.user_id, day, "Saved note"))
+                key = note_draft_key(day)
+                raw = '{"content":"Recoverable text","expected_content":7}'
+                model.service.settings.set(model.service.user_id, key, raw)
+                dialog = NoteEditorDialog(model, day, job_runner=ImmediateJobRunner())
+                self.addCleanup(dialog.deleteLater)
+                self.assertTrue(dialog.refresh())
+                dialog.editor.setPlainText("New edits")
+                dialog.report_checkbox.setChecked(True)
+                if conflict == "content":
+                    notes.save(DailyNote(model.service.user_id, day, "Changed elsewhere"))
+                else:
+                    model.service.settings.set(model.service.user_id, note_sharing_key(day), '{"ai":true}')
+                saved = QSignalSpy(dialog.saved)
+                with patch("worklogger.presentation.notes.dialog.show_warning"):
+                    dialog.save_button.click()
+                self.assertEqual(dialog.last_error.code, "note_conflict")
+                self.assertEqual(saved.count(), 0)
+                self.assertEqual(dialog.editor.toPlainText(), "New edits")
+                self.assertTrue(dialog.report_checkbox.isChecked())
+                self.assertEqual(model.service.settings.get(model.service.user_id, key), raw)
+                dialog._draft_timer.stop()
+                dialog.history_browser.stop()
 
     def test_memos_preserve_previous_entries_drafts_and_sharing_choices(self):
         model, notes, quick, factory = self._note_model()
