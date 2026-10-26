@@ -218,12 +218,17 @@ def normalize_work_log(
     )
 
 
-def slice_entry(record: WorkLog, start: datetime, end: datetime, *, keep_identity: bool) -> WorkLog:
+def slice_entry(record: WorkLog, start: datetime, end: datetime, *, keep_identity: bool,
+                preserve_offsets: bool = False) -> WorkLog:
     if record.started_at is not None:
-        start = (record.started_at if start.astimezone(timezone.utc) == record.started_at.astimezone(timezone.utc)
-                 else start.astimezone(record.started_at.tzinfo))
-        end = (record.ended_at if end.astimezone(timezone.utc) == record.ended_at.astimezone(timezone.utc)
-               else end.astimezone(record.started_at.tzinfo))
+        if start.astimezone(timezone.utc) == record.started_at.astimezone(timezone.utc):
+            start = record.started_at
+        elif not preserve_offsets:
+            start = start.astimezone(record.started_at.tzinfo)
+        if end.astimezone(timezone.utc) == record.ended_at.astimezone(timezone.utc):
+            end = record.ended_at
+        elif not preserve_offsets:
+            end = end.astimezone(record.started_at.tzinfo)
     return normalize_work_log(replace(record, day=start.date(), start_time=start.strftime("%H:%M"),
         end_time=end.strftime("%H:%M"), started_at=start if record.started_at else None,
         ended_at=end if record.started_at else None, id=record.id if keep_identity else None,

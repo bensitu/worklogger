@@ -20,7 +20,10 @@ def split_entry(record: WorkLog, first_minutes: int) -> tuple[WorkLog, WorkLog]:
     if type(first_minutes) is not int or first_minutes < 1 or not record.has_times:
         raise ValueError("record_split_invalid")
     start, _end = entry_interval(record) if record.started_at else TimeRange(record.start_time, record.end_time).as_datetimes(record.day)
-    return split_entry_at(record, start + timedelta(minutes=first_minutes))
+    cut = start + timedelta(minutes=first_minutes)
+    if record.started_at is not None:
+        cut = cut.astimezone(record.started_at.tzinfo)
+    return split_entry_at(record, cut)
 
 
 def split_entry_at(record: WorkLog, cut: datetime) -> tuple[WorkLog, WorkLog]:
@@ -35,7 +38,8 @@ def split_entry_at(record: WorkLog, cut: datetime) -> tuple[WorkLog, WorkLog]:
         raise ValueError("record_split_invalid")
     if not start < cut < end:
         raise ValueError("record_split_invalid")
-    return slice_entry(record, start, cut, keep_identity=True), slice_entry(record, cut, end, keep_identity=False)
+    return (slice_entry(record, start, cut, keep_identity=True, preserve_offsets=True),
+            slice_entry(record, cut, end, keep_identity=False, preserve_offsets=True))
 
 
 def merge_entries(left: WorkLog, right: WorkLog) -> WorkLog:

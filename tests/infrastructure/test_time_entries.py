@@ -28,6 +28,57 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_explicit_splits_preserve_selected_offsets_after_sqlite_round_trip(self):
+        from zoneinfo import ZoneInfo
+
+        zone = ZoneInfo("America/New_York")
+        cases = (("2026-03-08T01:30:00-05:00", "2026-03-08T04:30:00-04:00",
+                  datetime(2026, 3, 8, 3, 15, 22, 123456, tzinfo=zone)),
+                 ("2026-11-01T00:30:00-04:00", "2026-11-01T03:30:00-05:00",
+                  datetime(2026, 11, 1, 1, 45, tzinfo=zone, fold=1)))
+        for start_text, end_text, cut in cases:
+            with self.subTest(cut=cut.isoformat()):
+                start, end = datetime.fromisoformat(start_text), datetime.fromisoformat(end_text)
+                saved = self.repository.save_entry(WorkLog(self.user.id, start.date(), start.strftime("%H:%M"),
+                    end.strftime("%H:%M"), note="Recorded work", entry_type=EntryType.MEETING,
+                    started_at=start, ended_at=end, work_mode=WorkMode.REMOTE))
+                reopened = SQLiteWorkLogRepository(self.factory)
+                original = reopened.get_entry(self.user.id, saved.id)
+                result = self.service.split_at(original, cut)
+                self.assertTrue(result.ok, result.error)
+                left, right = (reopened.get_entry(self.user.id, entry.id) for entry in result.value)
+                self.assertEqual((left.ended_at.isoformat(), right.started_at.isoformat()),
+                                 (cut.isoformat(), cut.isoformat()))
+                self.assertEqual((left.started_at.isoformat(), right.ended_at.isoformat()), (start_text, end_text))
+                self.assertEqual((left.end_time, right.start_time), (cut.strftime("%H:%M"),) * 2)
+                self.assertAlmostEqual(left.worked_hours() + right.worked_hours(), original.worked_hours())
+                for entry in (left, right):
+                    self.assertEqual((entry.note, entry.entry_type, entry.work_mode, entry.context),
+                                     (original.note, original.entry_type, original.work_mode, original.context))
+                self.assertTrue(self.service.undo(self.service.latest_change().value.id).ok)
+                restored = reopened.get_entry(self.user.id, saved.id)
+                self.assertEqual((restored.started_at.isoformat(), restored.ended_at.isoformat()), (start_text, end_text))
+
+    def test_completed_content_saves_reject_foreign_records_without_changing_timer_behavior(self):
+        auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        other = auth.create_user("other-content-owner", "example-password", recovery_key=None, is_admin=False)
+        foreign = self.repository.save_entry(WorkLog(other.id, self.now.date(), "09:00", "10:00", note="Other account"))
+        previous_change = self.repository.latest_change(other.id)
+        with patch.object(self.repository, "save_entry", wraps=self.repository.save_entry) as save:
+            result = self.service.save_content("Invalid edit", foreign)
+            self.assertFalse(result.ok)
+            self.assertEqual(result.error.code, "worklog_entry_conflict")
+            save.assert_not_called()
+        self.assertEqual(self.repository.get_entry(other.id, foreign.id), foreign)
+        self.assertEqual(self.repository.latest_change(other.id), previous_change)
+
+        self.assertTrue(self.service.start("normal", "Active").ok)
+        result = self.service.save_content("Updated timer", foreign)
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(self.make_service().timer.content, "Updated timer")
+        self.assertEqual(self.repository.get_entry(other.id, foreign.id), foreign)
+        self.assertEqual(self.repository.latest_change(other.id), previous_change)
+
     def test_custom_search_pages_preserve_cursors_and_find_records_outside_the_first_page(self):
         from dataclasses import replace
         from datetime import date

@@ -18,6 +18,11 @@ from worklogger.domain.shared.errors import ConflictError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
+# Each of two fields can require six JSON characters per UTF-8 byte.
+# The fixed keys and sharing metadata fit within the additional 1 KiB.
+_MAX_NOTE_DRAFT_CHARACTERS = 12 * MAX_NOTE_CONTENT_BYTES + 1024
+
+
 class GetDailyNoteHandler:
     def __init__(self, repository: DailyNoteRepository) -> None:
         self._repository = repository
@@ -77,12 +82,15 @@ class DailyNotesService:
             unavailable = False
             if draft_raw:
                 try:
-                    if len(draft_raw) > 4 * 1024 * 1024:
+                    if len(draft_raw) > _MAX_NOTE_DRAFT_CHARACTERS:
                         raise ValueError("note_load_failed")
                     draft = json.loads(draft_raw)
                     content, expected = draft["content"], draft["expected_content"]
                     if not isinstance(content, str) or not isinstance(expected, str):
                         raise ValueError("note_load_failed")
+                    if (len(content.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES
+                            or len(expected.encode("utf-8")) > MAX_NOTE_CONTENT_BYTES):
+                        raise ValueError("note_content_too_long")
                     sharing = NoteSharing.decode(json.dumps(draft.get("sharing", {})))
                     expected_sharing = NoteSharing.decode(json.dumps(draft.get("expected_sharing", {})))
                     recovered = content != note.content or sharing != saved_sharing
@@ -121,6 +129,8 @@ class DailyNotesService:
             raw = json.dumps({"content": content, "expected_content": expected_content,
                               "sharing": {"reports": sharing.reports, "ai": sharing.ai},
                               "expected_sharing": {"reports": expected_sharing.reports, "ai": expected_sharing.ai}}, ensure_ascii=False)
+            if len(raw) > _MAX_NOTE_DRAFT_CHARACTERS:
+                raise ValueError("note_content_too_long")
             self.settings.set(self.user_id, note_draft_key(day), raw)
         return self._run(save)
 

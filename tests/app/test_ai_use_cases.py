@@ -122,7 +122,7 @@ class AiUseCaseTests(unittest.TestCase):
     def test_historical_note_references_follow_note_permissions_in_ai_context(self):
         from worklogger.domain.quicklog.rules import quick_log_reference
         day = date(2026, 5, 4)
-        entry = QuickLog(1, 1, day, "10:00", "Confidential historical detail", end_time="10:30")
+        entry = QuickLog(1, 1, day, description="Confidential historical detail", start_time="10:00", end_time="10:30")
         notes, previous = Mock(), Mock()
         notes.list_range.return_value = Result.success((DailyNote(1, day, quick_log_reference(entry)),))
         previous.handle.return_value = Result.success((entry,))

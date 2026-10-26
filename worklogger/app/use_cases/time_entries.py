@@ -305,6 +305,8 @@ class TimeEntryService:
                 return timer
             if completed is None:
                 raise ValueError("auto_record_not_started")
+            if completed.user_id != self.user_id:
+                raise ValueError("worklog_entry_conflict")
             return self.repository.save_entry(replace(completed, note=require_entry_content(content)))
         return self._run(save)
 

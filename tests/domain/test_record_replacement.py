@@ -4,7 +4,7 @@ import unittest
 from zoneinfo import ZoneInfo
 
 from worklogger.domain.projects.models import WorkContext
-from worklogger.domain.worklog.editing import split_entry_at, merge_entries
+from worklogger.domain.worklog.editing import split_entry, split_entry_at, merge_entries
 from worklogger.domain.worklog.models import WorkLog, EntryType, WorkMode
 from worklogger.domain.worklog.replacement import EntryReplacement
 
@@ -106,6 +106,26 @@ class RecordReplacementTests(unittest.TestCase):
                         cut.replace(tzinfo=timezone.utc)):
             with self.assertRaisesRegex(ValueError, "record_split_invalid"):
                 split_entry_at(self.old, invalid)
+
+    def test_elapsed_splits_and_replacements_keep_fixed_offset_policy(self):
+        start = datetime.fromisoformat("2026-11-01T00:30:00-04:00")
+        end = datetime.fromisoformat("2026-11-01T03:30:00-05:00")
+        old = replace(self.old, day=start.date(), start_time="00:30", end_time="03:30",
+                      started_at=start, ended_at=end)
+        left, right = split_entry(old, 135)
+        self.assertEqual(left.ended_at.isoformat(), "2026-11-01T02:45:00-04:00")
+        self.assertEqual(right.started_at.isoformat(), left.ended_at.isoformat())
+        self.assertEqual((left.started_at.isoformat(), right.ended_at.isoformat()),
+                         (start.isoformat(), end.isoformat()))
+        self.assertEqual(left.worked_hours() + right.worked_hours(), old.worked_hours())
+
+        incoming = WorkLog(1, start.date(), "01:45", "02:00", entry_type=EntryType.BREAK,
+                           started_at=datetime.fromisoformat("2026-11-01T01:45:00-05:00"),
+                           ended_at=datetime.fromisoformat("2026-11-01T02:00:00-05:00"))
+        _, left, right = EntryReplacement(incoming, (old,)).periods(keep_outside=True)
+        self.assertEqual(left.ended_at.isoformat(), "2026-11-01T02:45:00-04:00")
+        self.assertEqual(right.started_at.isoformat(), "2026-11-01T03:00:00-04:00")
+        self.assertEqual(left.worked_hours() + right.worked_hours(), old.worked_hours() - incoming.raw_hours())
 
     def test_replacement_rejects_foreign_and_duplicate_records(self):
         incoming = WorkLog(1, self.day, "12:00", "13:00")

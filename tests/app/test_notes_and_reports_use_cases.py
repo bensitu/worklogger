@@ -199,6 +199,91 @@ class CancelledToken:
 
 
 class NotesReportsUseCaseTests(unittest.TestCase):
+    def test_draft_recovery_supports_maximum_content_with_json_escaping(self):
+        from tests.app.test_application_use_cases import MemorySettingsRepository
+        from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES
+        from worklogger.domain.notes.preferences import NoteSharing
+
+        day = date(2026, 10, 27)
+        notes, settings = MemoryDailyNoteRepository(), MemorySettingsRepository()
+        service = DailyNotesService(user_id=1, notes=notes, settings=settings,
+                                    previous_entries=MemoryQuickLogRepository())
+        cases = (("\x00" * MAX_NOTE_CONTENT_BYTES, "\x01" * MAX_NOTE_CONTENT_BYTES),
+                 ("\u4e2d" * (MAX_NOTE_CONTENT_BYTES // 3) + "x" * (MAX_NOTE_CONTENT_BYTES % 3),
+                  "e" * MAX_NOTE_CONTENT_BYTES))
+        for content, expected in cases:
+            with self.subTest(content_prefix=repr(content[:1])):
+                notes.save(DailyNote(1, day, expected))
+                saved = service.save_draft(day, content, expected, NoteSharing())
+                self.assertTrue(saved.ok, saved.error)
+                loaded = service.load(day)
+                self.assertTrue(loaded.ok, loaded.error)
+                self.assertFalse(loaded.value.draft_unavailable)
+                self.assertTrue(loaded.value.recovered_draft)
+                self.assertEqual((loaded.value.content, loaded.value.expected_content), (content, expected))
+                self.assertEqual((loaded.value.sharing, loaded.value.expected_sharing),
+                                 (NoteSharing(), NoteSharing()))
+
+    def test_draft_recovery_rejects_oversized_decoded_fields_and_serialized_payloads(self):
+        import json
+        from tests.app.test_application_use_cases import MemorySettingsRepository
+        from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES
+        from worklogger.domain.notes.preferences import NoteSharing, note_draft_key, note_sharing_key
+
+        day = date(2026, 10, 27)
+        notes, settings = MemoryDailyNoteRepository(), MemorySettingsRepository()
+        notes.save(DailyNote(1, day, "Saved content"))
+        sharing = NoteSharing(True, False)
+        settings.set(1, note_sharing_key(day), sharing.encode())
+        service = DailyNotesService(user_id=1, notes=notes, settings=settings,
+                                    previous_entries=MemoryQuickLogRepository())
+        draft = {"content": "Draft", "expected_content": "Saved content"}
+        invalid = [json.dumps({**draft, field: "x" * (MAX_NOTE_CONTENT_BYTES + 1)})
+                   for field in ("content", "expected_content")]
+        invalid.append(json.dumps(draft) + " " * (16 * MAX_NOTE_CONTENT_BYTES))
+        for raw in invalid:
+            with self.subTest(serialized_length=len(raw)):
+                settings.set(1, note_draft_key(day), raw)
+                loaded = service.load(day)
+                self.assertTrue(loaded.ok, loaded.error)
+                self.assertTrue(loaded.value.draft_unavailable)
+                self.assertFalse(loaded.value.recovered_draft)
+                self.assertEqual((loaded.value.content, loaded.value.expected_content),
+                                 ("Saved content", "Saved content"))
+                self.assertEqual((loaded.value.sharing, loaded.value.expected_sharing), (sharing, sharing))
+                self.assertEqual(settings.get(1, note_draft_key(day)), raw)
+
+    def test_draft_parse_and_encoding_failures_preserve_saved_content_and_drafts(self):
+        import json
+        from tests.app.test_application_use_cases import MemorySettingsRepository
+        from worklogger.domain.notes.preferences import NoteSharing, note_draft_key
+
+        day = date(2026, 10, 27)
+        notes, settings = MemoryDailyNoteRepository(), MemorySettingsRepository()
+        note = DailyNote(1, day, "Saved content")
+        notes.save(note)
+        service = DailyNotesService(user_id=1, notes=notes, settings=settings,
+                                    previous_entries=MemoryQuickLogRepository())
+        raw = '{"content":' + "[" * 2000 + "0" + "]" * 2000 + ',"expected_content":""}'
+        settings.set(1, note_draft_key(day), raw)
+        loaded = service.load(day)
+        self.assertFalse(loaded.ok)
+        self.assertEqual(loaded.error.code, "note_load_failed")
+        self.assertEqual(settings.get(1, note_draft_key(day)), raw)
+        self.assertEqual(notes.get_for_day(1, day), note)
+
+        raw = json.dumps({"content": "\ud800", "expected_content": note.content})
+        settings.set(1, note_draft_key(day), raw)
+        loaded = service.load(day)
+        self.assertTrue(loaded.ok, loaded.error)
+        self.assertTrue(loaded.value.draft_unavailable)
+        self.assertEqual(loaded.value.content, note.content)
+        saved = service.save_draft(day, "\ud800", note.content, NoteSharing())
+        self.assertFalse(saved.ok)
+        self.assertEqual(saved.error.code, "note_save_failed")
+        self.assertEqual(settings.get(1, note_draft_key(day)), raw)
+        self.assertEqual(notes.get_for_day(1, day), note)
+
     def test_report_metadata_is_literal_without_removing_note_or_template_markdown(self):
         from worklogger.app.use_cases.report_generation import _template_values
         from worklogger.domain.projects.models import WorkContext
