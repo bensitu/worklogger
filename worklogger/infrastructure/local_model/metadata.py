@@ -7,7 +7,9 @@ from threading import RLock
 
 from worklogger.domain.local_model.models import LocalModelEntry
 from worklogger.infrastructure.files import atomic_destination, file_fingerprint
-from worklogger.infrastructure.local_model.catalog import catalog_entries
+from worklogger.infrastructure.local_model.catalog import catalog_entries, model_entry_from_mapping
+
+_MAX_MANIFEST_BYTES = 1024 * 1024
 
 
 class LocalModelMetadata:
@@ -52,23 +54,36 @@ class LocalModelMetadata:
             self._catalog_cache[path] = (key, entries)
             return entries
 
-    def save_catalog(self, entries: list[LocalModelEntry]) -> None:
+    def save_catalog(self, entries: list[LocalModelEntry], *, sync_manifest: bool = False) -> None:
         path = self._models_dir / "catalog.json"
         with self._cache_lock:
-            _write_json_atomic(path, {"models": [asdict(entry) for entry in entries]})
+            mappings = [asdict(entry) for entry in entries]
+            for mapping in mappings:
+                model_entry_from_mapping(mapping)
+            if len({entry.id for entry in entries}) != len(entries):
+                raise ValueError("local_model_catalog_invalid")
+            content = _json_bytes({"models": mappings}, self._max_catalog_bytes, "local_model_catalog_too_large")
+            manifest = (_json_bytes(self._manifest_records(entries), _MAX_MANIFEST_BYTES, "local_model_manifest_invalid")
+                        if sync_manifest else None)
+            # Validate both documents before publication; the catalog is authoritative and commits last.
+            with atomic_destination(path) as temporary:
+                temporary.write_bytes(content)
+                if manifest is not None:
+                    with atomic_destination(self._models_dir / "manifest.json") as pending:
+                        pending.write_bytes(manifest)
             self._catalog_cache.pop(path, None)
 
     def sync_manifest(self, entries: list[LocalModelEntry]) -> None:
+        _write_json_atomic(self._models_dir / "manifest.json", self._manifest_records(entries))
+
+    def _manifest_records(self, entries: list[LocalModelEntry]) -> list[dict]:
         path = self._models_dir / "manifest.json"
         manifest = {
             str(item.get("id", "")): item
             for item in _read_json_list(path)
             if isinstance(item, dict)
         }
-        for entry in entries:
-            existing = manifest.get(entry.id, {})
-            manifest[entry.id] = _manifest_record(entry, bool(existing.get("available", False)))
-        _write_json_atomic(path, list(manifest.values()))
+        return [_manifest_record(entry, bool(manifest.get(entry.id, {}).get("available", False))) for entry in entries]
 
     def set_available(self, entry: LocalModelEntry, available: bool) -> None:
         path = self._models_dir / "manifest.json"
@@ -94,13 +109,23 @@ def _read_json_list(path: Path) -> list[object]:
     if not path.exists():
         return []
     with path.open("rb") as stream:
-        content = stream.read(1024 * 1024 + 1)
-    if len(content) > 1024 * 1024:
+        content = stream.read(_MAX_MANIFEST_BYTES + 1)
+    if len(content) > _MAX_MANIFEST_BYTES:
         raise ValueError("local_model_manifest_invalid")
     data = json.loads(content.decode("utf-8"))
-    return data if isinstance(data, list) else []
+    if not isinstance(data, list):
+        raise ValueError("local_model_manifest_invalid")
+    return data
+
+
+def _json_bytes(data: object, maximum: int, error_code: str) -> bytes:
+    content = json.dumps(data, indent=2, ensure_ascii=False, allow_nan=False).encode("utf-8")
+    if len(content) > maximum:
+        raise ValueError(error_code)
+    return content
 
 
 def _write_json_atomic(path: Path, data: object) -> None:
+    content = _json_bytes(data, _MAX_MANIFEST_BYTES, "local_model_manifest_invalid")
     with atomic_destination(path) as temporary:
-        temporary.write_text(json.dumps(data, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
+        temporary.write_bytes(content)

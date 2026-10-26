@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import hashlib
-from dataclasses import fields
+from dataclasses import asdict, fields
 import json
 import tempfile
 import threading
@@ -38,6 +38,207 @@ class FakeResponse:
         chunk = self._payload[self._offset:self._offset + size]
         self._offset += len(chunk)
         return chunk
+
+
+class ModelStoreIntegrityTests(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.models = self.root / "models"
+        self.models.mkdir()
+        self.payload = b"GGUF\x03\x00\x00\x00" + bytes(16) + b"Synthetic model"
+        self.digest = hashlib.sha256(self.payload).hexdigest()
+        self.remote = []
+        self.store = JsonLocalModelStore(self.models, remote_catalog_url="https://catalog.example/models.json",
+            catalog_opener=lambda *_args, **_kwargs: FakeResponse(json.dumps({"models": self.remote}).encode()))
+
+    def entry(self, model_id, *, filename=None, **options):
+        return LocalModelEntry(model_id, model_id, filename or model_id + ".gguf", status="stable",
+            sha256=self.digest, download_url="https://models.example/model.gguf", **options)
+
+    def write_catalog(self, entries):
+        (self.models / "catalog.json").write_text(json.dumps({"models": [asdict(entry) for entry in entries]}), encoding="utf-8")
+
+    def account_settings(self):
+        from worklogger.infrastructure.database import MigrationRunner, SQLiteConnectionFactory
+        from worklogger.infrastructure.repositories import SQLiteAuthRepository, SQLiteSettingsRepository
+        from worklogger.infrastructure.security import PBKDF2PasswordHasher
+        factory = SQLiteConnectionFactory(self.root / "accounts.db")
+        MigrationRunner(factory).run_pending()
+        auth = SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+        users = tuple(auth.create_user(name, "synthetic-password", recovery_key=None, is_admin=False)
+                      for name in ("owner", "other"))
+        return SQLiteSettingsRepository(factory), users
+
+    def test_import_reuses_catalog_identity_and_preserves_reserved_filenames(self):
+        from worklogger.app.commands.local_model_commands import ImportLocalModelCommand
+        from worklogger.app.use_cases.local_models import ImportLocalModelHandler
+        entry = self.entry("catalog", filename="model.gguf", context_length=16384)
+        self.write_catalog([entry])
+        (self.models / entry.filename).write_bytes(self.payload)
+        source = self.root / entry.filename
+        source.write_bytes(self.payload)
+        settings, users = self.account_settings()
+        result = ImportLocalModelHandler(store=self.store, settings=settings).handle(ImportLocalModelCommand(users[0].id, source))
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value, entry)
+        self.assertEqual(settings.get(users[0].id, "local_model_active_id"), entry.id)
+        self.assertEqual(self.store.list_models().value, (entry,))
+        replacement = self.payload + b"Different model"
+        source.write_bytes(replacement)
+        imported = self.store.import_model(source)
+        self.assertTrue(imported.ok, imported.error)
+        self.assertNotEqual(imported.value.filename, entry.filename)
+        self.assertTrue(self.store.verify_model(entry.id).value.verified)
+        self.assertTrue(self.store.verify_model(imported.value.id).value.verified)
+        (self.models / entry.filename).unlink()
+        repeated = self.store.import_model(source)
+        self.assertTrue(repeated.ok, repeated.error)
+        self.assertEqual(repeated.value.id, imported.value.id)
+        self.assertFalse((self.models / entry.filename).exists())
+
+    def test_deleting_existing_aliases_preserves_other_accounts_and_remaining_references(self):
+        from dataclasses import replace
+        from worklogger.app.commands.local_model_commands import DeleteLocalModelCommand
+        from worklogger.app.use_cases.local_models import DeleteLocalModelHandler
+        settings, users = self.account_settings()
+        catalog = self.entry("catalog", filename="shared.gguf")
+        alias = replace(catalog, id="existing-import", status="local", download_url="")
+        for requested, surviving in ((alias, catalog), (catalog, alias)):
+            with self.subTest(requested=requested.id):
+                self.write_catalog([catalog, alias])
+                path = self.models / catalog.filename
+                path.write_bytes(self.payload)
+                settings.set(users[0].id, "local_model_active_id", requested.id)
+                settings.set(users[1].id, "local_model_active_id", surviving.id)
+                handler = DeleteLocalModelHandler(store=self.store, settings=settings, usage_reader=settings)
+                blocked = handler.handle(DeleteLocalModelCommand(users[0].id, surviving.id))
+                self.assertEqual(blocked.error.code, "local_model_used_by_another_user")
+                result = handler.handle(DeleteLocalModelCommand(users[0].id, requested.id))
+                self.assertTrue(result.ok, result.error)
+                self.assertEqual(path.read_bytes(), self.payload)
+                self.assertTrue(JsonLocalModelStore(self.models).verify_model(surviving.id).value.verified)
+                self.assertEqual(settings.get(users[1].id, "local_model_active_id"), surviving.id)
+                self.assertIsNone(settings.get(users[0].id, "local_model_active_id"))
+        first = replace(alias, id="first")
+        second = replace(alias, id="second")
+        self.write_catalog([first, second])
+        self.assertTrue(self.store.delete_model(first.id).ok)
+        self.assertTrue(self.store.verify_model(second.id).value.verified)
+        self.assertTrue(self.store.delete_model(second.id).ok)
+        self.assertFalse(path.exists())
+
+    def test_refresh_rejects_serialized_catalog_growth_without_replacing_metadata(self):
+        entry = self.entry("retained")
+        self.write_catalog([entry])
+        self.store._metadata.set_available(entry, False)
+        before = {name: (self.models / name).read_bytes() for name in ("catalog.json", "manifest.json")}
+        self.remote = [{"id": f"remote-{index}", "filename": f"remote-{index}.gguf"} for index in range(3000)]
+        self.assertLess(len(json.dumps({"models": self.remote}).encode()), 1024 * 1024)
+        result = self.store.refresh_catalog()
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "local_model_catalog_failed")
+        self.assertEqual({name: (self.models / name).read_bytes() for name in before}, before)
+        self.assertEqual(JsonLocalModelStore(self.models).list_models().value, (entry,))
+
+    def test_refresh_validates_remote_entries_and_manifest_before_publication(self):
+        entry = self.entry("retained")
+        for invalid in ("remote", "manifest", "manifest-type"):
+            with self.subTest(invalid=invalid):
+                self.write_catalog([entry])
+                manifest = self.models / "manifest.json"
+                manifest.write_text({"remote": "[]", "manifest": "invalid", "manifest-type": "{}"}[invalid], encoding="utf-8")
+                self.remote = [{"id": "new", "filename": "new.gguf"}]
+                if invalid == "remote":
+                    self.remote.append({"id": "invalid", "filename": "../outside.gguf"})
+                before = {name: (self.models / name).read_bytes() for name in ("catalog.json", "manifest.json")}
+                self.assertFalse(self.store.refresh_catalog().ok)
+                self.assertEqual({name: (self.models / name).read_bytes() for name in before}, before)
+                self.assertEqual(JsonLocalModelStore(self.models).list_models().value, (entry,))
+
+    def test_failed_manifest_publication_preserves_catalog_and_allows_refresh_retry(self):
+        from worklogger.infrastructure.files import atomic_destination
+        entry = self.entry("retained")
+        self.write_catalog([entry])
+        before = (self.models / "catalog.json").read_bytes()
+        self.remote = [{"id": "new", "filename": "new.gguf"}]
+        def destination(path, **options):
+            if path.name == "manifest.json":
+                raise OSError("Synthetic write failure")
+            return atomic_destination(path, **options)
+        with patch("worklogger.infrastructure.local_model.metadata.atomic_destination", side_effect=destination):
+            self.assertFalse(self.store.refresh_catalog().ok)
+        self.assertEqual((self.models / "catalog.json").read_bytes(), before)
+        self.assertEqual(self.store.list_models().value, (entry,))
+        self.assertTrue(self.store.refresh_catalog().ok)
+        self.assertEqual([entry.id for entry in self.store.list_models().value], ["new"])
+
+    def test_refresh_preserves_verified_installed_models_when_remote_entries_change(self):
+        from dataclasses import replace
+        from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
+        from worklogger.app.use_cases.local_models import ListLocalModelsHandler
+        installed = self.entry("installed", context_length=16384)
+        missing = self.entry("missing")
+        damaged = self.entry("damaged")
+        no_hash = replace(self.entry("no-hash"), sha256="")
+        invalid_header = replace(self.entry("invalid-header"), sha256=hashlib.sha256(b"not a GGUF").hexdigest())
+        settings, users = self.account_settings()
+        settings.set(users[0].id, "local_model_active_id", installed.id)
+        for replacement in (None, replace(installed, sha256="a" * 64), replace(installed, id="remote-alias")):
+            with self.subTest(replacement=replacement):
+                self.write_catalog([installed, missing, damaged, no_hash, invalid_header])
+                for entry in (installed, no_hash):
+                    (self.models / entry.filename).write_bytes(self.payload)
+                (self.models / damaged.filename).write_bytes(self.payload + b"changed")
+                (self.models / invalid_header.filename).write_bytes(b"not a GGUF")
+                self.remote = [asdict(replacement)] if replacement else []
+                result = self.store.refresh_catalog()
+                self.assertTrue(result.ok, result.error)
+                self.assertEqual(result.value, (replace(installed, status="preserved"),))
+                self.assertTrue(self.store.refresh_catalog().ok)
+                inventory = ListLocalModelsHandler(store=JsonLocalModelStore(self.models), settings=settings).handle(
+                    ListLocalModelsQuery(users[0].id))
+                self.assertTrue(inventory.ok, inventory.error)
+                self.assertTrue(inventory.value.items[0].active)
+                self.assertTrue(inventory.value.items[0].verified)
+                self.assertEqual(inventory.value.items[0].entry.context_length, installed.context_length)
+        self.remote = []
+        (self.models / installed.filename).write_bytes(self.payload + b"changed")
+        self.assertEqual(self.store.refresh_catalog().value, ())
+
+    def test_refresh_adopts_remote_updates_after_installed_model_is_explicitly_deleted(self):
+        from dataclasses import replace
+        entry = self.entry("installed")
+        self.write_catalog([entry])
+        (self.models / entry.filename).write_bytes(self.payload)
+        updated = replace(entry, sha256="a" * 64, context_length=16384)
+        self.remote = [asdict(updated)]
+        self.assertEqual(self.store.refresh_catalog().value, (replace(entry, status="preserved"),))
+        self.assertTrue(self.store.delete_model(entry.id).ok)
+        self.assertFalse((self.models / entry.filename).exists())
+        self.assertEqual(self.store.refresh_catalog().value, (updated,))
+        self.assertFalse(self.store.verify_model(updated.id).value.verified)
+
+    def test_remote_status_labels_do_not_preserve_unverified_entries(self):
+        for status in ("local", "preserved"):
+            with self.subTest(status=status):
+                self.remote = [{"id": "remote", "filename": "remote.gguf", "status": status}]
+                self.assertTrue(self.store.refresh_catalog().ok)
+                self.remote = []
+                self.assertEqual(self.store.refresh_catalog().value, ())
+
+    def test_refresh_keeps_verified_existing_alias_ids_for_a_shared_file(self):
+        from dataclasses import replace
+        entry = self.entry("catalog", filename="shared.gguf")
+        alias = replace(entry, id="existing-import", status="local", download_url="")
+        self.write_catalog([entry, alias])
+        (self.models / entry.filename).write_bytes(self.payload)
+        updated = replace(entry, context_length=16384)
+        self.remote = [asdict(updated)]
+        result = self.store.refresh_catalog()
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual({entry.id: entry for entry in result.value}, {entry.id: updated, alias.id: alias})
+        for entry in result.value:
+            self.assertTrue(self.store.verify_model(entry.id).value.verified)
 
 
 class LocalModelInfrastructureTests(unittest.TestCase):

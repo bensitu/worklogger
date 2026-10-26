@@ -10,6 +10,7 @@ import os
 import re
 import tempfile
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from threading import RLock
 from urllib.request import Request
@@ -19,7 +20,7 @@ from worklogger.domain.shared.errors import CancellationError, InfrastructureErr
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.files import file_fingerprint
 from worklogger.infrastructure.http import https_opener
-from worklogger.infrastructure.local_model.catalog import catalog_entries
+from worklogger.infrastructure.local_model.catalog import model_entry_from_mapping
 from worklogger.infrastructure.local_model.download import HttpRangeDownloader, UrlOpen
 from worklogger.infrastructure.local_model.files import check_download_cancelled, has_gguf_header, safe_model_filename, safe_model_url, sha256_of_file
 from worklogger.infrastructure.local_model.metadata import LocalModelMetadata
@@ -70,16 +71,30 @@ class JsonLocalModelStore:
         try:
             remote = self._fetch_remote_catalog()
             with self._metadata_lock:
-                local = [entry for entry in self._metadata.load_catalog() if entry.status in {"local", "preserved"}]
+                existing = self._metadata.load_catalog()
                 bundled = self._metadata.bundled_entries()
                 bundled_ids = {entry.id for entry in bundled}
+                remote_entries = {entry.id: entry for entry in remote}
+                local = []
+                for entry in existing:
+                    if entry.id in bundled_ids:
+                        continue
+                    if entry.status == "local" and not entry.download_url:
+                        local.append(entry)
+                        continue
+                    incoming = remote_entries.get(entry.id)
+                    verified = self.verify_model(entry.id)
+                    if verified.ok and verified.value.verified:
+                        if incoming and (incoming.filename, incoming.sha256) == (entry.filename, entry.sha256):
+                            local.append(incoming)
+                        else:
+                            local.append(replace(entry, status="preserved"))
                 protected_ids = {entry.id for entry in (*bundled, *local)}
                 protected_files = {entry.filename.casefold() for entry in (*bundled, *local)}
                 merged = list(bundled) + [entry for entry in remote if entry.id not in protected_ids
                     and entry.filename.casefold() not in protected_files] + [entry for entry in local
                         if entry.id not in bundled_ids]
-                self._metadata.save_catalog(merged)
-                self._metadata.sync_manifest(merged)
+                self._metadata.save_catalog(merged, sync_manifest=True)
                 return self.list_models()
         except Exception:
             return Result.failure(InfrastructureError("local_model_catalog_failed", "local_model_catalog_failed"))
@@ -128,17 +143,21 @@ class JsonLocalModelStore:
                 digest = copied.hexdigest()
                 with self._metadata_lock:
                     catalog = self._metadata.load_catalog()
-                    destination, existing_verified = self._unique_destination(filename, digest, is_cancelled=is_cancelled)
+                    destination, existing_verified = self._unique_destination(filename, digest, catalog=catalog,
+                                                                               is_cancelled=is_cancelled)
                     check_download_cancelled(is_cancelled)
                     if not existing_verified:
                         os.replace(temporary, destination)
-                    entry = LocalModelEntry(
-                        id=_safe_model_id(destination.stem, digest), display_name=source.stem,
-                        filename=destination.name, status="local", sha256=digest,
-                        estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
-                        description=destination.name,
-                    )
-                    self._metadata.save_catalog([item for item in catalog if item.id != entry.id] + [entry])
+                    entry = next((item for item in catalog if item.sha256 == digest
+                                  and self._resolve(item.filename) == destination), None)
+                    if entry is None:
+                        entry = LocalModelEntry(
+                            id=_safe_model_id(destination.stem, digest), display_name=source.stem,
+                            filename=destination.name, status="local", sha256=digest,
+                            estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
+                            description=destination.name,
+                        )
+                        self._metadata.save_catalog([item for item in catalog if item.id != entry.id] + [entry])
                     self._metadata.set_available(entry, True)
             return Result.success(entry)
         except InterruptedError:
@@ -251,13 +270,15 @@ class JsonLocalModelStore:
         try:
             with self._metadata_lock:
                 path = self._resolve(entry.value.filename)
-                path.unlink(missing_ok=True)
-                with self._cache_lock:
-                    self._verified_files.pop(path, None)
                 catalog = self._metadata.load_catalog()
+                shared = any(item.id != entry.value.id and self._resolve(item.filename) == path for item in catalog)
                 if entry.value.status in {"local", "preserved"}:
                     catalog = [item for item in catalog if item.id != entry.value.id]
                     self._metadata.save_catalog(catalog)
+                if not shared:
+                    path.unlink(missing_ok=True)
+                    with self._cache_lock:
+                        self._verified_files.pop(path, None)
                 self._metadata.set_available(entry.value, False)
             return Result.success(None)
         except Exception as exc:
@@ -303,7 +324,13 @@ class JsonLocalModelStore:
         data = json.loads(raw.decode("utf-8"))
         if not isinstance(data, dict) or not isinstance(data.get("models"), list):
             raise ValueError("local_model_catalog_invalid")
-        return catalog_entries(data["models"])
+        entries = {}
+        for item in data["models"]:
+            entry = model_entry_from_mapping(item)
+            if entry.status in {"local", "preserved"}:
+                entry = replace(entry, status="stable")
+            entries.setdefault(entry.id, entry)
+        return list(entries.values())
 
     def _resolve(self, filename: str) -> Path:
         base = self._models_dir.resolve(strict=False)
@@ -319,18 +346,17 @@ class JsonLocalModelStore:
             raise ValueError("local_model_filename_invalid")
         return resolved
 
-    def _unique_destination(self, filename: str, digest: str, *, is_cancelled=None) -> tuple[Path, bool]:
-        destination = self._resolve(filename)
-        if not destination.exists():
-            return destination, False
-        if sha256_of_file(destination, is_cancelled=is_cancelled) == digest:
-            return destination, True
-        candidate = self._resolve(f"{Path(filename).stem}-{digest[:8]}.gguf")
-        if candidate.exists():
-            if sha256_of_file(candidate, is_cancelled=is_cancelled) != digest:
-                raise ValueError("local_model_hash_mismatch")
-            return candidate, True
-        return candidate, False
+    def _unique_destination(self, filename: str, digest: str, *, catalog=(), is_cancelled=None) -> tuple[Path, bool]:
+        for name in (filename, f"{Path(filename).stem}-{digest[:8]}.gguf"):
+            destination = self._resolve(name)
+            owners = [entry for entry in catalog if self._resolve(entry.filename) == destination]
+            if owners and not any(entry.sha256 == digest for entry in owners):
+                continue
+            if not destination.exists():
+                return destination, False
+            if sha256_of_file(destination, is_cancelled=is_cancelled) == digest:
+                return destination, True
+        raise ValueError("local_model_hash_mismatch")
 
 
 def _safe_model_id(stem: str, digest: str) -> str:
