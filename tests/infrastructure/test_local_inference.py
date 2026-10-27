@@ -309,7 +309,19 @@ class LocalInferenceTests(unittest.TestCase):
         self.assertEqual(result.error.code, "local_model_hash_mismatch")
         self.assertEqual(self.engines, [])
         self.store.verify_model = lambda model, **kwargs: Result.success(LocalModelFileStatus(model, True, True))
+        original_factory = self.service._engine_factory
         self.service._engine_factory = lambda **kwargs: (_ for _ in ()).throw(OSError("Private diagnostic"))
-        result = self.handler.handle(RewriteTextCommand(1, "Original note"))
-        self.assertEqual(result.error.code, "local_model_load_failed")
-        self.assertNotIn("Private diagnostic", repr(result.error))
+        from importlib.metadata import PackageNotFoundError
+        for backend_version in ("0.3.19", None):
+            with self.subTest(backend_version=backend_version):
+                with (patch("worklogger.infrastructure.ai.runtime.distribution_version", return_value=backend_version,
+                            side_effect=PackageNotFoundError() if backend_version is None else None),
+                      self.assertLogs("worklogger.infrastructure.ai.runtime", level="ERROR") as log):
+                    result = self.handler.handle(RewriteTextCommand(1, "Original note"))
+                self.assertEqual(result.error.code, "local_model_load_failed")
+                self.assertEqual(result.error.details, {"reason": "OSError", "backend_version": backend_version or "unknown"})
+                self.assertIn("backend_version=" + (backend_version or "unknown"), log.output[0])
+                self.assertNotIn("Private diagnostic", repr(result.error) + "\n".join(log.output))
+                self.assertNotIn("Original note", repr(result.error) + "\n".join(log.output))
+        self.service._engine_factory = original_factory
+        self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Next note")).ok)

@@ -28,6 +28,25 @@ Enable AI Assist to use the model. Turning off Local Model disables model manage
 and text-capacity editing without removing files or changing the saved capacity.
 Downloading a file alone does not select it.
 
+## Model Loading
+
+Verified confirms file integrity, not compatibility with the installed inference
+backend. A valid GGUF can require architecture or tensor support absent from an
+older backend. Loading can also fail because of insufficient memory.
+
+For source runs, check the interpreter and backend used to start the application:
+
+```sh
+python -c "import sys, llama_cpp; print(sys.executable); print(llama_cpp.__version__)"
+```
+
+An IDE, terminal, and build environment can use different interpreters and backend
+versions. Use the intended virtual environment explicitly, or run the verified
+installer above with that environment's interpreter. Completely exit and restart
+WorkLogger after changing native dependencies. Re-importing an unchanged verified
+file does not fix backend incompatibility. Loading failures log the backend version
+and exception type without recording text content or raw exception messages.
+
 ## Managing Files
 
 The model list identifies downloadable, imported, verified, and selected entries.

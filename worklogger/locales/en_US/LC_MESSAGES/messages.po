@@ -2998,8 +2998,8 @@ msgstr "Unable to load or save project data. Your input has been retained."
 msgid "Unable to load or save the background. The previous background has been retained."
 msgstr "Unable to load or save the background. The previous background has been retained."
 
-msgid "Unable to load the selected model. Check available memory or choose a smaller model."
-msgstr "Unable to load the selected model. Check available memory or choose a smaller model."
+msgid "Unable to load the selected model. Check local AI runtime compatibility and available memory."
+msgstr "Unable to load the selected model. Check local AI runtime compatibility and available memory."
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "Unable to load the user profile. Please try again."

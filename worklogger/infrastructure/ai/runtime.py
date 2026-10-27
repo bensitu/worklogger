@@ -1,6 +1,7 @@
 """Account-scoped, lazy native inference for verified local model files."""
 
 from dataclasses import asdict
+from importlib.metadata import PackageNotFoundError, version as distribution_version
 from importlib.util import find_spec
 import logging
 from threading import RLock
@@ -23,6 +24,17 @@ from worklogger.infrastructure.ai.runtime_options import engine_options, is_appl
 from worklogger.infrastructure.files import file_fingerprint
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _model_load_failure(error: Exception) -> InfrastructureError:
+    try:
+        backend_version = distribution_version("llama-cpp-python")
+    except (PackageNotFoundError, OSError, ValueError):
+        backend_version = "unknown"
+    reason = type(error).__name__
+    LOGGER.error("local_model_load_failed: %s; backend_version=%s", reason, backend_version)
+    return InfrastructureError("local_model_load_failed", "local_model_load_failed",
+                               {"reason": reason, "backend_version": backend_version})
 
 
 class LocalInferenceRuntime:
@@ -176,17 +188,13 @@ class LocalInferenceRuntime:
                             model_path=str(path), n_ctx=context,
                             **engine_options(gpu_offload_supported=gpu_offload_supported), verbose=False,
                         ), key, control)
-                    except InterruptedError:
+                    except InterruptedError as error:
                         if control.reason:
                             raise
-                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
-                    except Exception:
+                        return Result.failure(_model_load_failure(error))
+                    except Exception as error:
                         self._close_engine()
-                        return Result.failure(
-                            InfrastructureError(
-                                "local_model_load_failed", "local_model_load_failed"
-                            )
-                        )
+                        return Result.failure(_model_load_failure(error))
 
                 failure = []
                 execution_failed = False
@@ -247,13 +255,13 @@ class LocalInferenceRuntime:
                     LOGGER.warning("local_inference_metal_execution_failed_using_cpu")
                     try:
                         self._load_engine(factory, configuration, key, control)
-                    except InterruptedError:
+                    except InterruptedError as error:
                         if control.reason:
                             raise
-                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
-                    except Exception:
+                        return Result.failure(_model_load_failure(error))
+                    except Exception as error:
                         self._close_engine()
-                        return Result.failure(InfrastructureError("local_model_load_failed", "local_model_load_failed"))
+                        return Result.failure(_model_load_failure(error))
                     result = gateway.generate(request)
                     if not result.ok:
                         self._close_engine()

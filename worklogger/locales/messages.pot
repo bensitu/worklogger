@@ -2996,7 +2996,7 @@ msgstr ""
 msgid "Unable to load or save the background. The previous background has been retained."
 msgstr ""
 
-msgid "Unable to load the selected model. Check available memory or choose a smaller model."
+msgid "Unable to load the selected model. Check local AI runtime compatibility and available memory."
 msgstr ""
 
 msgid "Unable to load the user profile. Please try again."

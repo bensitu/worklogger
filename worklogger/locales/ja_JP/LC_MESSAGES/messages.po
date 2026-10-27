@@ -2998,8 +2998,8 @@ msgstr "プロジェクトデータを読み込みまたは保存できません
 msgid "Unable to load or save the background. The previous background has been retained."
 msgstr "背景を読み込むか保存できませんでした。元の背景は保持されています。"
 
-msgid "Unable to load the selected model. Check available memory or choose a smaller model."
-msgstr "選択したモデルを読み込めません。空きメモリを確認するか、小さいモデルを選択してください。"
+msgid "Unable to load the selected model. Check local AI runtime compatibility and available memory."
+msgstr "選択したモデルを読み込めません。ローカル AI 実行環境の互換性と空きメモリを確認してください。"
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "ユーザープロフィールを読み込めません。再試行してください。"

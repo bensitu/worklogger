@@ -137,7 +137,7 @@ _MESSAGE_GROUPS = (
     (("ai_assist_disabled",), N_("Enable AI Assist to use text processing.")),
     (("ai_service_disabled",), N_("AI Assist is disabled for this installation.")),
     (("local_model_disabled",), N_("Enable the local model to use text processing.")),
-    (("local_model_load_failed",), N_("Unable to load the selected model. Check available memory or choose a smaller model.")),
+    (("local_model_load_failed",), N_("Unable to load the selected model. Check local AI runtime compatibility and available memory.")),
     (("local_inference_timeout",), N_("Local text processing timed out. Try shorter content or a smaller model.")),
     (("local_inference_context_limit",), N_("This text exceeds the selected model's context limit. Shorten it and try again.")),
     (("avatar_image_invalid",), N_("Choose a valid PNG, JPEG, WebP, or BMP image.")),

@@ -2998,8 +2998,8 @@ msgstr "無法載入或儲存專案資料，輸入內容已保留。"
 msgid "Unable to load or save the background. The previous background has been retained."
 msgstr "無法載入或儲存背景，已保留原背景。"
 
-msgid "Unable to load the selected model. Check available memory or choose a smaller model."
-msgstr "無法載入所選模型。請檢查可用記憶體或選擇較小的模型。"
+msgid "Unable to load the selected model. Check local AI runtime compatibility and available memory."
+msgstr "無法載入所選模型。請檢查本機 AI 執行元件的相容性及可用記憶體。"
 
 msgid "Unable to load the user profile. Please try again."
 msgstr "無法載入使用者資料，請再試一次。"

@@ -25,6 +25,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Local model loading errors cover runtime compatibility as well as memory limits, with safe backend-version diagnostics.
 - Failed or cancelled local model imports remove temporary files and roll back newly copied models if metadata cannot be saved, without deleting existing model files.
 - Background job and completion failures retain safe diagnostic codes without logging private exception payloads or blocking other completed requests.
 - Settings preference saves continue after submission or display failures, and local model caches invalidate when files are replaced.
