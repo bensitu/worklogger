@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 import json
+import logging
 import math
 import os
 import re
@@ -115,7 +116,8 @@ class JsonLocalModelStore:
             if source.stat().st_size > shutil.disk_usage(self._models_dir).free:
                 return Result.failure(ValidationError("local_model_disk_full", "local_model_disk_full"))
             filename = safe_model_filename(source.name)
-            with tempfile.TemporaryDirectory(prefix=".import-", dir=self._models_dir) as directory:
+            staging = tempfile.TemporaryDirectory(prefix=".import-", dir=self._models_dir)
+            with staging as directory:
                 temporary = Path(directory) / filename
                 copied = hashlib.sha256()
                 with source.open("rb") as reader, temporary.open("xb") as writer:
@@ -146,19 +148,36 @@ class JsonLocalModelStore:
                     destination, existing_verified = self._unique_destination(filename, digest, catalog=catalog,
                                                                                is_cancelled=is_cancelled)
                     check_download_cancelled(is_cancelled)
-                    if not existing_verified:
-                        os.replace(temporary, destination)
                     entry = next((item for item in catalog if item.sha256 == digest
                                   and self._resolve(item.filename) == destination), None)
                     if entry is None:
                         entry = LocalModelEntry(
                             id=_safe_model_id(destination.stem, digest), display_name=source.stem,
                             filename=destination.name, status="local", sha256=digest,
-                            estimated_size_mb=max(1, int(destination.stat().st_size / 1_048_576)),
+                            estimated_size_mb=max(1, int(temporary.stat().st_size / 1_048_576)),
                             description=destination.name,
                         )
-                        self._metadata.save_catalog([item for item in catalog if item.id != entry.id] + [entry])
-                    self._metadata.set_available(entry, True)
+                    created_identity = None
+                    committed = False
+                    try:
+                        if not existing_verified:
+                            created_identity = file_fingerprint(temporary.stat())[:2]
+                            os.replace(temporary, destination)
+                        # Finish temporary-file cleanup before publishing metadata.
+                        staging.cleanup()
+                        check_download_cancelled(is_cancelled)
+                        self._metadata.save_catalog([item for item in catalog if item.id != entry.id] + [entry],
+                                                    available_model_id=entry.id)
+                        committed = True
+                    finally:
+                        if not committed and created_identity is not None:
+                            try:
+                                if file_fingerprint(destination.lstat())[:2] == created_identity:
+                                    destination.unlink()
+                            except FileNotFoundError:
+                                pass
+                            except OSError as error:
+                                logging.getLogger(__name__).error("local_model_import_cleanup_failed: %s", type(error).__name__)
             return Result.success(entry)
         except InterruptedError:
             return Result.failure(CancellationError("job_cancelled", "job_cancelled"))

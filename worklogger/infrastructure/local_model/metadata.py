@@ -1,6 +1,7 @@
 """Bounded local model metadata reads and atomic persistence."""
 
 import json
+import logging
 from dataclasses import asdict
 from pathlib import Path
 from threading import RLock
@@ -54,7 +55,8 @@ class LocalModelMetadata:
             self._catalog_cache[path] = (key, entries)
             return entries
 
-    def save_catalog(self, entries: list[LocalModelEntry], *, sync_manifest: bool = False) -> None:
+    def save_catalog(self, entries: list[LocalModelEntry], *, sync_manifest: bool = False,
+                     available_model_id: str | None = None) -> None:
         path = self._models_dir / "catalog.json"
         with self._cache_lock:
             mappings = [asdict(entry) for entry in entries]
@@ -63,24 +65,47 @@ class LocalModelMetadata:
             if len({entry.id for entry in entries}) != len(entries):
                 raise ValueError("local_model_catalog_invalid")
             content = _json_bytes({"models": mappings}, self._max_catalog_bytes, "local_model_catalog_too_large")
-            manifest = (_json_bytes(self._manifest_records(entries), _MAX_MANIFEST_BYTES, "local_model_manifest_invalid")
-                        if sync_manifest else None)
+            manifest_path = self._models_dir / "manifest.json"
+            manifest = None
+            previous_manifest = None
+            manifest_existed = False
+            if sync_manifest or available_model_id is not None:
+                manifest_existed = manifest_path.exists()
+                previous_manifest = _read_json_list(manifest_path)
+                records = self._manifest_records(entries, existing=previous_manifest)
+                for record in records:
+                    if record["id"] == available_model_id:
+                        record["available"] = True
+                manifest = _json_bytes(records, _MAX_MANIFEST_BYTES, "local_model_manifest_invalid")
             # Validate both documents before publication; the catalog is authoritative and commits last.
-            with atomic_destination(path) as temporary:
-                temporary.write_bytes(content)
-                if manifest is not None:
-                    with atomic_destination(self._models_dir / "manifest.json") as pending:
-                        pending.write_bytes(manifest)
+            manifest_written = False
+            try:
+                with atomic_destination(path) as temporary:
+                    temporary.write_bytes(content)
+                    if manifest is not None:
+                        with atomic_destination(manifest_path) as pending:
+                            pending.write_bytes(manifest)
+                        manifest_written = True
+            except BaseException:
+                if manifest_written:
+                    try:
+                        if manifest_existed:
+                            _write_json_atomic(manifest_path, previous_manifest)
+                        else:
+                            manifest_path.unlink(missing_ok=True)
+                    except OSError as error:
+                        logging.getLogger(__name__).error("local_model_manifest_restore_failed: %s", type(error).__name__)
+                raise
             self._catalog_cache.pop(path, None)
 
     def sync_manifest(self, entries: list[LocalModelEntry]) -> None:
         _write_json_atomic(self._models_dir / "manifest.json", self._manifest_records(entries))
 
-    def _manifest_records(self, entries: list[LocalModelEntry]) -> list[dict]:
+    def _manifest_records(self, entries: list[LocalModelEntry], *, existing: list[object] | None = None) -> list[dict]:
         path = self._models_dir / "manifest.json"
         manifest = {
             str(item.get("id", "")): item
-            for item in _read_json_list(path)
+            for item in (_read_json_list(path) if existing is None else existing)
             if isinstance(item, dict)
         }
         return [_manifest_record(entry, bool(manifest.get(entry.id, {}).get("available", False))) for entry in entries]

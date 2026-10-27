@@ -109,9 +109,14 @@ checks can run; the native prompt-evaluation abort callback applies to CPU only.
 
 Import copies and hashes the source in one pass without holding the catalog lock
 for the whole copy. **Cancel** stops copying or verification at a chunk boundary;
-unpublished files are removed and the source remains unchanged. Completed files
-are independently verified before selection. If cancellation arrives after a
-file is published, the completed import can remain available but is not selected.
+uncommitted files and temporary directories are removed and the source remains
+unchanged. If saving the catalog or manifest fails, the new model file is removed
+and metadata changes are rolled back. A file that existed before the import is
+never removed by this cleanup, including a model shared with another account.
+Completed files are independently verified before selection. If cancellation
+arrives after the model and its metadata have been committed, the completed import
+can remain available but is not selected. Force termination or persistent file
+locks can prevent cleanup; older temporary directories are not deleted automatically.
 
 If a local catalog or manifest becomes unreadable, close the application and
 preserve the affected JSON file and model weights before making changes. Move the

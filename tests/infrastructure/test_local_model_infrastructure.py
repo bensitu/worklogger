@@ -69,6 +69,99 @@ class ModelStoreIntegrityTests(unittest.TestCase):
                       for name in ("owner", "other"))
         return SQLiteSettingsRepository(factory), users
 
+    def test_failed_import_metadata_publication_removes_new_files_and_restores_metadata(self):
+        import os
+        source = self.root / "candidate.gguf"
+        source.write_bytes(self.payload)
+        replace_file = os.replace
+        for existing in (False, True):
+            for failed_name in ("manifest.json", "catalog.json"):
+                with self.subTest(existing=existing, failed_name=failed_name):
+                    models = self.root / f"{existing}-{failed_name}"
+                    models.mkdir()
+                    store = JsonLocalModelStore(models)
+                    if existing:
+                        previous = self.root / "retained.gguf"
+                        previous.write_bytes(self.payload)
+                        retained = store.import_model(previous).value
+                    before = {p.name: p.read_bytes() for p in models.iterdir()}
+
+                    def publish(original, destination):
+                        if Path(destination).name == failed_name:
+                            raise OSError("Synthetic metadata publication failure")
+                        return replace_file(original, destination)
+
+                    with patch("worklogger.infrastructure.files.os.replace", side_effect=publish):
+                        result = store.import_model(source)
+                    self.assertFalse(result.ok)
+                    self.assertEqual(result.error.code, "local_model_import_failed")
+                    self.assertEqual({p.name: p.read_bytes() for p in models.iterdir()}, before)
+                    self.assertEqual(source.read_bytes(), self.payload)
+                    if existing:
+                        self.assertTrue(store.verify_model(retained.id).value.verified)
+                    retried = store.import_model(source)
+                    self.assertTrue(retried.ok, retried.error)
+                    self.assertTrue(store.verify_model(retried.value.id).value.verified)
+
+    def test_failed_duplicate_import_preserves_the_existing_model(self):
+        import os
+        source = self.root / "candidate.gguf"
+        source.write_bytes(self.payload)
+        imported = self.store.import_model(source).value
+        managed = self.store.model_path(imported.id)
+        before = {p.name: p.read_bytes() for p in self.models.iterdir()}
+        replace_file = os.replace
+
+        def publish(original, destination):
+            if Path(destination).name == "manifest.json":
+                raise OSError("Synthetic metadata publication failure")
+            return replace_file(original, destination)
+
+        with patch("worklogger.infrastructure.files.os.replace", side_effect=publish):
+            result = self.store.import_model(managed)
+        self.assertFalse(result.ok)
+        self.assertEqual({p.name: p.read_bytes() for p in self.models.iterdir()}, before)
+        self.assertTrue(self.store.verify_model(imported.id).value.verified)
+
+    def test_cancellation_after_file_publication_removes_the_uncommitted_model(self):
+        import os
+        source = self.root / "candidate.gguf"
+        source.write_bytes(self.payload)
+        cancelled = threading.Event()
+        replace_file = os.replace
+
+        def publish(original, destination):
+            result = replace_file(original, destination)
+            if Path(destination).suffix == ".gguf":
+                cancelled.set()
+            return result
+
+        with patch("worklogger.infrastructure.local_model.store.os.replace", side_effect=publish):
+            result = self.store.import_model(source, is_cancelled=cancelled.is_set)
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "job_cancelled")
+        self.assertEqual(tuple(self.models.iterdir()), ())
+        self.assertEqual(source.read_bytes(), self.payload)
+
+    def test_temporary_cleanup_failure_does_not_commit_the_import(self):
+        source = self.root / "candidate.gguf"
+        source.write_bytes(self.payload)
+        cleanup = tempfile.TemporaryDirectory.cleanup
+        failed = False
+
+        def clean(directory):
+            nonlocal failed
+            if Path(directory.name).name.startswith(".import-") and not failed:
+                failed = True
+                raise PermissionError("Synthetic temporary file lock")
+            return cleanup(directory)
+
+        with patch("worklogger.infrastructure.local_model.store.tempfile.TemporaryDirectory.cleanup", new=clean):
+            result = self.store.import_model(source)
+        self.assertFalse(result.ok)
+        self.assertEqual(tuple(self.models.iterdir()), ())
+        self.assertEqual(source.read_bytes(), self.payload)
+
     def test_import_reuses_catalog_identity_and_preserves_reserved_filenames(self):
         from worklogger.app.commands.local_model_commands import ImportLocalModelCommand
         from worklogger.app.use_cases.local_models import ImportLocalModelHandler
