@@ -91,7 +91,7 @@ class BuildDependencyTests(unittest.TestCase):
 
     def test_lock_capture_records_prefetched_target_wheel_without_index_access(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             requirements = root / "requirements-ai.txt"
             requirements.write_text("-r requirements-installer.txt\nllama-cpp-python==0.3.36\n", encoding="utf-8")
             tools = root / "requirements-installer.txt"

@@ -267,8 +267,10 @@ class NotesReportsUseCaseTests(unittest.TestCase):
         raw = '{"content":' + "[" * 2000 + "0" + "]" * 2000 + ',"expected_content":""}'
         settings.set(1, note_draft_key(day), raw)
         loaded = service.load(day)
-        self.assertFalse(loaded.ok)
-        self.assertEqual(loaded.error.code, "note_load_failed")
+        self.assertTrue(loaded.ok, loaded.error)
+        self.assertTrue(loaded.value.draft_unavailable)
+        self.assertFalse(loaded.value.recovered_draft)
+        self.assertEqual((loaded.value.content, loaded.value.expected_content), (note.content, note.content))
         self.assertEqual(settings.get(1, note_draft_key(day)), raw)
         self.assertEqual(notes.get_for_day(1, day), note)
 

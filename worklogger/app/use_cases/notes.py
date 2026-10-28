@@ -94,7 +94,7 @@ class DailyNotesService:
                     sharing = NoteSharing.decode(json.dumps(draft.get("sharing", {})))
                     expected_sharing = NoteSharing.decode(json.dumps(draft.get("expected_sharing", {})))
                     recovered = content != note.content or sharing != saved_sharing
-                except (ValueError, TypeError, KeyError):
+                except (ValueError, TypeError, KeyError, RecursionError):
                     content, expected, sharing, expected_sharing = note.content, note.content, saved_sharing, saved_sharing
                     unavailable = True
                     logging.getLogger(__name__).warning("note_draft_unavailable")

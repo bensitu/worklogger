@@ -90,7 +90,7 @@ class ModelStoreIntegrityTests(unittest.TestCase):
         self.assertTrue(reimported.ok, reimported.error)
         self.assertEqual(reimported.value, published)
         self.assertEqual(updated_store.list_models().value, (published,))
-        self.assertEqual(list(self.models.glob("*.gguf")), [managed_path])
+        self.assertEqual([path.resolve() for path in self.models.glob("*.gguf")], [managed_path])
         self.assertEqual(managed_path.read_bytes(), self.payload)
         self.assertEqual(source.read_bytes(), self.payload)
 
