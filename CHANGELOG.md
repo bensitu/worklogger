@@ -16,6 +16,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Changed
 
+- Updated local model recommendations with Gemma 4 E2B/E4B, Qwen3.5-9B, and an explicitly identified empero-ai community option. Qwen3-8B, the low-memory Qwen2.5-1.5B option, and existing model identities remain available without changing saved selections.
 - Settings share responsive forms, consistent input styles, and action groups that wrap for narrow windows and longer translations.
 - Dropdowns and numeric or date/time inputs require focus before the mouse wheel changes their values, preventing accidental edits while scrolling pages.
 - AI text polishing now opens an editable, side-by-side review before replacing time-record, note, or report text. Additional instructions support repeated polishing; cancelling or a failed request preserves the existing text.

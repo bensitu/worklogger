@@ -1,23 +1,103 @@
 {
   "models": [
     {
-      "id": "qwen3_4b_instruct_2507_q4",
-      "display_name": "Qwen3-4B-Instruct-2507 Q4_K_M",
-      "filename": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "id": "gemma4_e2b_it_q4",
+      "display_name": "Gemma 4 E2B IT Q4_K_M",
+      "filename": "gemma-4-E2B-it-Q4_K_M.gguf",
       "status": "stable",
-      "sha256": "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e",
-      "download_url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
-      "estimated_size_mb": 2382,
+      "sha256": "740185b21d22ceb83a11c3aa62ad5842ef32c70f6096d756bbee85a1e4ec34b8",
+      "download_url": "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/0314792d7f1f7e229411f620751375812bb9faf2/gemma-4-E2B-it-Q4_K_M.gguf",
+      "estimated_size_mb": 2963,
       "min_ram_gb": 8,
+      "context_length": 131072,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Recommended starting option for short multilingual work notes and summaries. Review names, times, task status, and added details before applying the result.",
+      "description_translations": {
+        "zh_CN": "建议优先尝试，用于多语言简短工作笔记与摘要。使用结果前，请核对人名、时间、任务状态及新增细节。",
+        "zh_TW": "建議優先嘗試，用於多語言簡短工作筆記與摘要。採用結果前，請核對人名、時間、任務狀態及新增細節。",
+        "ja_JP": "短い業務メモや要約に向けた多言語モデル。最初の選択肢として推奨します。適用前に氏名、時刻、作業状態、追加された内容を確認してください。",
+        "ko_KR": "짧은 다국어 업무 메모와 요약에 먼저 사용해 볼 모델입니다. 결과를 적용하기 전에 이름, 시간, 작업 상태 및 추가된 내용을 확인하세요."
+      }
+    },
+    {
+      "id": "gemma4_e4b_it_q4",
+      "display_name": "Gemma 4 E4B IT Q4_K_M",
+      "filename": "gemma-4-E4B-it-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "85a896a047553e842f25297ee5b031d64ff30147d9c4af17b1e4b394cd1fab87",
+      "download_url": "https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/bfc15c382204943c3a8fff0c750b94ae2364d7a3/gemma-4-E4B-it-Q4_K_M.gguf",
+      "estimated_size_mb": 4747,
+      "min_ram_gb": 12,
+      "context_length": 131072,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Larger multilingual alternative for computers with more memory. E4B describes effective parameters, not total model size. Review generated facts and wording before applying.",
+      "description_translations": {
+        "zh_CN": "适合内存较充足电脑的较大多语言备选模型。E4B 表示有效参数规模，而非模型总规模。使用前请核对生成的事实与措辞。",
+        "zh_TW": "適合記憶體較充足電腦的較大型多語言備選模型。E4B 表示有效參數規模，而非模型總規模。採用前請核對產生的事實與措辭。",
+        "ja_JP": "メモリに余裕のある端末向けの大型多言語モデル。E4B は有効パラメータ規模であり、モデル全体の規模ではありません。適用前に事実と言い回しを確認してください。",
+        "ko_KR": "메모리가 충분한 컴퓨터를 위한 대형 다국어 대안입니다. E4B는 전체 모델 크기가 아닌 유효 매개변수 규모를 나타냅니다. 적용 전에 사실과 표현을 검토하세요."
+      }
+    },
+    {
+      "id": "qwen35_9b_q4",
+      "display_name": "Qwen3.5-9B Q4_K_M",
+      "filename": "Qwen3.5-9B-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "03b74727a860a56338e042c4420bb3f04b2fec5734175f4cb9fa853daf52b7e8",
+      "download_url": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/3885219b6810b007914f3a7950a8d1b469d598a5/Qwen3.5-9B-Q4_K_M.gguf",
+      "estimated_size_mb": 5418,
+      "min_ram_gb": 16,
       "context_length": 262144,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Larger alternative for multilingual work-text editing on computers with ample memory. Check translated names, responsibility, and unfinished work before applying the result.",
+      "description_translations": {
+        "zh_CN": "适合内存充足电脑的较大多语言工作文本编辑模型。使用结果前，请核对翻译后的人名、责任归属及未完成的工作。",
+        "zh_TW": "適合記憶體充足電腦的較大型多語言工作文字編輯模型。採用結果前，請核對翻譯後的人名、責任歸屬及未完成的工作。",
+        "ja_JP": "十分なメモリを備えた端末で業務文書を編集する大型多言語モデル。適用前に翻訳された氏名、担当者、未完了の作業を確認してください。",
+        "ko_KR": "메모리가 넉넉한 컴퓨터에서 다국어 업무 텍스트를 편집하는 대형 모델입니다. 결과 적용 전에 번역된 이름, 담당 관계 및 미완료 작업을 확인하세요."
+      }
+    },
+    {
+      "id": "local_Qwen3.8-4B-Q4_K_M_dec96e8c",
+      "display_name": "empero-ai Qwen3.8-4B-Distill Q4_K_M",
+      "filename": "Qwen3.8-4B-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790",
+      "download_url": "https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/391fc7d103e3942a408def3e4f51c2f85d464417/Qwen3.8-4B-Q4_K_M.gguf",
+      "estimated_size_mb": 2655,
+      "min_ram_gb": 8,
+      "context_length": 8192,
+      "max_output_tokens": 2048,
+      "license": "Apache-2.0",
+      "description": "Optional community-trained model from empero-ai, not an official Qwen release under this name. Training provenance is not independently verified. Review facts, Japanese politeness, and translated names.",
+      "description_translations": {
+        "zh_CN": "empero-ai 提供的可选社区训练模型，并非此名称的 Qwen 官方版本。训练来源未经独立验证。请核对事实、日语敬语及翻译后的人名。",
+        "zh_TW": "empero-ai 提供的可選社群訓練模型，並非此名稱的 Qwen 官方版本。訓練來源未經獨立驗證。請核對事實、日語敬語及翻譯後的人名。",
+        "ja_JP": "empero-ai が提供する任意選択のコミュニティ学習モデルです。この名称の Qwen 公式版ではなく、学習の来歴は独立に検証されていません。事実、敬語、翻訳された氏名を確認してください。",
+        "ko_KR": "empero-ai의 선택형 커뮤니티 학습 모델로, 이 이름의 Qwen 공식 버전이 아닙니다. 학습 출처는 독립적으로 검증되지 않았습니다. 사실, 일본어 경어 및 번역된 이름을 확인하세요."
+      }
+    },
+    {
+      "id": "qwen3_8b_q4",
+      "display_name": "Qwen3-8B Q4_K_M",
+      "filename": "Qwen3-8B-Q4_K_M.gguf",
+      "status": "stable",
+      "sha256": "120307ba529eb2439d6c430d94104dabd578497bc7bfe7e322b5d9933b449bd4",
+      "download_url": "https://huggingface.co/unsloth/Qwen3-8B-GGUF/resolve/a6adef130ffb23ddaf1a62fec9dced968c9bc482/Qwen3-8B-Q4_K_M.gguf",
+      "estimated_size_mb": 4795,
+      "min_ram_gb": 12,
+      "context_length": 40960,
       "max_output_tokens": 8192,
       "license": "Apache-2.0",
-      "description": "Multilingual non-thinking instruction model for drafting and editing work summaries. Preferred starting option; review generated text before saving.",
+      "description": "Larger multilingual alternative retained for work-text editing. Review checklist formatting, empty report sections, and uncertainty before applying the result.",
       "description_translations": {
-        "zh_CN": "多语言非思考模式指令模型，用于起草和编辑工作摘要。建议优先尝试，保存前请检查生成内容。",
-        "zh_TW": "多語言非思考模式指令模型，用於起草和編輯工作摘要。建議優先嘗試，儲存前請檢查產生內容。",
-        "ja_JP": "業務要約の下書きと編集に向けた多言語・非思考型の指示モデル。最初の選択肢として推奨します。保存前に生成内容を確認してください。",
-        "ko_KR": "업무 요약 초안과 편집을 위한 다국어 비사고형 지시 모델입니다. 먼저 사용해 볼 선택지이며, 저장 전에 생성 내용을 검토하세요."
+        "zh_CN": "保留的较大多语言工作文本编辑备选模型。使用结果前，请核对清单格式、空白报告栏目及不确定状态。",
+        "zh_TW": "保留的較大型多語言工作文字編輯備選模型。採用結果前，請核對清單格式、空白報告欄目及不確定狀態。",
+        "ja_JP": "業務文書の編集用に継続提供する大型多言語モデル。適用前にチェックリストの形式、空の報告項目、不確実な状態の表現を確認してください。",
+        "ko_KR": "업무 텍스트 편집용으로 유지하는 대형 다국어 대안입니다. 결과 적용 전에 체크리스트 형식, 빈 보고서 항목 및 불확실성 표현을 확인하세요."
       }
     },
     {
@@ -41,23 +121,23 @@
       }
     },
     {
-      "id": "qwen3_8b_q4",
-      "display_name": "Qwen3-8B Q4_K_M",
-      "filename": "Qwen3-8B-Q4_K_M.gguf",
+      "id": "qwen3_4b_instruct_2507_q4",
+      "display_name": "Qwen3-4B-Instruct-2507 Q4_K_M",
+      "filename": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
       "status": "stable",
-      "sha256": "120307ba529eb2439d6c430d94104dabd578497bc7bfe7e322b5d9933b449bd4",
-      "download_url": "https://huggingface.co/unsloth/Qwen3-8B-GGUF/resolve/a6adef130ffb23ddaf1a62fec9dced968c9bc482/Qwen3-8B-Q4_K_M.gguf",
-      "estimated_size_mb": 4795,
-      "min_ram_gb": 12,
-      "context_length": 40960,
+      "sha256": "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e",
+      "download_url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/ae44f08e1392f39c0e474af10c3ff8355c8b6688/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "estimated_size_mb": 2382,
+      "min_ram_gb": 8,
+      "context_length": 262144,
       "max_output_tokens": 8192,
       "license": "Apache-2.0",
-      "description": "Larger multilingual model for computers with more memory. The text gateway requests non-thinking output using the Qwen3 prompt directive.",
+      "description": "Previous catalog option retained for existing installations. Prefer Gemma 4 E2B for new downloads. Carefully review completion states, translated names, and unsupported additions.",
       "description_translations": {
-        "zh_CN": "适合内存较充足电脑的较大多语言模型。文本接口使用 Qwen3 提示指令请求非思考模式输出。",
-        "zh_TW": "適合記憶體較充足電腦的較大型多語言模型。文字介面使用 Qwen3 提示指令請求非思考模式輸出。",
-        "ja_JP": "メモリに余裕のある端末向けの大型多言語モデル。テキスト接続は Qwen3 の指示で非思考型の出力を要求します。",
-        "ko_KR": "메모리가 충분한 컴퓨터를 위한 대형 다국어 모델입니다. 텍스트 연결은 Qwen3 지시문으로 비사고형 출력을 요청합니다."
+        "zh_CN": "为已有安装保留的原目录选项。新下载建议优先选择 Gemma 4 E2B。请仔细核对完成状态、翻译后的人名及没有依据的新增内容。",
+        "zh_TW": "為既有安裝保留的原目錄選項。新下載建議優先選擇 Gemma 4 E2B。請仔細核對完成狀態、翻譯後的人名及沒有依據的新增內容。",
+        "ja_JP": "既存の利用環境向けに継続提供する従来のモデルです。新規ダウンロードには Gemma 4 E2B を推奨します。完了状態、翻訳された氏名、根拠のない追加内容を確認してください。",
+        "ko_KR": "기존 설치를 위해 유지하는 이전 목록의 모델입니다. 새로 다운로드할 때는 Gemma 4 E2B를 먼저 권장합니다. 완료 상태, 번역된 이름 및 근거 없는 추가 내용을 꼼꼼히 확인하세요."
       }
     },
     {
@@ -72,12 +152,12 @@
       "context_length": 131072,
       "max_output_tokens": 4096,
       "license": "MIT",
-      "description": "Compact multilingual instruction model from Microsoft. An alternative for work summaries; compare results in your working language and verify task status, checklist markers, and empty report sections.",
+      "description": "Previous compact model retained for existing installations. Check the requested output language, Japanese politeness, and report structure; use a recommended alternative for new downloads.",
       "description_translations": {
-        "zh_CN": "Microsoft 提供的小型多语言指令模型，可作为工作摘要的另一种选择。请比较其在工作语言中的输出，并核对任务状态、清单勾选标记及空白报告栏目。",
-        "zh_TW": "Microsoft 提供的小型多語言指令模型，可作為工作摘要的另一種選擇。請比較其在工作語言中的輸出，並核對任務狀態、清單勾選標記及空白報告欄目。",
-        "ja_JP": "Microsoft の小型多言語指示モデル。業務要約向けの別の選択肢です。使用言語での出力を比較し、作業状態、チェックリストの印、空の報告項目を確認してください。",
-        "ko_KR": "Microsoft의 소형 다국어 지시 모델로 업무 요약을 위한 다른 선택지입니다. 업무 언어의 결과를 비교하고 작업 상태, 체크리스트 표시 및 빈 보고서 항목을 확인하세요."
+        "zh_CN": "为已有安装保留的原小型模型。请核对指定的输出语言、日语敬语及报告结构；新下载建议选择前列的推荐模型。",
+        "zh_TW": "為既有安裝保留的原小型模型。請核對指定的輸出語言、日語敬語及報告結構；新下載建議選擇前列的推薦模型。",
+        "ja_JP": "既存の利用環境向けに継続提供する従来の小型モデルです。指定した出力言語、敬語、報告の構造を確認してください。新規ダウンロードには上位の推奨モデルをご検討ください。",
+        "ko_KR": "기존 설치를 위해 유지하는 이전 소형 모델입니다. 요청한 출력 언어, 일본어 경어 및 보고서 구조를 확인하세요. 새로 다운로드할 때는 목록 앞부분의 추천 모델을 고려하세요."
       }
     },
     {
@@ -92,12 +172,12 @@
       "context_length": 32768,
       "max_output_tokens": 8192,
       "license": "Apache-2.0",
-      "description": "Multilingual non-thinking instruction model retained for compatibility with Qwen2.5 text generation. Requires more memory than the compact options.",
+      "description": "Previous multilingual model retained for existing installations and Qwen2.5 workflows. Requires more memory than the small-model options; review facts and report structure before applying.",
       "description_translations": {
-        "zh_CN": "保留以兼容 Qwen2.5 文本生成的多语言非思考模式指令模型。所需内存高于小型模型。",
-        "zh_TW": "保留以相容 Qwen2.5 文字產生的多語言非思考模式指令模型。所需記憶體高於小型模型。",
-        "ja_JP": "Qwen2.5 の文章生成との互換性を保つ多言語・非思考型の指示モデル。小型モデルより多くのメモリが必要です。",
-        "ko_KR": "Qwen2.5 텍스트 생성과의 호환성을 위해 유지하는 다국어 비사고형 지시 모델입니다. 소형 모델보다 메모리가 더 필요합니다."
+        "zh_CN": "为已有安装及 Qwen2.5 使用流程保留的原多语言模型。所需内存高于小型模型；使用前请核对事实与报告结构。",
+        "zh_TW": "為既有安裝及 Qwen2.5 使用流程保留的原多語言模型。所需記憶體高於小型模型；採用前請核對事實與報告結構。",
+        "ja_JP": "既存の利用環境と Qwen2.5 の利用手順向けに継続提供する従来の多言語モデルです。小型モデルより多くのメモリを使用します。適用前に事実と報告の構造を確認してください。",
+        "ko_KR": "기존 설치와 Qwen2.5 사용 흐름을 위해 유지하는 이전 다국어 모델입니다. 소형 모델보다 메모리가 더 필요합니다. 적용 전에 사실과 보고서 구조를 확인하세요."
       }
     }
   ]

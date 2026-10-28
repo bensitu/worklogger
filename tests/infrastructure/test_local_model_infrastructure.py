@@ -69,6 +69,31 @@ class ModelStoreIntegrityTests(unittest.TestCase):
                       for name in ("owner", "other"))
         return SQLiteSettingsRepository(factory), users
 
+    def test_catalog_addition_reuses_an_imported_model_identity_and_file(self):
+        from dataclasses import replace
+
+        source = self.root / "community-model-Q4_K_M.gguf"
+        source.write_bytes(self.payload)
+        imported = self.store.import_model(source).value
+        managed_path = self.store.model_path(imported.id)
+        published = replace(imported, status="stable", display_name="Community model Q4_K_M",
+                            download_url="https://models.example/model.gguf", description="Publisher information")
+        bundled = self.root / "bundled.json"
+        bundled.write_text(json.dumps({"models": [asdict(published)]}), encoding="utf-8")
+
+        updated_store = JsonLocalModelStore(self.models, bundled_catalog_path=bundled)
+        self.assertEqual(updated_store.list_models().value, (published,))
+        self.assertEqual(updated_store.model_path(imported.id), managed_path)
+        self.assertTrue(updated_store.verify_model(imported.id).value.verified)
+
+        reimported = updated_store.import_model(source)
+        self.assertTrue(reimported.ok, reimported.error)
+        self.assertEqual(reimported.value, published)
+        self.assertEqual(updated_store.list_models().value, (published,))
+        self.assertEqual(list(self.models.glob("*.gguf")), [managed_path])
+        self.assertEqual(managed_path.read_bytes(), self.payload)
+        self.assertEqual(source.read_bytes(), self.payload)
+
     def test_failed_import_metadata_publication_removes_new_files_and_restores_metadata(self):
         import os
         source = self.root / "candidate.gguf"
@@ -567,6 +592,7 @@ class LocalModelInfrastructureTests(unittest.TestCase):
             entries = JsonLocalModelStore(directory, bundled_catalog_path=catalog).list_models().value
             self.assertEqual(len(entries), len(raw))
             self.assertEqual(len({item.id for item in entries}), len(raw))
+            self.assertEqual(len({item.filename.casefold() for item in entries}), len(raw))
             for item, data in zip(entries, raw):
                 self.assertEqual(set(data), names)
                 self.assertRegex(item.download_url, r"^https://huggingface\.co/[^/]+/[^/]+/resolve/[0-9a-f]{40}/")

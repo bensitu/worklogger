@@ -178,6 +178,12 @@ Protect backups as sensitive, unencrypted files. See [database handling](databas
 The public `model_catalog.json` contains a `models` list. Entries describe IDs,
 display names, filenames, checksums, download URLs, estimated sizes, RAM estimates,
 context/output limits, descriptions, translated descriptions, and licenses.
+Entries are shown in catalog order; the order does not select a model. Keep IDs,
+filenames, and checksums stable when changing recommendations so existing account
+selections and downloaded files remain usable. When promoting an imported file to
+a downloadable entry, its generated import ID can be retained to reuse the same
+file and selection. Bundled entries take precedence over persistent entries with
+the same ID.
 
 Persistent `models/catalog.json` and `manifest.json` accompany shared GGUF files.
 Catalog reads are bounded to 1 MiB. Metadata never automatically downloads or

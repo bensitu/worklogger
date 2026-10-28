@@ -28,6 +28,47 @@ Enable AI Assist to use the model. Turning off Local Model disables model manage
 and text-capacity editing without removing files or changing the saved capacity.
 Downloading a file alone does not select it.
 
+## Choosing a Model
+
+The catalog starts with these Q4_K_M options:
+
+| Model | Intended use | Approximate download |
+| --- | --- | ---: |
+| Gemma 4 E2B IT | Recommended starting point for short multilingual work notes and summaries | 3.11 GB |
+| Gemma 4 E4B IT | Larger multilingual alternative for computers with more memory | 4.98 GB |
+| Qwen3.5-9B | Larger alternative for multilingual work-text editing | 5.68 GB |
+| empero-ai Qwen3.8-4B-Distill | Optional community-trained alternative; review the publisher before downloading | 2.78 GB |
+| Qwen3-8B | Retained multilingual alternative; check formatting and uncertain states | 5.03 GB |
+
+Qwen2.5-1.5B remains available for brief notes on memory-constrained computers.
+Qwen3-4B-Instruct-2507, Phi-4-mini, and Qwen2.5-7B remain later in the catalog for
+existing installations. Their IDs, filenames, checksums, and download sources are
+unchanged. Updating the catalog does not download files, remove installed models,
+or change an account's selected model. Choose **Use model** to switch explicitly.
+
+Gemma 4 E2B is the suggested starting point, not a guarantee of factual accuracy.
+All models can add unsupported details, change names or task states, or miss an
+editing instruction. Compare both versions before applying a revision. The
+recommendations concern short work-text editing; they do not establish long-report
+quality or performance on every platform. Download size is not a RAM requirement.
+
+Gemma's E2B and E4B labels describe effective parameter scales rather than total
+model sizes. Their text GGUF files contain approximately 4.65B and 7.52B parameter
+elements respectively. See the official [E2B](https://huggingface.co/google/gemma-4-E2B)
+and [E4B](https://huggingface.co/google/gemma-4-E4B) model cards.
+
+The [empero-ai release](https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF)
+is not an official Qwen release under that name. Its publisher declares Apache-2.0,
+but its training provenance has not been independently verified. Its standard
+Q4_K_M file shares the identity of an earlier import of the same filename and
+checksum, so an existing import can use the catalog information without a second
+copy. Renamed imports remain separate. This catalog entry retains the 8,192-token
+window used by standard imports rather than raising its effective capacity when
+an existing account has a larger saved preference. Its GGUF metadata advertises a
+larger window; that window has not been validated for this recommendation.
+Higher-precision quantization does not guarantee better instruction following or
+factual accuracy.
+
 ## Model Loading
 
 Verified confirms file integrity, not compatibility with the installed inference
@@ -143,7 +184,8 @@ damaged metadata aside, restart with the bundled catalog, and re-import retained
 GGUF files. Do not delete model files merely to silence a metadata error.
 
 Source runs read root `model_catalog.json`; packaged runs use its bundled copy.
-Persistent `models/catalog.json` entries override matching IDs and retain imports.
+Bundled entries take precedence over matching IDs in persistent
+`models/catalog.json`; other persistent entries retain imported models.
 Refresh uses an explicitly configured HTTPS remote catalog, if supplied, otherwise
 local catalog files.
 
