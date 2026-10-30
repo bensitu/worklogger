@@ -293,6 +293,8 @@ class AppWindowTests(unittest.TestCase):
                     window._calendar_view_model._calendar_events_handler = GetCalendarEventsForRangeHandler(calendar)
                     window.refresh()
                     page = window.settings_page
+                    if runner is not None:
+                        runner.finish()
                     window.entry_panel.start_input.setText("11:00")
                     window.entry_panel.content_input.setPlainText("Unsaved manual draft")
                     getattr(page, "import_" + kind + "_button").click()
@@ -556,6 +558,7 @@ class AppWindowTests(unittest.TestCase):
 
             def create_page(self, parent=None):
                 page = FakeSettingsPage()
+                page.refresh()
                 self.created.append((parent, page))
                 return page
 
