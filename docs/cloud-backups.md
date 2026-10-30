@@ -127,6 +127,9 @@ A maximum of one explicitly retains only the latest version. A cleanup failure d
 the completed upload: its status remains visible and deletion is retried after
 a later successful upload. Connection failures during publication can leave an
 unlisted object; objects are not blindly deleted when publication is uncertain.
+If another device publishes newer history before an interrupted upload can be
+confirmed, the upload reports a failure and preserves its archive. Review the
+current history before retrying; retained recovery versions remain available.
 
 ## Restore and Local Recovery
 

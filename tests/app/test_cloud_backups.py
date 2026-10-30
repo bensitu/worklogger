@@ -4,11 +4,14 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import hashlib
+import json
 import unittest
+from unittest.mock import patch
 
 from worklogger.app.use_cases.cloud_backups import CloudBackupService
 from worklogger.domain.cloud_backup import BackupConfiguration, BackupCredentials, StoredObject, backup_due
 from worklogger.infrastructure.backup.archive import PersonalBackupArchive
+from worklogger.infrastructure.backup.object_stores import ConditionalObjectStore
 
 
 class MemoryConfiguration:
@@ -147,6 +150,43 @@ class CloudBackupTests(unittest.TestCase):
         self.assertEqual(self.service.upload().error.code, "cloud_conflict")
         self.assertEqual(self.remote.objects["head.json"], before + b" ")
         self.assertEqual(len(self.remote.objects), 2)
+
+    def test_lost_publication_response_preserves_archives_retained_by_another_device(self):
+        second_configuration = MemoryConfiguration()
+        second_remote = MemoryObjects()
+        second = CloudBackupService(configuration=second_configuration, personal_data=MemoryPersonalData(),
+            archive=PersonalBackupArchive(), store_factory=lambda *_: second_remote,
+            recovery_store=lambda _content: "recovery.wlbackup", now=lambda: self.now)
+
+        class RetryingObjects(MemoryObjects, ConditionalObjectStore):
+            interrupted = False
+
+            def put(remote, key, data, *, expected_etag):
+                def send():
+                    MemoryObjects.put(remote, key, data, expected_etag=expected_etag)
+                    if key == "head.json" and not remote.interrupted:
+                        remote.interrupted = True
+                        revision = json.loads(data)["versions"][0]["revision"]
+                        published = second.upload(expected_revision=revision, force=True)
+                        self.assertTrue(published.ok, published.error)
+                        raise ConnectionError("response lost")
+                remote._conditional_put(key, data, send)
+
+        self.remote = RetryingObjects()
+        second_remote.objects = self.remote.objects
+        with patch("worklogger.infrastructure.backup.object_stores.sleep"):
+            result = self.service.upload()
+        self.assertFalse(result.ok)
+        self.assertEqual(result.error.code, "cloud_operation_failed")
+        versions = self.service.overview().value.versions
+        self.assertEqual(len(versions), 2)
+        self.assertIn(self.settings.value["pending_upload"]["revision"], {version.revision for version in versions})
+        for version in versions:
+            with self.subTest(revision=version.revision):
+                content = self.remote.get("objects/" + version.revision + ".wlbackup", limit=version.size)
+                self.assertIsNotNone(content)
+                self.assertEqual(hashlib.sha256(content.data).hexdigest(), version.sha256)
+                self.assertEqual(PersonalBackupArchive().decode(content.data), self.data.data)
 
     def test_failed_publication_keeps_cleanup_retriable_without_deleting_an_accepted_object(self):
         original_put = self.remote.put

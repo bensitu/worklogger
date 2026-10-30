@@ -38,7 +38,8 @@ class ConditionalObjectStore:
                     raise
                 if self._matches(key, data):
                     return
-                raise
+                # A later writer can replace a successfully published value.
+                raise ConnectionError("cloud_connection_failed") from None
             except (URLError, TimeoutError, ConnectionError, HTTPException):
                 uncertain = True
                 if self._matches(key, data):
@@ -54,8 +55,8 @@ class ConditionalObjectStore:
         except (URLError, TimeoutError, ConnectionError, HTTPException):
             return False
         except ValueError as error:
-            if str(error) == "cloud_backup_too_large":
-                raise ValueError("cloud_conflict") from None
+            if str(error) in {"cloud_backup_too_large", "cloud_conflict"}:
+                return False
             raise
 
     def test_connection(self):

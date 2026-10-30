@@ -26,6 +26,7 @@ Historical entries describe their respective releases; see the [user guide](docs
 
 ### Fixed
 
+- Interrupted cloud uploads preserve recovery archives when another device publishes newer history before upload confirmation.
 - Deeply nested, invalid note drafts no longer prevent saved notes from opening. The original draft remains available without replacing saved content.
 - Local model loading errors cover runtime compatibility as well as memory limits, with safe backend-version diagnostics.
 - Failed or cancelled local model imports remove temporary files and roll back newly copied models if metadata cannot be saved, without deleting existing model files.
