@@ -6,8 +6,8 @@ byte-for-byte checksums for the declared target platform.
 ## Application Downloads
 
 Download the application from [GitHub Releases](https://github.com/bensitu/worklogger/releases/latest)
-and follow the matching release notes. WorkLogger 4.0.0 uses the archive layouts
-listed below; older versions can have different layouts and features.
+and follow the matching release notes. Current application archives use the layouts
+listed below; older releases can have different layouts and features.
 
 ### Continuous Integration Builds
 
