@@ -9,7 +9,6 @@ from collections.abc import Callable, Iterable, Sequence
 from worklogger.config.constants import DEFAULT_LEAVE_HOURS
 from worklogger.domain.analytics.models import AnalyticsDashboard, ChartDataBundle, MonthStats
 from worklogger.domain.worklog.models import CustomEntryType, EntryType, WorkModeValue, WorkLog
-from worklogger.domain.reporting.periods import weekly_period
 from worklogger.domain.settings.work_schedule import WorkSchedule
 
 
@@ -260,11 +259,11 @@ def quarterly_chart_data(
             hours = record.worked_hours()
             if hours > 0:
                 totals[quarter_index] += hours
-                unit_sets[quarter_index].add(weekly_period(record.day, week_start_monday).start)
+                unit_sets[quarter_index].add(record.day)
             leave_value = record.leave_hours(standard_hours=standard_leave_hours)
             if leave_value > 0:
                 leave_hours[quarter_index] += leave_value
-                leave_unit_sets[quarter_index].add(weekly_period(record.day, week_start_monday).start)
+                leave_unit_sets[quarter_index].add(record.day)
 
     return _bundle(
         labels,
@@ -291,9 +290,9 @@ def annual_chart_data(
     if len(labels) != 12:
         raise ValueError("month_labels_required")
     totals = [0.0 for _label in labels]
-    unit_counts = [0 for _label in labels]
+    work_dates = [set() for _label in labels]
     leave_hours = [0.0 for _label in labels]
-    leave_unit_counts = [0 for _label in labels]
+    leave_dates = [set() for _label in labels]
 
     for month in range(1, 13):
         index = month - 1
@@ -301,18 +300,18 @@ def annual_chart_data(
             hours = record.worked_hours()
             if hours > 0:
                 totals[index] += hours
-                unit_counts[index] += 1
+                work_dates[index].add(record.day)
             leave_value = record.leave_hours(standard_hours=standard_leave_hours)
             if leave_value > 0:
                 leave_hours[index] += leave_value
-                leave_unit_counts[index] += 1
+                leave_dates[index].add(record.day)
 
     return _bundle(
         labels,
         totals,
-        unit_counts,
+        [len(days) for days in work_dates],
         leave_hours,
-        leave_unit_counts,
+        [len(days) for days in leave_dates],
         metric,
         include_leaves,
         periods=tuple(analytics_period(year, month, "monthly") for month in range(1, 13)),

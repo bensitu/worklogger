@@ -257,12 +257,14 @@ def aggregate_days(records) -> tuple[WorkLog, ...]:
     return tuple(result)
 
 
-def entry_interval(record: WorkLog) -> tuple[datetime, datetime] | None:
+def entry_interval(record: WorkLog, *, local_timezone: tzinfo | None = None) -> tuple[datetime, datetime] | None:
     if not record.has_times:
         return None
     if record.started_at is not None and record.ended_at is not None:
         return record.started_at.astimezone(timezone.utc), record.ended_at.astimezone(timezone.utc)
-    times = shift_datetimes(record.day, record.start_time, record.end_time)
+    if local_timezone is None:
+        return None
+    times = shift_datetimes(record.day, record.start_time, record.end_time, local_timezone)
     return tuple(moment.astimezone(timezone.utc) for moment in times)
 
 

@@ -17,10 +17,19 @@ from worklogger.domain.worklog.rules import (
     parse_time,
     shift_datetimes,
     entries_overlap,
+    entry_interval,
 )
 
 
 class WorkLogRuleTests(unittest.TestCase):
+    def test_wall_clock_intervals_require_an_explicit_timezone(self):
+        record = WorkLog(1, date(2026, 10, 31), "22:00", "06:00")
+        self.assertIsNone(entry_interval(record))
+        interval = entry_interval(record, local_timezone=ZoneInfo("Asia/Tokyo"))
+        self.assertEqual(interval, (datetime(2026, 10, 31, 13, tzinfo=timezone.utc),
+                                    datetime(2026, 10, 31, 21, tzinfo=timezone.utc)))
+        self.assertEqual((interval[1] - interval[0]).total_seconds(), 8 * 3600)
+
     def test_record_search_requires_canonical_cursor_dates(self):
         from worklogger.domain.worklog.search import EntryCursor
         self.assertEqual(EntryCursor("2026-10-18", "09:00", 1).day, "2026-10-18")

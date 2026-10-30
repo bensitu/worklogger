@@ -311,6 +311,19 @@ class ReportingAndAnalyticsRuleTests(unittest.TestCase):
         self.assertEqual(quarterly.leave_line_data[1], 6.0)
         self.assertEqual(annual.leave_hours_data[0], ("M1", 6.0))
 
+    def test_average_chart_values_use_distinct_work_dates_in_every_scope(self):
+        entries = (WorkLog(1, date(2026, 1, 5), "09:00", "13:00"),
+                   WorkLog(1, date(2026, 1, 5), "14:00", "18:00"),
+                   WorkLog(1, date(2026, 1, 6), "09:00", "11:00"))
+        by_day = {row.day: row for row in aggregate_days(entries)}
+        monthly = monthly_chart_data(date(2026, 1, 1), date(2026, 1, 31), "average", False, by_day.get)
+        reader = lambda month: entries if month == 1 else ()
+        quarterly = quarterly_chart_data(reader, 2026, "average", False)
+        annual = annual_chart_data(reader, 2026, tuple(str(month) for month in range(1, 13)), "average", False)
+        self.assertEqual([value for _label, value in monthly.bar_data if value], [5])
+        self.assertEqual(quarterly.bar_data[0][1], 5)
+        self.assertEqual(annual.bar_data[0][1], 5)
+
 
 if __name__ == "__main__":
     unittest.main()

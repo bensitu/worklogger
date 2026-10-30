@@ -332,6 +332,10 @@ Exports do not save the current draft. See [data formats](data-formats.md).
 Choose a month, quarter, or year. Worked hours exclude recorded rest and leave.
 Overtime uses the daily standard-hours threshold. Daily average is worked hours
 divided by dates with positive worked hours, not all dates in the period.
+Average-hour charts use this daily basis in every scope; multiple records on the
+same date do not increase the number of workdays. A date with any recorded leave
+counts as one leave date, including partial-day leave, and may also count as an
+attendance date when it contains worked time.
 
 Actual attendance shows dates with positive worked hours and retains the dot
 visualization. Planned work appears beside the previous-period comparison, not
