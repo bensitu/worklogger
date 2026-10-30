@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import date
 import os
 from pathlib import Path
@@ -144,11 +144,12 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
     def test_selected_model_connects_record_note_and_report_rewriting(self):
         self.enterContext(patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes))
+        from worklogger.composition.lifecycle import dispose_runtime
         from worklogger.infrastructure.ai.runtime import LocalInferenceRuntime
         from worklogger.infrastructure.local_model import JsonLocalModelStore
         from worklogger.app.use_cases.local_models import ListLocalModelsHandler
         from worklogger.app.queries.local_model_queries import ListLocalModelsQuery
-        with self.runtime_directory() as directory:
+        with self.runtime_directory() as directory, ExitStack() as runtimes:
             root = Path(directory)
             source = root / "sample.gguf"
             source.write_bytes(b"GGUF\x03\x00\x00\x00" + bytes(16) + b"synthetic model fixture")
@@ -170,8 +171,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     password_iterations=1000), argv=[], auth_controller_factory=AutoRegisterAuthenticator)
             self.assertTrue(result.ok, result.error)
             runtime = result.value
-            self.addCleanup(runtime.window.close)
-            self.addCleanup(runtime.local_inference.close)
+            runtimes.callback(dispose_runtime, runtime)
             settings = SQLiteSettingsRepository(runtime.connection_factory)
             settings.set(runtime.user.id, "local_model_active_id", entry.id)
             inventory = ListLocalModelsHandler(store=runtime.local_inference.store, settings=settings).handle(ListLocalModelsQuery(runtime.user.id)).value
@@ -179,42 +179,41 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.window.settings_page.refresh()
             runtime.window.settings_page.settings_changed.emit(runtime.window.settings_page.state)
             panel = runtime.window.entry_panel
+            self.assertTrue(wait_for_condition(lambda: not panel.is_busy))
             panel.content_input.setPlainText("A local record description")
-            self.assertTrue(panel.polish_button.isEnabled())
+            self.assertTrue(wait_for_condition(lambda: panel.polish_button.isEnabled()))
             reports = runtime.window.reports_page
             reports.refresh()
-            deadline = time.monotonic() + 3
-            while reports.is_busy and time.monotonic() < deadline:
-                runtime.application.processEvents()
-                time.sleep(0.005)
-            self.assertTrue(reports.ai_assist_button.isEnabled(),
+            self.assertTrue(wait_for_condition(lambda: reports.ai_assist_button.isEnabled()),
                             (reports.is_busy, reports.last_error, bool(reports._states), bool(reports.editor.toPlainText())))
             notes = runtime.window._notes_workflow._view_model
             self.assertTrue(notes.rewrite_available)
             self.assertEqual(notes.rewrite("Synthetic note").value, "Revised synthetic text")
             runtime.window.settings_page.local_model_enabled_switch.click()
-            self.assertTrue(wait_for_condition(lambda: not runtime.window.settings_page.is_busy))
+            self.assertTrue(wait_for_condition(lambda: not runtime.window.settings_page.is_busy
+                                              and not notes.rewrite_available))
             self.assertFalse(reports.ai_assist_button.isEnabled())
             self.assertFalse(notes.rewrite_available)
             self.assertFalse(panel.polish_button.isEnabled())
             panel.clear_button.click()
             settings.set(runtime.user.id, "local_model_enabled", "1")
             settings.set(runtime.user.id, MINIMAL_MODE_SETTING_KEY, "1")
-            runtime.window.close()
+            runtime.window.hide()
+            self.assertTrue(runtime.job_runner.shutdown(wait=True))
+            runtime.local_inference.close()
             with patch("worklogger.composition.context.LocalInferenceRuntime", side_effect=inference):
                 restarted = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                     password_iterations=1000), argv=[])
             self.assertTrue(restarted.ok, restarted.error)
-            self.addCleanup(restarted.value.window.close)
-            self.addCleanup(restarted.value.local_inference.close)
+            runtimes.callback(dispose_runtime, restarted.value)
             minimal = restarted.value.window
             self.assertIsInstance(minimal, MinimalView)
+            self.assertTrue(wait_for_condition(lambda: not minimal.entry_panel.is_busy))
             minimal.entry_panel.content_input.setPlainText("A local record description")
-            deadline = time.monotonic() + 3
-            while not minimal.entry_panel.polish_button.isEnabled() and time.monotonic() < deadline:
-                restarted.value.application.processEvents()
-                time.sleep(0.005)
-            self.assertTrue(minimal.entry_panel.polish_button.isEnabled())
+            self.assertTrue(wait_for_condition(lambda: minimal.entry_panel.polish_button.isEnabled()),
+                            (minimal.entry_panel.is_busy, minimal.entry_panel.view_model.rewrite_available,
+                             restarted.value.local_inference.reason,
+                             settings.get(runtime.user.id, "local_model_active_id")))
 
     def setUp(self):
         from tests.presentation.qt_support import dispose_test_windows
