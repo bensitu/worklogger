@@ -28,17 +28,22 @@ WORKLOG_VERSION_17 = '''CREATE TABLE worklog(
 
 class WorkModeMigrationTests(unittest.TestCase):
     def setUp(self):
+        self._create_database(17)
+
+    def _create_database(self, version):
         self.directory = self.enterContext(tempfile.TemporaryDirectory())
         self.path = Path(self.directory) / "records.db"
         self.factory = SQLiteConnectionFactory(self.path)
         with self.factory.transaction() as connection:
             for name, statement in TABLE_STATEMENTS.items():
-                if name != "work_modes":
-                    connection.execute(WORKLOG_VERSION_17 if name == "worklog" else statement)
-            for statement in INDEX_STATEMENTS:
-                if "work_modes_" not in statement:
+                if name == "worklog":
+                    statement = WORKLOG_VERSION_17 if version == 17 else statement.split(",\n        FOREIGN KEY(user_id,project_id)")[0] + ")"
+                if name != "work_modes" or version != 17:
                     connection.execute(statement)
-            connection.execute("INSERT INTO schema_migrations VALUES(17,'entry_classification_and_work_modes',datetime('now'))")
+            for statement in INDEX_STATEMENTS:
+                if "work_items_owner_project" not in statement and (version != 17 or "work_modes_" not in statement):
+                    connection.execute(statement)
+            connection.execute("INSERT INTO schema_migrations VALUES(?,'entry_classification_and_work_modes',datetime('now'))", (version,))
         auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
         self.user = auth.create_user("migration-owner", "example-password", recovery_key=None, is_admin=False)
         from worklogger.domain.worklog.models import EntryType
@@ -51,6 +56,49 @@ class WorkModeMigrationTests(unittest.TestCase):
                 (self.user.id, json.dumps([before]), json.dumps([current]), json.dumps([current])))
             connection.execute("INSERT INTO settings VALUES(?,'time_entry_timer',?)", (self.user.id, encode_timer(self.timer)))
             connection.execute("UPDATE sqlite_sequence SET seq=77 WHERE name='worklog'")
+
+    def test_ownership_conflicts_preserve_original_rows_and_use_the_existing_recovery_error(self):
+        from worklogger.infrastructure.startup_errors import startup_error
+        for version in (17, 18):
+            for context in (("foreign", None), ("owned", "foreign-item"),
+                            ("owned", "other-project-item"), (None, "owned-item")):
+                with self.subTest(version=version, context=context):
+                    self._create_database(version)
+                    auth = SQLiteAuthRepository(self.factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))
+                    other = auth.create_user("other-owner", "example-password", recovery_key=None, is_admin=False)
+                    with self.factory.transaction() as connection:
+                        connection.executemany("INSERT INTO projects(id,user_id,name,normalized_name) VALUES(?,?,?,?)",
+                            (("owned", self.user.id, "Owned", "owned"), ("another", self.user.id, "Another", "another"),
+                             ("foreign", other.id, "Foreign", "foreign")))
+                        connection.executemany("INSERT INTO work_items(id,user_id,project_id,title,normalized_title) VALUES(?,?,?,?,?)",
+                            (("owned-item", self.user.id, "owned", "Owned", "owned"),
+                             ("other-project-item", self.user.id, "another", "Other project", "other project"),
+                             ("foreign-item", other.id, "foreign", "Foreign", "foreign")))
+                        connection.execute("UPDATE worklog SET project_id=?,work_item_id=? WHERE id=41", context)
+                        before = dict(connection.execute("SELECT * FROM worklog").fetchone())
+                    with self.assertRaisesRegex(ValueError, "^database_foreign_key_invalid$") as raised:
+                        MigrationRunner(self.factory).run_pending()
+                    self.assertEqual(startup_error(raised.exception).code, "database_foreign_key_invalid")
+                    with self.factory.connection() as connection:
+                        self.assertEqual(dict(connection.execute("SELECT * FROM worklog").fetchone()), before)
+                        self.assertEqual(connection.execute("SELECT version FROM schema_migrations").fetchone()[0], version)
+                        self.assertEqual(connection.execute("SELECT seq FROM sqlite_sequence WHERE name='worklog'").fetchone()[0], 77)
+                    self.assertTrue(list(self.path.parent.glob("records.db.bak_upgrade_*")))
+
+    def test_upgrade_preserves_valid_project_links(self):
+        for version in (17, 18):
+            with self.subTest(version=version):
+                self._create_database(version)
+                with self.factory.transaction() as connection:
+                    connection.execute("INSERT INTO projects(id,user_id,name,normalized_name) VALUES('owned',?,'Owned','owned')", (self.user.id,))
+                    connection.execute("INSERT INTO work_items(id,user_id,project_id,title,normalized_title) VALUES('item',?,'owned','Item','item')", (self.user.id,))
+                    connection.execute("UPDATE worklog SET project_id='owned',work_item_id='item' WHERE id=41")
+                    before = dict(connection.execute("SELECT * FROM worklog").fetchone())
+                    before.setdefault("work_mode_label", "")
+                self.assertEqual(MigrationRunner(self.factory).run_pending(), (CURRENT_SCHEMA_VERSION,))
+                with self.factory.connection() as connection:
+                    self.assertEqual(dict(connection.execute("SELECT * FROM worklog").fetchone()), before)
+                    self.assertIsNone(connection.execute("PRAGMA foreign_key_check").fetchone())
 
     def test_upgrade_preserves_snapshots_timer_record_identity_and_sequence(self):
         self.assertEqual(MigrationRunner(self.factory).run_pending(), (CURRENT_SCHEMA_VERSION,))

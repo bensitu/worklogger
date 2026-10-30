@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
+import re
 import stat
 import sys
 import time
@@ -90,12 +91,12 @@ def prune_corrupt_backups(
         return
     database_path = Path(path)
     directory = database_path.resolve(strict=False).parent
-    prefix = f"{database_path.name}.bak_corrupt_"
+    pattern = re.compile(re.escape(database_path.name) + r"\.bak_corrupt_[0-9]+_[0-9a-f]{32}")
     try:
         backups = [
             candidate
             for candidate in directory.iterdir()
-            if candidate.is_file() and candidate.name.startswith(prefix) and not candidate.name.endswith(("-wal", "-shm"))
+            if not candidate.is_symlink() and candidate.is_file() and pattern.fullmatch(candidate.name)
         ]
     except OSError:
         return
@@ -109,6 +110,8 @@ def prune_corrupt_backups(
     for _modified, _name, old_backup in available[keep:]:
         try:
             for suffix in ("-wal", "-shm", ""):
-                Path(str(old_backup) + suffix).unlink(missing_ok=True)
+                candidate = Path(str(old_backup) + suffix)
+                if not candidate.is_symlink():
+                    candidate.unlink(missing_ok=True)
         except OSError:
             pass

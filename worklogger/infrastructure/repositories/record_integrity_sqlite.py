@@ -7,6 +7,7 @@ import math
 from pathlib import Path
 
 from worklogger.app.use_cases.record_integrity import InvalidRecord, RecordInspection
+from worklogger.domain.worklog.rules import normalize_work_log
 from worklogger.infrastructure.database.current_schema import CURRENT_SCHEMA_VERSION
 from worklogger.infrastructure.files import atomic_destination
 from worklogger.infrastructure.repositories.worklog_mapping_sqlite import WorkLogStorage
@@ -30,7 +31,11 @@ class SQLiteRecordIntegrity:
         records, issues, size = [], [], 0
         for row in connection.execute("SELECT * FROM worklog WHERE user_id=? ORDER BY id", (user_id,)):
             try:
-                WorkLogStorage.from_row(row)
+                record = WorkLogStorage.from_row(row)
+                if any(row[key] not in (None, "") for key in ("started_at", "ended_at")) and (
+                        record.started_at is None or record.ended_at is None):
+                    raise ValueError("stored_work_log_invalid")
+                normalize_work_log(record)
             except (ValueError, TypeError, OverflowError):
                 values = {key: _stored_value(row[key]) for key in row.keys()}
                 size += len(json.dumps(values, ensure_ascii=True, allow_nan=False).encode("utf-8"))

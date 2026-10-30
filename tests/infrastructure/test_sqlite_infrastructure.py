@@ -2,6 +2,7 @@ from __future__ import annotations
 from worklogger.infrastructure.database.migrations.runner import MIGRATION_VERSIONS
 
 import base64
+import json
 from contextlib import closing
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -261,12 +262,105 @@ class SQLiteInfrastructureTests(unittest.TestCase):
     def test_corrupt_database_backups_are_pruned(self) -> None:
         database_path = Path(self._tempdir.name) / "retention.db"
         for index in range(4):
-            backup = database_path.with_name(f"retention.db.bak_corrupt_{index}")
+            backup = database_path.with_name(f"retention.db.bak_corrupt_{index}_{index:032x}")
             backup.write_text(str(index), encoding="utf-8")
+            Path(str(backup) + "-wal").write_text("Retained journal", encoding="utf-8")
+        unrelated = database_path.with_name("retention.db.bak_corrupt_personal-copy")
+        unrelated.write_text("Retained original", encoding="utf-8")
+        legacy = database_path.with_name("retention.db.bak_corrupt_123")
+        legacy.write_text("Retained legacy copy", encoding="utf-8")
 
         prune_corrupt_backups(database_path, keep=2)
 
-        self.assertEqual(len(list(database_path.parent.glob("retention.db.bak_*"))), 2)
+        recognized = list(database_path.parent.glob("retention.db.bak_corrupt_*_????????????????????????????????"))
+        self.assertEqual(len(recognized), 2)
+        self.assertEqual(len(list(database_path.parent.glob("retention.db.bak_corrupt_*-wal"))), 2)
+        self.assertEqual(unrelated.read_text(encoding="utf-8"), "Retained original")
+        self.assertEqual(legacy.read_text(encoding="utf-8"), "Retained legacy copy")
+
+    def test_corrupt_backup_cleanup_does_not_remove_symbolic_links(self):
+        database_path = Path(self._tempdir.name) / "retention.db"
+        target = database_path.with_name("original-copy")
+        target.write_text("Retained original", encoding="utf-8")
+        link = database_path.with_name("retention.db.bak_corrupt_1_" + "a" * 32)
+        try:
+            link.symlink_to(target)
+        except OSError:
+            self.skipTest("Symbolic links are unavailable")
+        backup = database_path.with_name("retention.db.bak_corrupt_2_" + "b" * 32)
+        backup.write_text("Retained backup", encoding="utf-8")
+        prune_corrupt_backups(database_path, keep=1)
+        self.assertTrue(link.is_symlink())
+        self.assertTrue(backup.is_file())
+        self.assertEqual(target.read_text(encoding="utf-8"), "Retained original")
+
+    def test_corrupt_provenance_is_rejected_consistently_and_restore_rolls_back(self):
+        user = self.auth_repository().create_user("report-owner", "example-password", recovery_key=None, is_admin=False)
+        reports = SQLiteReportRepository(self.factory)
+        day = date(2026, 10, 5)
+        saved = SaveReportHandler(reports).handle(SaveReportCommand(user.id, "daily", day, day, "Original report")).value
+        for raw in ('{', '[]', 'null', '{"sources":null}', '{"sources":[{}]}',
+                    '{"sources":[1]}', '{"standard_hours":"invalid"}'):
+            with self.subTest(provenance=raw):
+                with self.factory.transaction() as connection:
+                    connection.execute("UPDATE reports SET provenance=? WHERE id=?", (raw, saved.id))
+                    connection.execute("UPDATE report_revisions SET provenance=? WHERE report_id=?", (raw, saved.id))
+                operations = (
+                    lambda: reports.get_by_id(user.id, saved.id),
+                    lambda: reports.get_for_period(user.id, "daily", day, day),
+                    lambda: reports.list_by_type(user.id, "daily"),
+                    lambda: reports.list_revisions(user.id, saved.id),
+                    lambda: reports.get_revision(user.id, saved.id, saved.revision),
+                    lambda: reports.restore_revision(user.id, saved.id, saved.revision, saved.revision),
+                )
+                for operation in operations:
+                    with self.assertRaisesRegex(ValueError, "^stored_records_invalid$"):
+                        operation()
+                with self.factory.connection() as connection:
+                    self.assertEqual(tuple(connection.execute("SELECT revision,content,provenance FROM reports WHERE id=?",
+                                                              (saved.id,)).fetchone()), (saved.revision, saved.content, raw))
+                    self.assertEqual(connection.execute("SELECT COUNT(*) FROM report_revisions WHERE report_id=?",
+                                                        (saved.id,)).fetchone()[0], 1)
+
+    def test_provenance_preserves_known_fields_and_accepts_additional_metadata(self):
+        from worklogger.infrastructure.repositories.report_provenance_sqlite import decode_provenance
+        value = {"language": "en", "future_metadata": {"version": 2}, "sources": [
+            {"kind": "record", "identifier": "41", "revision": 2, "digest": "source-digest", "future_field": True}]}
+        decoded = decode_provenance(json.dumps(value))
+        self.assertEqual((decoded.language, decoded.standard_hours), ("en", 8.0))
+        self.assertEqual((decoded.sources[0].identifier, decoded.sources[0].revision), ("41", 2))
+        self.assertEqual(decode_provenance("{}").sources, ())
+
+    def test_atomic_destination_syncs_published_files_and_preserves_existing_destinations(self):
+        from worklogger.infrastructure.files import atomic_destination
+        destination = Path(self._tempdir.name) / "export.json"
+        for overwrite in (True, False):
+            with self.subTest(overwrite=overwrite):
+                destination.unlink(missing_ok=True)
+                def directory_synced(directory):
+                    self.assertEqual(directory, destination.parent)
+                    self.assertEqual(destination.read_bytes(), b"Complete export")
+                with patch("worklogger.infrastructure.files._sync_directory", side_effect=directory_synced) as sync:
+                    with atomic_destination(destination, overwrite=overwrite) as temporary:
+                        temporary.write_bytes(b"Complete export")
+                sync.assert_called_once_with(destination.parent)
+                self.assertFalse(temporary.exists())
+        with self.assertRaises(FileExistsError):
+            with atomic_destination(destination, overwrite=False) as temporary:
+                temporary.write_bytes(b"Replacement")
+        self.assertEqual(destination.read_bytes(), b"Complete export")
+        self.assertFalse(temporary.exists())
+
+    def test_directory_sync_closes_its_descriptor_even_when_sync_fails(self):
+        from worklogger.infrastructure.files import _sync_directory
+        with patch("worklogger.infrastructure.files.os.name", "posix"), \
+                patch("worklogger.infrastructure.files.os.open", return_value=17) as opened, \
+                patch("worklogger.infrastructure.files.os.close") as closed, \
+                patch("worklogger.infrastructure.files.os.fsync", side_effect=OSError("Storage failure")):
+            with self.assertRaises(OSError):
+                _sync_directory(self._tempdir.name)
+        opened.assert_called_once()
+        closed.assert_called_once_with(17)
 
     def test_database_access_failure_preserves_existing_data(self) -> None:
         path = Path(self._tempdir.name) / "locked.db"

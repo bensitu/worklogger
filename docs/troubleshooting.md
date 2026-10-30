@@ -70,6 +70,13 @@ Do not delete a database to fix a schema or integrity error. Close the applicati
 preserve the database and any journal files or backups, and inspect a copy.
 Unsupported layouts are rejected without resetting data. See [database handling](database.md).
 
+An upgrade also rejects project or work-item associations that belong to another
+account. These associations are not silently reassigned or removed. Restore a
+verified compatible backup, or retain the original database and request help
+reviewing a copy. Invalid stored deductions and captured timestamps can be
+identified through **Settings > Data > Check records** before explicitly archiving
+and removing the affected records.
+
 If database validation prevents startup, the recovery window groups the read-only,
 copyable database path with **Open data directory**. Opening the directory does
 not change files. Under **Choose one action**, select one of the following:

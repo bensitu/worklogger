@@ -50,6 +50,19 @@ def _google_subject(value):
     return subject if re.fullmatch(r"[A-Za-z0-9_.-]{1,255}", subject) else None
 
 
+def validate_account_ownership(connection):
+    if connection.execute("PRAGMA foreign_key_check").fetchone() is not None or connection.execute("""
+        SELECT 1 FROM worklog AS w
+        WHERE (w.project_id IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM projects AS p WHERE p.user_id=w.user_id AND p.id=w.project_id))
+        OR (w.work_item_id IS NOT NULL AND (w.project_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM work_items AS i
+            WHERE i.user_id=w.user_id AND i.project_id=w.project_id AND i.id=w.work_item_id)))
+        LIMIT 1
+    """).fetchone() is not None:
+        raise ValueError("database_foreign_key_invalid")
+
+
 def enforce_account_ownership(connection):
     normalize_identities(connection)
     sequence = connection.execute("SELECT seq FROM sqlite_sequence WHERE name='worklog'").fetchone()

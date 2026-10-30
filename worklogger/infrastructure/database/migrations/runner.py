@@ -11,7 +11,7 @@ from worklogger.infrastructure.database.current_schema import (
 )
 from worklogger.infrastructure.database.migrations.snapshot import prune_upgrade_snapshots, save_snapshot
 from worklogger.infrastructure.database.migrations.work_modes import extend_work_modes
-from worklogger.infrastructure.database.migrations.ownership import enforce_account_ownership
+from worklogger.infrastructure.database.migrations.ownership import enforce_account_ownership, validate_account_ownership
 from worklogger.infrastructure.database.released_import import (
     import_released_schema,
     validate_released_schema,
@@ -71,6 +71,8 @@ class MigrationRunner:
                     # The writer lock prevents changes while a separate reader snapshots committed data.
                     with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as source:
                         snapshot = save_snapshot(source, self._connection_factory.database_path, "upgrade")
+                if kind in {"previous", "previous_ownership"}:
+                    validate_account_ownership(connection)
                 if kind == "released":
                     import_released_schema(connection)
                 elif kind == "previous":

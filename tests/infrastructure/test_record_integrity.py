@@ -71,6 +71,38 @@ class RecordIntegrityTests(unittest.TestCase):
         self.assertEqual(self.service.archive_invalid(current, self.destination).error.code, "record_recovery_timer_active")
         self.assertEqual(self.service.inspect().value, current)
 
+    def test_inspection_identifies_invalid_deductions_and_offsets_without_rewriting_values(self):
+        cases = (
+            (1, None, None),
+            (2, None, None),
+            (0, "invalid", None),
+            (0, "2026-10-07T09:00:00", "2026-10-07T10:00:00"),
+            (0, "2026-10-07T09:00:00+09:00", None),
+        )
+        with self.factory.transaction() as connection:
+            for deduction, start, end in cases:
+                connection.execute('INSERT INTO worklog(user_id,d,start,end,"break",started_at,ended_at) '
+                                   'VALUES(?,?,?,?,?,?,?)',
+                                   (self.owner, "2026-10-07", "09:00", "10:00", deduction, start, end))
+            connection.execute('INSERT INTO worklog(user_id,d,start,end,"break") VALUES(?,?,?,?,?)',
+                               (self.owner, "2026-10-08", "22:00", "06:00", 1))
+            connection.execute('INSERT INTO worklog(user_id,d,start,end,started_at,ended_at) VALUES(?,?,?,?,?,?)',
+                               (self.owner, "2026-10-09", "09:00", "10:00",
+                                "2026-10-09T09:00:00+09:00", "2026-10-09T10:00:00+09:00"))
+            before = [tuple(row) for row in connection.execute("SELECT * FROM worklog ORDER BY id")]
+        inspection = self.repository.inspect(self.owner)
+        self.assertEqual(len(inspection.records), len(cases) + 1)
+        with self.factory.connection() as connection:
+            self.assertEqual([tuple(row) for row in connection.execute("SELECT * FROM worklog ORDER BY id")], before)
+        self.assertEqual(self.repository.archive_invalid(self.owner, inspection, self.destination), len(cases) + 1)
+        document = json.loads(self.destination.read_bytes())
+        self.assertEqual([(row["break"], row["started_at"], row["ended_at"])
+                          for row in document["records"]][1:], list(cases))
+        remaining = SQLiteWorkLogRepository(self.factory).list_for_month(self.owner, 2026, 10)
+        self.assertEqual(len(remaining), 3)
+        self.assertEqual(remaining[1].worked_hours(), 7)
+        self.assertEqual(remaining[2].started_at.isoformat(), "2026-10-09T09:00:00+09:00")
+
     def test_failed_commit_rolls_back_removal_and_retains_the_recovery_copy(self):
         original = self.service.inspect().value
         transaction = self.factory.transaction
