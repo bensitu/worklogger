@@ -1,0 +1,71 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    target-branch: main
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    exclude-paths:
+      - requirements-dev.txt
+    allow:
+      - dependency-name: cryptography
+      - dependency-name: keyring
+      - dependency-name: certifi
+      - dependency-name: pyjwt
+      - dependency-name: portalocker
+      - dependency-name: boto3
+      - dependency-name: icalendar
+      - dependency-name: recurring-ical-events
+      - dependency-name: jinja2
+      - dependency-name: pyinstaller
+      - dependency-name: pip
+      - dependency-name: setuptools
+    ignore:
+      # Qt and numerical libraries require coordinated platform validation.
+      - dependency-name: pyside6
+      - dependency-name: numpy
+      # Native inference updates also require approved artifact hashes.
+      - dependency-name: llama-cpp-python
+      # Routine data, formatting, and development updates remain manual.
+      - dependency-name: tzlocal
+      - dependency-name: tzdata
+      - dependency-name: holidays
+      - dependency-name: python-dateutil
+      - dependency-name: openpyxl
+      - dependency-name: et-xmlfile
+      - dependency-name: packaging
+      - dependency-name: ruff
+    groups:
+      runtime-dependencies:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - pyinstaller
+          - pip
+          - setuptools
+        update-types:
+          - minor
+          - patch
+      build-tools:
+        patterns:
+          - pyinstaller
+          - pip
+          - setuptools
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: main
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    allow:
+      - dependency-name: actions/*
+      - dependency-name: pypa/gh-action-pip-audit
+      - dependency-name: sigstore/cosign-installer
+    groups:
+      workflow-actions:
+        patterns:
+          - '*'

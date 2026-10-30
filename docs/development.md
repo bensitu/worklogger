@@ -45,6 +45,27 @@ Do not merge them into normal runtime dependencies. The approved native artifact
 are listed separately in `requirements/native-artifacts.json`.
 See [packaging](packaging.md).
 
+## Dependency Maintenance
+
+Dependabot checks selected Python dependencies and GitHub Actions monthly and
+opens pull requests against `main` for manual review. The configuration in
+`.github/dependabot.yml` must be present on the default branch to become active.
+Python updates cover security, authentication, cloud storage, calendar parsing,
+and build tooling. Minor and patch updates are grouped by runtime or build use;
+major updates remain separate. Workflow action updates form a separate group.
+
+Qt, NumPy, the native inference backend, routine data and formatting libraries,
+and contributor tooling are excluded from automatic version updates. Review
+these dependencies manually; native inference updates must also update
+`requirements/native-artifacts.json` with verified artifact identities and hashes.
+The allowlist does not narrow CI vulnerability checks. GitHub security alerts and
+security update settings are separate from the monthly version-update schedule.
+
+Action updates do not update the `cosign-release` input or Python's bundled
+SQLite, OpenSSL, and Expat libraries. Check those versions in release artifacts.
+Before merging an update, review its compatibility notes and successful CI
+results. Synchronize dependency changes merged into `main` back to `develop`.
+
 ## Code Conventions
 
 Read [architecture](architecture.md) and [contributing](../CONTRIBUTING.md).
