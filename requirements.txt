@@ -6,7 +6,7 @@ tzdata==2026.5
 holidays==0.106
 cryptography==50.0.2
 keyring==25.7.0
-certifi==2026.10.19
+certifi==2026.10.23
 icalendar==7.3.0
 recurring-ical-events==3.8.2
 python-dateutil==2.9.0.post0
