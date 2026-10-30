@@ -20,7 +20,7 @@ from tests.infrastructure.test_auth_schema_migration import released_database
 from worklogger.bootstrap import (
     DesktopRuntimeConfig,
     build_authenticated_desktop_runtime,
-    build_desktop_runtime,
+    build_diagnostic_runtime,
 )
 from worklogger.config.constants import (
     GITHUB_LATEST_RELEASE_API_URL,
@@ -71,6 +71,30 @@ class CancellingAuthenticator:
 
 
 class RuntimeBootstrapTests(unittest.TestCase):
+    def test_authenticated_startup_rejects_reduced_password_cost_before_opening_database(self):
+        with self.runtime_directory() as directory:
+            path = Path(directory) / "worklog.db"
+            with patch("worklogger.bootstrap.AuthController") as controller:
+                result = build_authenticated_desktop_runtime(
+                    DesktopRuntimeConfig(database_path=path, password_iterations=1000), argv=[])
+            self.assertFalse(result.ok)
+            self.assertFalse(path.exists())
+            controller.assert_not_called()
+
+    def test_diagnostic_runtime_requires_an_explicit_database_and_unambiguous_account(self):
+        self.assertEqual(build_diagnostic_runtime().error.code, "runtime_user_required")
+        from worklogger.bootstrap import _resolve_runtime_user
+        from worklogger.domain.auth.models import User
+        from unittest.mock import Mock
+
+        repository = Mock()
+        repository.list_users.return_value = (User(1, "first"), User(2, "second"))
+        self.assertEqual(_resolve_runtime_user(repository, DesktopRuntimeConfig()).error.code, "runtime_user_required")
+        repository.create_user.assert_not_called()
+        repository.get_by_id.return_value = repository.list_users.return_value[1]
+        selected = _resolve_runtime_user(repository, DesktopRuntimeConfig(user_id=2))
+        self.assertEqual(selected.value.id, 2)
+
     def test_disabled_authentication_policies_reach_login_and_account_settings(self):
         import json
         with self.runtime_directory() as directory:
@@ -94,12 +118,13 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 SQLiteAuthRepository(factory, password_hasher=PBKDF2PasswordHasher(iterations=1000)).create_user(
                     "managed-user", "secret123", recovery_key=None, is_admin=True)
                 self.assertFalse(build_authenticated_desktop_runtime(config, argv=[], auth_controller_factory=authenticate).ok)
-                result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                result = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                     create_user_if_empty=True, password_iterations=1000), argv=[])
                 self.assertTrue(result.ok, result.error)
                 runtime = result.value
                 try:
                     page = runtime.window.settings_page
+                    self.assertTrue(wait_for_condition(lambda: not page.is_busy))
                     self.assertFalse(page.manage_identities_button.isHidden())
                     self.assertFalse(page.manage_identities_button.isEnabled())
                     self.assertIsNone(runtime.window._settings_workflow._identity_workflow)
@@ -177,6 +202,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             inventory = ListLocalModelsHandler(store=runtime.local_inference.store, settings=settings).handle(ListLocalModelsQuery(runtime.user.id)).value
             runtime.local_inference.update_inventory(inventory)
             runtime.window.settings_page.refresh()
+            self.assertTrue(wait_for_condition(lambda: not runtime.window.settings_page.is_busy))
             runtime.window.settings_page.settings_changed.emit(runtime.window.settings_page.state)
             panel = runtime.window.entry_panel
             self.assertTrue(wait_for_condition(lambda: not panel.is_busy))
@@ -200,7 +226,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             settings.set(runtime.user.id, MINIMAL_MODE_SETTING_KEY, "1")
             runtimes.close()
             with patch("worklogger.composition.context.LocalInferenceRuntime", side_effect=inference):
-                restarted = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                restarted = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                     password_iterations=1000), argv=[])
             self.assertTrue(restarted.ok, restarted.error)
             runtimes.callback(dispose_runtime, restarted.value)
@@ -300,7 +326,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         ):
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                                           create_user_if_empty=True, password_iterations=1_000)
-            initial = build_desktop_runtime(config, argv=[])
+            initial = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(initial.ok, initial.error)
             initial.value.window.close()
             initial.value.job_runner.shutdown(wait=True)
@@ -309,7 +335,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             for key, value in {"external_model_enabled": "1", "external_model_base_url": "https://example.com/v1",
                                "external_model_name": "test-model"}.items():
                 settings.set(initial.value.user.id, key, value)
-            result = build_desktop_runtime(config, argv=[])
+            result = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(result.ok, result.error)
             runtime = result.value
             try:
@@ -346,7 +372,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                             patch.object(JsonLocalModelStore, "list_models") as inventory, \
                             patch.object(JsonLocalModelStore, "verify_model") as verify, \
                             patch("worklogger.infrastructure.ai.external.OpenAICompatibleGateway.generate") as external:
-                        result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                        result = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                             create_user_if_empty=True, password_iterations=1000, minimal_mode=minimal), argv=[])
                         self.assertTrue(result.ok, result.error)
                         runtime = result.value
@@ -373,6 +399,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                             workflow = window._settings_workflow
                             self.assertIsNone(workflow._local_models_workflow)
                             page = workflow.create_page()
+                            self.assertTrue(wait_for_condition(lambda: not page.is_busy))
                             self.assertFalse(page.manage_local_models_button.isEnabled())
                             self.assertFalse(page.local_model_enabled_switch.isEnabled())
                             self.assertFalse(page.external_base_url_line_edit.isEnabled())
@@ -406,6 +433,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertFalse(window.entry_panel.view_model.rewrite_available)
                 self.assertIsNone(window._settings_workflow._local_models_workflow)
                 self.assertIsNone(window._settings_workflow._update_check_handler)
+                self.assertTrue(wait_for_condition(lambda: not window.settings_page.is_busy))
                 self.assertFalse(window.settings_page.check_updates_button.isEnabled())
                 self.assertFalse(window.settings_page.manage_local_models_button.isEnabled())
             finally:
@@ -425,7 +453,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                     with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration), \
                             patch("worklogger.composition.settings.CloudBackupService") as service:
                         service.return_value.settings.return_value = Result.success((None, BackupCredentials(), {}))
-                        result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+                        result = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                             create_user_if_empty=True, password_iterations=1000, minimal_mode=minimal), argv=[])
                         self.assertTrue(result.ok, result.error)
                         runtime = result.value
@@ -434,6 +462,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                             workflow = runtime.window._settings_workflow
                             workflow.start_cloud_backups(runtime.window)
                             page = workflow.create_page()
+                            self.assertTrue(wait_for_condition(lambda: not page.is_busy))
                             panel = page.cloud_backup_panel
                             self.assertFalse(panel.isHidden())
                             self.assertTrue(page.export_csv_button.isEnabled())
@@ -485,6 +514,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             try:
                 self.assertEqual(get_language(), "ja_JP")
                 page = first.value.window.settings_page
+                self.assertTrue(wait_for_condition(lambda: not page.is_busy))
                 self.assertTrue(page.manage_entry_types_button.isEnabled())
                 self.assertEqual(page.language_combo.currentData(), "ja_JP")
                 self.assertIsNone(self.preferences.load())
@@ -512,7 +542,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                 create_user_if_empty=True, password_iterations=1_000,
                 window=AppWindowConfig(selected_day=date(2026, 5, 4), today=date(2026, 5, 15)))
-            result = build_desktop_runtime(config, argv=[])
+            result = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(result.ok, result.error)
             runtime = result.value
             window = runtime.window
@@ -523,12 +553,11 @@ class RuntimeBootstrapTests(unittest.TestCase):
                         if cell.in_month and cell.is_holiday}
 
             def set_holidays(enabled):
-                window.settings_page.holidays_switch.set_checked(enabled)
-                deadline = time.monotonic() + 3
-                runtime.application.processEvents()
-                while displayed_holidays() != (expected if enabled else {}) and time.monotonic() < deadline:
-                    runtime.application.processEvents()
-                    time.sleep(0.005)
+                page = window.settings_page
+                self.assertTrue(wait_for_condition(lambda: not page.is_busy))
+                page.holidays_switch.set_checked(enabled)
+                self.assertTrue(wait_for_condition(lambda: not page.is_busy
+                    and displayed_holidays() == (expected if enabled else {})))
 
             try:
                 self.assertIsNone(window._holidays)
@@ -560,11 +589,12 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 self.assertEqual(displayed_holidays(), expected)
             finally:
                 window.close()
-            restarted = build_desktop_runtime(config, argv=[])
+            restarted = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(restarted.ok, restarted.error)
             window = restarted.value.window
             try:
                 self.assertTrue(window.refresh())
+                self.assertTrue(wait_for_condition(lambda: not window.settings_page.is_busy))
                 self.assertTrue(window.settings_page.holidays_switch.is_checked())
                 self.assertEqual(displayed_holidays(), expected)
             finally:
@@ -574,11 +604,11 @@ class RuntimeBootstrapTests(unittest.TestCase):
         with self.runtime_directory() as directory:
             config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                                           create_user_if_empty=True, password_iterations=1_000)
-            first = build_desktop_runtime(config, argv=[])
+            first = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(first.ok, first.error)
             SQLiteSettingsRepository(first.value.connection_factory).set(first.value.user.id, MINIMAL_MODE_SETTING_KEY, "1")
             first.value.window.close()
-            second = build_desktop_runtime(config, argv=[])
+            second = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(second.ok, second.error)
             window = second.value.window
             requests = []
@@ -587,7 +617,10 @@ class RuntimeBootstrapTests(unittest.TestCase):
             def settings_dialog(model, parent):
                 dialog = SettingsDialog(model, parent)
                 dialog.category_nav.set_category("account")
-                QTimer.singleShot(0, dialog, dialog.logout_button.click)
+                def logout_when_ready():
+                    if wait_for_condition(lambda: not dialog.page.is_busy):
+                        dialog.logout_button.click()
+                QTimer.singleShot(0, dialog, logout_when_ready)
                 QTimer.singleShot(2_000, dialog, dialog.reject)
                 return dialog
 
@@ -638,7 +671,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 database_path=Path(directory) / "worklog.db",
                 create_user_if_empty=True, password_iterations=1_000,
             )
-            first = build_desktop_runtime(config, argv=[])
+            first = build_diagnostic_runtime(config, argv=[])
             self.assertTrue(first.ok, first.error)
             runtime = first.value
             settings = SQLiteSettingsRepository(runtime.connection_factory)
@@ -652,7 +685,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             runtime.window.close()
             second = None
             try:
-                second = build_desktop_runtime(config, argv=[])
+                second = build_diagnostic_runtime(config, argv=[])
                 self.assertTrue(second.ok, second.error)
                 window = second.value.window
                 self.assertEqual(get_language(), "ja_JP")
@@ -675,7 +708,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         with self.runtime_directory() as directory:
             database_path = Path(directory) / "worklog.db"
 
-            runtime = build_desktop_runtime(
+            runtime = build_diagnostic_runtime(
                 DesktopRuntimeConfig(
                     database_path=database_path,
                     create_user_if_empty=True,
@@ -727,7 +760,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
     def test_runtime_bootstrap_switches_to_minimal_view_from_user_setting(self) -> None:
         with self.runtime_directory() as directory:
             database_path = Path(directory) / "worklog.db"
-            first = build_desktop_runtime(
+            first = build_diagnostic_runtime(
                 DesktopRuntimeConfig(
                     database_path=database_path,
                     create_user_if_empty=True,
@@ -748,7 +781,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             )
             first.value.window.close()
 
-            runtime = build_desktop_runtime(
+            runtime = build_diagnostic_runtime(
                 DesktopRuntimeConfig(
                     database_path=database_path,
                     password_iterations=1_000,
@@ -771,11 +804,12 @@ class RuntimeBootstrapTests(unittest.TestCase):
             configuration = database_path.parent / "worklogger.config.json"
             configuration.write_text('{"features":{"background_images":true,"minimal_view":false}}', encoding="utf-8")
             with patch("worklogger.infrastructure.runtime_config.configuration_path", return_value=configuration):
-                fallback = build_desktop_runtime(DesktopRuntimeConfig(database_path=database_path, minimal_mode=True,
+                fallback = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=database_path, minimal_mode=True,
                                                    password_iterations=1_000), argv=[])
                 self.assertTrue(fallback.ok, fallback.error)
                 try:
                     self.assertNotIsInstance(fallback.value.window, MinimalView)
+                    self.assertTrue(wait_for_condition(lambda: not fallback.value.window.settings_page.is_busy))
                     self.assertTrue(fallback.value.window.settings_page.minimal_view_row.isHidden())
                     self.assertEqual(SQLiteSettingsRepository(fallback.value.connection_factory).get(
                         fallback.value.user.id, MINIMAL_MODE_SETTING_KEY), "1")
@@ -786,7 +820,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
         with self.runtime_directory() as directory:
             configuration = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db",
                                                   create_user_if_empty=True, password_iterations=1_000)
-            first = build_desktop_runtime(configuration, argv=[])
+            first = build_diagnostic_runtime(configuration, argv=[])
             self.assertTrue(first.ok, first.error)
             settings = SQLiteSettingsRepository(first.value.connection_factory)
             for key, value in ((MINIMAL_MODE_SETTING_KEY, "1"), ("theme", "green"), ("dark_mode", "1"),
@@ -795,7 +829,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             started = first.value.window.entry_panel.view_model.start("meeting", "Ongoing record")
             self.assertTrue(started.ok, started.error)
             first.value.window.close()
-            restored = build_desktop_runtime(configuration, argv=[])
+            restored = build_diagnostic_runtime(configuration, argv=[])
             self.assertTrue(restored.ok, restored.error)
             window = restored.value.window
             observed = []
@@ -804,6 +838,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
                 dialog = SettingsDialog(model, parent)
 
                 def inspect_and_close():
+                    self.assertTrue(wait_for_condition(lambda: not dialog.page.is_busy))
                     observed.append((set(dialog.page._category_pages), dialog.minimal_switch.isEnabled(),
                                      not dialog.background_settings.isHidden()))
                     dialog.reject()
@@ -831,7 +866,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
     def test_runtime_bootstrap_rejects_empty_database_without_bootstrap_user(self) -> None:
         with self.runtime_directory() as directory:
-            runtime = build_desktop_runtime(
+            runtime = build_diagnostic_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(directory) / "worklog.db",
                     create_user_if_empty=False,
@@ -871,7 +906,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
 
     def test_runtime_builders_isolate_remembered_credentials_by_database(self) -> None:
         with self.runtime_directory() as first_directory:
-            first = build_desktop_runtime(
+            first = build_diagnostic_runtime(
                 DesktopRuntimeConfig(
                     database_path=Path(first_directory) / "worklog.db",
                     create_user_if_empty=True,

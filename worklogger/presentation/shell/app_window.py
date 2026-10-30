@@ -410,8 +410,6 @@ class AppWindow(QMainWindow):
         self.status_label.hide()
 
         self.notes_button.setVisible(self._notes_workflow is not None)
-        if self._notes_workflow is None:
-            self.notes_button.setVisible(False)
         main_layout.addWidget(self.status_label)
 
     def _connect_signals(self) -> None:
@@ -634,6 +632,7 @@ class AppWindow(QMainWindow):
         index = self._page_routes.get(normalized)
         if index is None:
             return False
+        settings_created = normalized == "settings" and self._settings_page is None
         try:
             page = self.settings_page if normalized == "settings" else self.page_stack.widget(index)
         except Exception:
@@ -649,7 +648,8 @@ class AppWindow(QMainWindow):
         elif normalized == "reports":
             self.reports_page.refresh(self._selected_day)
         elif normalized == "settings":
-            self.settings_page.refresh()
+            if not settings_created:
+                page.refresh()
             if self._residency_controller is not None:
                 self._residency_controller.refresh()
         self._set_status("")

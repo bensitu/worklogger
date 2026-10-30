@@ -197,7 +197,8 @@ def build_user_runtime(
             auth_session=auth_session,
             local_inference=handlers.local_inference,
             job_runner=job_runner,
-            revoke_remembered_session=RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle,
+            revoke_remembered_session=(RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle
+                                       if auth_repository is not None else None),
         )
 
     return _runtime_result(
@@ -219,7 +220,8 @@ def build_user_runtime(
         auth_session=auth_session,
         local_inference=handlers.local_inference,
         job_runner=job_runner,
-        revoke_remembered_session=RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle,
+        revoke_remembered_session=(RevokeRememberedSessionHandler(auth_repository, user_id=user.id).handle
+                                   if auth_repository is not None else None),
     )
 
 

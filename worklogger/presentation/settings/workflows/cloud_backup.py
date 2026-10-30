@@ -1,6 +1,6 @@
 """Background cloud backup scheduling and explicit transfer confirmations."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from time import monotonic
 from weakref import WeakSet
 
@@ -24,7 +24,10 @@ def _local_time(value):
 
 def _parse_time(value):
     try:
-        return datetime.fromisoformat(value) if value else None
+        parsed = datetime.fromisoformat(value) if value else None
+        if parsed is not None and parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
     except (TypeError, ValueError, OverflowError):
         return None
 

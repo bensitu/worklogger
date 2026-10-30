@@ -66,7 +66,7 @@ class AnalyticsViewModel:
         bundle_handler: AnalyticsBundleHandlerProtocol,
         csv_exporter: AnalyticsCsvExporterProtocol,
         pdf_exporter: AnalyticsPdfExporterProtocol,
-        standard_leave_hours: float = 8.0,
+        standard_work_hours: float = 8.0,
         dashboard_handler: AnalyticsDashboardHandlerProtocol | None = None,
         week_start_monday: bool = False,
         project_handler=None,
@@ -75,7 +75,7 @@ class AnalyticsViewModel:
         self._bundle_handler = bundle_handler
         self._csv_exporter = csv_exporter
         self._pdf_exporter = pdf_exporter
-        self._standard_leave_hours = standard_leave_hours
+        self._standard_work_hours = standard_work_hours
         self._dashboard_handler = dashboard_handler
         self._week_start_monday = week_start_monday
         self._project_handler = project_handler
@@ -89,7 +89,7 @@ class AnalyticsViewModel:
         self._week_start_monday = bool(enabled)
 
     def set_standard_work_hours(self, hours: float) -> None:
-        self._standard_leave_hours = max(1.0, min(float(hours), 24.0))
+        self._standard_work_hours = max(1.0, min(float(hours), 24.0))
 
     @property
     def user_id(self) -> int:
@@ -126,7 +126,7 @@ class AnalyticsViewModel:
                 metric=normalized_metric,
                 include_leaves=include_leaves,
                 scope=normalized_scope,
-                standard_leave_hours=self._standard_leave_hours,
+                standard_leave_hours=self._standard_work_hours,
                 week_start_monday=self._week_start_monday,
             )
         )

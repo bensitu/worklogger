@@ -175,6 +175,7 @@ class DatePickerButton(QPushButton):
         self._week_start_monday = week_start_monday
         self._popup = None
         self._colors = None
+        self._holiday_error = ""
         self.calendar = None
         self.clicked.connect(self.open_calendar)
 
@@ -191,14 +192,17 @@ class DatePickerButton(QPushButton):
             self.calendar.set_colors(colors)
 
     def set_holidays(self, holidays):
+        self._holiday_error = ""
         if self.calendar is not None:
             self.calendar.set_holidays(holidays)
             self.holiday_status_label.clear()
             self._resize_popup()
 
     def set_holiday_error(self, message):
-        self.holiday_status_label.setText(message)
-        self._resize_popup()
+        self._holiday_error = message
+        if self.calendar is not None:
+            self.holiday_status_label.setText(message)
+            self._resize_popup()
 
     def _resize_popup(self):
         if self._popup.isVisible():
@@ -230,6 +234,7 @@ class DatePickerButton(QPushButton):
             self.holiday_status_label = StatusLabel()
             self.holiday_status_label.setObjectName("date_picker_holiday_status_label")
             self.holiday_status_label.setTextFormat(Qt.TextFormat.PlainText)
+            self.holiday_status_label.setText(self._holiday_error)
             self.holiday_status_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             layout.addWidget(self.holiday_status_label)
             shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self._popup)

@@ -16,7 +16,7 @@ def infrastructure_failure(code: str, error: Exception, *, logger_name: str) -> 
 
 
 def application_failure(code: str, error: Exception, *, logger_name: str) -> AppError:
-    if isinstance(error, ValueError):
+    if isinstance(error, (TypeError, ValueError)):
         reason = str(error)
         if not reason.startswith("stored_") and re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", reason):
             return ValidationError(reason, reason)

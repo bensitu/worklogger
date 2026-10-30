@@ -13,7 +13,7 @@ from PySide6.QtCore import QSettings, Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QCloseEvent
 
-from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+from worklogger.bootstrap import DesktopRuntimeConfig, build_diagnostic_runtime
 from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
 from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalendarEventRepository
@@ -1275,7 +1275,7 @@ class TimeEntryWorkflowTests(unittest.TestCase):
             LanguagePreferences(QSettings(str(root / "language.ini"), QSettings.Format.IniFormat))))
         self.enterContext(patch.dict(os.environ, {"WORKLOGGER_LANG": "en_US"}))
         self.warning = self.enterContext(patch("worklogger.presentation.widgets.time_entries.QMessageBox.warning"))
-        result = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
+        result = build_diagnostic_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
             create_user_if_empty=True, password_iterations=1000,
             window=AppWindowConfig(selected_day=date(2026, 5, 20), today=date(2026, 5, 20),
                                    confirm_discard_changes=lambda: True)), argv=[])

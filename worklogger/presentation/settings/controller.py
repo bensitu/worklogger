@@ -196,7 +196,6 @@ class SettingsWorkflowController:
         dialog = self._dialog_factory(self._settings_view_model, parent)
         self._bind_surface(dialog.page)
         dialog.page.refresh()
-        self._processing_workflow.sync(dialog.page)
         return dialog
 
     def set_restore_handler(self, handler: ReloadHandler) -> None:
@@ -225,7 +224,6 @@ class SettingsWorkflowController:
         page = self._page_factory(self._settings_view_model, parent)
         self._bind_surface(page)
         page.refresh()
-        self._processing_workflow.sync(page)
         return page
 
     def _bind_surface(self, surface: SettingsPage) -> None:
@@ -279,6 +277,7 @@ class SettingsWorkflowController:
                 lambda: self._open_local_models(surface)
             )
         self._processing_workflow.bind(surface)
+        surface.refreshed.connect(lambda: self._processing_workflow.sync(surface))
 
     def _check_records(self, surface):
         if not getattr(self._data_management_view_model, "can_check_records", False):

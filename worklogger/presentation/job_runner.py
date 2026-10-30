@@ -87,7 +87,7 @@ class QtJobRunner(QObject):
         self._closed = False
         self._callbacks: dict[str, JobCallback[object] | None] = {}
         self._tokens: dict[str, CancellationToken] = {}
-        self._signals = _JobSignals()
+        self._signals = _JobSignals(self)
         self._signals.completed.connect(self._complete)
         application = QCoreApplication.instance()
         if application is not None:

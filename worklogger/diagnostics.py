@@ -72,7 +72,7 @@ def require_value(result):
 
 
 def check_workflows():
-    from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+    from worklogger.bootstrap import DesktopRuntimeConfig, build_diagnostic_runtime
     from worklogger.composition.lifecycle import dispose_runtime
     from worklogger.domain.projects.models import WorkContext
     from worklogger.infrastructure.backup import SQLiteBackupService
@@ -103,7 +103,7 @@ def check_workflows():
         summary = upgrade_database(Path(factory.database_path), upgraded)
         if summary.time_records != 1 or summary.reports != 1:
             raise RuntimeError("upgrade_verification_failed")
-        runtime = require_value(build_desktop_runtime(DesktopRuntimeConfig(database_path=upgraded,
+        runtime = require_value(build_diagnostic_runtime(DesktopRuntimeConfig(database_path=upgraded,
             user_id=previous.id, minimal_mode=False, password_iterations=1000), argv=[]))
         try:
             current_auth = SQLiteAuthRepository(runtime.connection_factory, password_hasher=PBKDF2PasswordHasher(iterations=1000))

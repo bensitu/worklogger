@@ -298,6 +298,8 @@ class SettingsWorkflowTests(unittest.TestCase):
         )
         page = controller.create_page()
         self.addCleanup(page.deleteLater)
+        operation, complete = requests.pop(0)
+        complete(operation(CancellationToken()))
         page.test_external_model_requested.emit()
         operation, complete = requests[0]
         operation(token)
@@ -311,12 +313,12 @@ class SettingsWorkflowTests(unittest.TestCase):
 
     def test_model_status_ignores_superseded_and_disposed_surfaces(self):
         from types import SimpleNamespace
-        from worklogger.app.job_runner import JobHandle
+        from worklogger.app.job_runner import CancellationToken, JobHandle
         from shiboken6 import delete
 
         requests = []
         def submit(name, operation, *, on_complete):
-            requests.append(on_complete)
+            requests.append((operation, on_complete))
             return JobHandle(name, lambda: None)
 
         controller = SettingsWorkflowController(
@@ -326,6 +328,8 @@ class SettingsWorkflowTests(unittest.TestCase):
             job_runner=Mock(submit=submit), local_models_workflow=Mock(),
         )
         page = controller.create_page()
+        operation, complete = requests.pop(1)
+        complete(operation(CancellationToken()))
         workflow = controller._processing_workflow
         workflow.refresh_models(page)
         def inventory(name):
@@ -333,12 +337,12 @@ class SettingsWorkflowTests(unittest.TestCase):
             return Result.success(SimpleNamespace(inventory=SimpleNamespace(
                 items=(SimpleNamespace(entry=entry, verified=True),), active_model_id=name)))
         with patch.object(page, "set_local_model_status") as status:
-            requests[1](inventory("current"))
-            requests[0](inventory("previous"))
+            requests[1][1](inventory("current"))
+            requests[0][1](inventory("previous"))
             status.assert_called_once_with(ready=True, name="current")
             workflow.refresh_models(page)
             delete(page)
-            requests[2](inventory("disposed"))
+            requests[2][1](inventory("disposed"))
             self.assertEqual(status.call_count, 1)
 
     def test_processing_submission_failure_does_not_block_initialization_or_settings(self):
@@ -375,6 +379,8 @@ class SettingsWorkflowTests(unittest.TestCase):
             notify_success=lambda *_args: None, notify_error=lambda *_args: None,
         )
         page = controller.create_page()
+        operation, complete = runner.requests.pop(0)
+        complete(operation(CancellationToken()))
         page.category_nav.set_category("about")
         self.assertFalse(page.update_status_label.isHidden())
         page.check_updates_button.click()

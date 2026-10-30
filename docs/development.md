@@ -294,6 +294,11 @@ git diff --check
 See [testing](testing.md) for discovery, visual checks, and fixture isolation.
 Changing Python/Qt/native dependencies also requires a consistent target build
 and artifact checks, not just a successful import.
+The unauthenticated `build_diagnostic_runtime` helper requires an explicit
+database path and, for multi-account databases, an explicit account identifier.
+Use isolated synthetic databases for diagnostics. Normal desktop startup uses
+`build_authenticated_desktop_runtime`, enforces the password-hashing minimum,
+and does not accept diagnostic password costs without an injected authenticator.
 Continuous integration checks supported Python versions on Windows, Linux and
 macOS ARM64, validates translations, runs ordinary tests and audits dependency
 vulnerabilities. Separate build jobs verify platform archives after extraction

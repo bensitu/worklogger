@@ -1,6 +1,7 @@
 """Automatic backup startup delays and manual transfer availability."""
 
 import os
+from datetime import datetime, timezone
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -15,7 +16,7 @@ from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from tests.job_runner import ImmediateJobRunner
 from worklogger.presentation.settings.sections.cloud_backup import CloudBackupPanel
-from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow
+from worklogger.presentation.settings.workflows.cloud_backup import CloudBackupWorkflow, _local_time, _parse_time
 
 
 class CloudBackupWorkflowTests(unittest.TestCase):
@@ -89,6 +90,21 @@ class CloudBackupWorkflowTests(unittest.TestCase):
         workflow.reload()
         self.service.upload.assert_called_once_with()
         self.assertFalse(workflow._busy)
+
+    def test_backup_times_treat_missing_offsets_as_utc(self):
+        naive = "2026-10-12T04:30:00"
+        aware = naive + "+00:00"
+        self.assertEqual(_parse_time(naive), datetime(2026, 10, 12, 4, 30, tzinfo=timezone.utc))
+        self.assertEqual(_parse_time(naive), _parse_time("2026-10-12T13:30:00+09:00"))
+        self.assertEqual(_local_time(naive), _local_time(aware))
+        self.assertEqual(_local_time(naive), datetime.fromisoformat(aware).astimezone().strftime("%Y-%m-%d %H:%M"))
+        configuration, credentials, _state = self.service.settings.return_value.value
+        self.service.settings.return_value = Result.success((configuration, credentials, {"last_success": naive}))
+        workflow = self.workflow(0)
+        with patch("worklogger.presentation.settings.workflows.cloud_backup.backup_due", return_value=False) as due:
+            workflow.reload()
+        self.assertEqual(due.call_args.args[1], datetime.fromisoformat(aware))
+        self.service.upload.assert_not_called()
 
     def test_automatic_backups_wait_for_busy_views_even_after_startup_delay(self):
         workflow = self.workflow(0)

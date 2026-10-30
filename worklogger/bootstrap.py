@@ -88,12 +88,15 @@ AuthControllerFactory = Callable[[AuthViewModel], DesktopAuthenticator]
 
 
 
-def build_desktop_runtime(
+def build_diagnostic_runtime(
     config: DesktopRuntimeConfig | None = None,
     *,
     argv: Sequence[str] | None = None,
 ) -> Result[DesktopRuntime]:
+    """Build an unauthenticated runtime for an explicitly selected diagnostic database."""
     config = config or DesktopRuntimeConfig()
+    if config.database_path is None:
+        return Result.failure(ValidationError("runtime_user_required", "runtime_user_required"))
     job_runner = None
     runtime = None
     try:
@@ -101,7 +104,7 @@ def build_desktop_runtime(
         if not logging_result.ok:
             return logging_result
         LOGGER.info("desktop_runtime_build_started")
-        database_path, connection_factory, auth_repository = _prepare_database(config)
+        database_path, connection_factory, auth_repository = _prepare_database(config, diagnostic=True)
         user_result = _resolve_runtime_user(auth_repository, config)
         if not user_result.ok or user_result.value is None:
             return Result.failure(
@@ -150,7 +153,8 @@ def build_authenticated_desktop_runtime(
         if not logging_result.ok:
             return logging_result
         LOGGER.info("authenticated_desktop_runtime_build_started")
-        database_path, connection_factory, auth_repository = _prepare_database(config)
+        database_path, connection_factory, auth_repository = _prepare_database(
+            config, diagnostic=auth_controller_factory is not None)
         application = _application(argv)
         initialize_language(LanguagePreferences())
         deployment = load_runtime_configuration()
@@ -245,15 +249,20 @@ def _session_store(path) -> RememberSessionStore:
     return FileRememberTokenSessionStore(Path(path))
 
 
-def _password_hasher(iterations: int | None) -> PBKDF2PasswordHasher:
+def _password_hasher(iterations: int | None, *, diagnostic: bool = False) -> PBKDF2PasswordHasher:
     if iterations is None:
         return PBKDF2PasswordHasher()
-    return PBKDF2PasswordHasher(iterations=int(iterations), legacy_iterations=(100,))
+    if type(iterations) is not int or iterations < (1 if diagnostic else 100_000):
+        raise ValueError("invalid_numeric_setting")
+    return PBKDF2PasswordHasher(iterations=iterations)
 
 
 def _prepare_database(
     config: DesktopRuntimeConfig,
+    *,
+    diagnostic: bool = False,
 ) -> tuple[Path, SQLiteConnectionFactory, RuntimeAuthRepository]:
+    hasher = _password_hasher(config.password_iterations, diagnostic=diagnostic)
     database_path = (
         Path(config.database_path) if config.database_path else default_database_path()
     )
@@ -277,7 +286,7 @@ def _prepare_database(
         LOGGER.warning("proxy_credential_upgrade_deferred: %s", type(error).__name__)
     auth_repository = SQLiteAuthRepository(
         connection_factory,
-        password_hasher=_password_hasher(config.password_iterations),
+        password_hasher=hasher,
     )
     return database_path, connection_factory, auth_repository
 
@@ -327,8 +336,10 @@ def _resolve_runtime_user(
         return Result.success(user)
 
     users = auth_repository.list_users()
-    if users:
+    if len(users) == 1:
         return Result.success(users[0])
+    if users:
+        return Result.failure(ValidationError("runtime_user_required", "runtime_user_required"))
 
     if not config.create_user_if_empty:
         return Result.failure(

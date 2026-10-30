@@ -53,6 +53,7 @@ from worklogger.presentation.settings.sections.state import SettingsSectionState
 
 class SettingsPage(QWidget, SettingsSectionState):
     settings_changed = Signal(object)
+    refreshed = Signal()
     backup_requested = Signal()
     check_records_requested = Signal()
     records_recovered = Signal()
@@ -107,6 +108,7 @@ class SettingsPage(QWidget, SettingsSectionState):
             on_error=self._set_error,
             on_saved=self._preference_saved,
             on_busy=lambda busy: self.set_busy("preferences", busy),
+            on_refresh_busy=lambda busy: self.set_busy("settings_refresh", busy),
         )
         self._residency_key = residency_setting_key()
         self._category_pages: dict[str, int] = {}
@@ -164,16 +166,15 @@ class SettingsPage(QWidget, SettingsSectionState):
                 self._update_configuration_status()
 
     def refresh(self) -> bool:
-        self._preferences.cancel_refresh()
-        result = self._view_model.load()
-        if not result.ok or result.value is None:
-            self._set_error(result.error)
-            return False
-        self.set_state(result.value)
+        return self._preferences.refresh(self._view_model.load, self._apply_refreshed_state)
+
+    def _apply_refreshed_state(self, state: SettingsState) -> None:
+        self.set_state(state)
+        self._last_error = None
         self.status_label.clear()
         self.status_label.hide()
         self.profile_refresh_requested.emit()
-        return True
+        self.refreshed.emit()
 
     def set_account(self, user: User) -> None:
         self._account_is_admin = user.is_admin

@@ -8,7 +8,7 @@ from PySide6.QtCore import QDate, QDateTime, QPoint, QTime, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDateEdit, QDateTimeEdit
 
-from worklogger.presentation.widgets.date_picker import MonthCalendar, configure_calendar_popup
+from worklogger.presentation.widgets.date_picker import DatePickerButton, MonthCalendar, configure_calendar_popup
 from worklogger.presentation.widgets.date_range import DateRangeControls
 from worklogger.presentation.theme import ThemeEngine
 
@@ -17,6 +17,19 @@ class DatePickerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
+    def test_holiday_errors_survive_lazy_popup_creation_and_clear_after_success(self):
+        picker = DatePickerButton()
+        self.addCleanup(picker.deleteLater)
+        self.addCleanup(picker.close)
+        picker.set_holiday_error("Holiday loading failed")
+        self.assertIsNone(picker.calendar)
+        picker.open_calendar()
+        self.assertEqual(picker.holiday_status_label.text(), "Holiday loading failed")
+        picker.set_holidays({date(2026, 10, 12): "Holiday"})
+        self.assertEqual(picker.holiday_status_label.text(), "")
+        picker.set_holiday_error("Holiday loading failed")
+        self.assertEqual(picker.holiday_status_label.text(), "Holiday loading failed")
 
     def test_date_range_popups_follow_current_and_changed_application_themes(self):
         old_style, old_palette = self.app.styleSheet(), self.app.palette()

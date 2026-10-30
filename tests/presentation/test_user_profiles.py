@@ -14,14 +14,14 @@ from PySide6.QtCore import Qt, QSettings
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QDialog, QMessageBox
 
-from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+from worklogger.bootstrap import DesktopRuntimeConfig, build_diagnostic_runtime
 from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.repositories import SQLiteAuthRepository
 from worklogger.infrastructure.security import PBKDF2PasswordHasher
 from tests.job_runner import ImmediateJobRunner
-from tests.presentation.qt_support import dispose_test_windows
+from tests.presentation.qt_support import dispose_test_windows, wait_for_condition
 
 
 class UserProfilePresentationTests(unittest.TestCase):
@@ -33,7 +33,7 @@ class UserProfilePresentationTests(unittest.TestCase):
         self.enterContext(patch.dict(os.environ, {"WORKLOGGER_LANG": "en_US"}))
         self.config = DesktopRuntimeConfig(database_path=Path(directory) / "worklog.db", create_user_if_empty=True,
             bootstrap_username="han_meimei", password_iterations=1000)
-        result = build_desktop_runtime(self.config, argv=[])
+        result = build_diagnostic_runtime(self.config, argv=[])
         self.assertTrue(result.ok, result.error)
         self.runtime = result.value
         self.addCleanup(dispose_test_windows)
@@ -43,6 +43,7 @@ class UserProfilePresentationTests(unittest.TestCase):
         self.controller = self.runtime.window._settings_workflow
         self.controller._job_runner = ImmediateJobRunner()
         self.page = self.runtime.window.settings_page
+        self.assertTrue(wait_for_condition(lambda: not self.page.is_busy))
         self.editor = self.page.display_name_editor
 
     def save_name(self, name):
@@ -69,7 +70,7 @@ class UserProfilePresentationTests(unittest.TestCase):
         self.save_name("")
         self.assertEqual(self.runtime.window.sidebar.profile_name_label.text(), "han_meimei")
         self.save_name("Mary")
-        reopened = build_desktop_runtime(replace(self.config, minimal_mode=True), argv=[]).value
+        reopened = build_diagnostic_runtime(replace(self.config, minimal_mode=True), argv=[]).value
         self.addCleanup(reopened.local_inference.close)
         self.addCleanup(lambda: reopened.job_runner.shutdown(wait=True))
         reopened.window.refresh()

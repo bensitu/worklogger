@@ -182,6 +182,7 @@ class ReportsPage(QWidget):
             if calendar_sync:
                 self._calendar_day = selected_day
             self._selected_day = selected_day
+            self._update_export_labels()
         if self._view_model is None:
             self._set_status(_("Reports are not configured."), error=True)
             return False
@@ -259,6 +260,7 @@ class ReportsPage(QWidget):
         self.copy_button.clicked.connect(self.copy_markdown)
         self.save_button.clicked.connect(self._save_current)
         self.export_current_button.export_requested.connect(self._choose_export_scope)
+        self._update_export_labels()
         content.addWidget(self.editor_panel, 2)
 
         self.history_panel = ReportHistoryPanel(allow_delete=bool(getattr(self._view_model, "delete_available", False)),
@@ -310,13 +312,16 @@ class ReportsPage(QWidget):
         for action in self.export_current_button.menu().actions():
             key = action.data()
             action.setEnabled(not busy and (timesheet_export if action.menu() is not None else has_content if key == "current" else saved_export))
-            if key == "day":
-                action.setText(_("Saved daily report") + f" ({self._selected_day.isoformat()})")
-            elif key == "month":
-                action.setText(_("Saved daily reports for this month") + f" ({self._selected_day:%Y-%m})")
         self.copy_button.setEnabled(not busy and has_content)
         self.generate_button.setEnabled(not busy and self._view_model is not None)
         self._update_ai_controls()
+
+    def _update_export_labels(self):
+        for action in self.export_current_button.menu().actions():
+            if action.data() == "day":
+                action.setText(_("Saved daily report") + f" ({self._selected_day.isoformat()})")
+            elif action.data() == "month":
+                action.setText(_("Saved daily reports for this month") + f" ({self._selected_day:%Y-%m})")
 
     def refresh_ai_availability(self):
         self._ai_ready = bool(self._view_model is not None and getattr(self._view_model, "rewrite_available", True))
@@ -565,6 +570,7 @@ class ReportsPage(QWidget):
         self._saved_content[state.report_type] = state.content
         self._rendered_type = state.report_type
         self._selected_day = state.period_start
+        self._update_export_labels()
         self.report_type_control.set_value(state.report_type, emit=False)
         self.history_panel.set_selected_report(state.report_id)
         self.editor.setPlainText(state.content)

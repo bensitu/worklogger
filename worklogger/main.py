@@ -100,11 +100,11 @@ def smoke_import_check() -> int:
 
 def smoke_runtime_check() -> int:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from worklogger.bootstrap import DesktopRuntimeConfig, build_desktop_runtime
+    from worklogger.bootstrap import DesktopRuntimeConfig, build_diagnostic_runtime
     from worklogger.composition.lifecycle import dispose_runtime
 
     with tempfile.TemporaryDirectory() as directory:
-        runtime = build_desktop_runtime(
+        runtime = build_diagnostic_runtime(
             DesktopRuntimeConfig(
                 database_path=os.path.join(directory, "worklog.db"),
                 create_user_if_empty=True,

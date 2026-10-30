@@ -3,7 +3,7 @@
 import os
 from time import monotonic
 
-from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QObject
 from PySide6.QtWidgets import QWidget
 from shiboken6 import isValid
 from worklogger.presentation.widgets.shutdown_progress import BackgroundTaskShutdownDialog
@@ -33,7 +33,7 @@ def stop_background_tasks(runner, *, force_exit=None) -> None:
 def dispose_runtime(runtime) -> None:
     try:
         runner = getattr(runtime, "job_runner", None)
-        if runner is not None:
+        if runner is not None and (not isinstance(runner, QObject) or isValid(runner)):
             stop_background_tasks(runner)
     finally:
         try:
@@ -41,7 +41,15 @@ def dispose_runtime(runtime) -> None:
             if inference is not None:
                 inference.close()
         finally:
-            window = runtime.window
-            if isinstance(window, QWidget) and isValid(window):
-                window.deleteLater()
-                QCoreApplication.sendPostedEvents(window, QEvent.Type.DeferredDelete)
+            try:
+                window = runtime.window
+                if isinstance(window, QWidget) and isValid(window):
+                    window.deleteLater()
+                    QCoreApplication.sendPostedEvents(window, QEvent.Type.DeferredDelete)
+            finally:
+                if isinstance(runner, QObject) and isValid(runner):
+                    application = QCoreApplication.instance()
+                    if getattr(application, "_worklogger_job_runner", None) is runner:
+                        del application._worklogger_job_runner
+                    runner.deleteLater()
+                    QCoreApplication.sendPostedEvents(runner, QEvent.Type.DeferredDelete)

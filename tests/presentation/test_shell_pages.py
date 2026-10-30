@@ -42,6 +42,24 @@ class ReportsViewModel:
 
 
 class ShellPagesTests(unittest.TestCase):
+    def test_export_dates_follow_report_navigation_and_history_selection(self):
+        page = ReportsPage(ReportsViewModel(), date(2026, 10, 16), job_runner=ImmediateJobRunner())
+        self.addCleanup(page.deleteLater)
+        actions = {action.data(): action for action in page.export_current_button.menu().actions()}
+
+        def check_dates(day):
+            self.assertIn(day.isoformat(), actions["day"].text())
+            self.assertIn(f"{day:%Y-%m}", actions["month"].text())
+
+        check_dates(date(2026, 10, 16))
+        self.assertTrue(page.refresh(date(2026, 11, 3)))
+        check_dates(date(2026, 11, 3))
+        page.editor.setPlainText("Edited report")
+        check_dates(date(2026, 11, 3))
+        state = ReportEditorState(1, "daily", date(2026, 9, 12), date(2026, 9, 12), "Saved report")
+        page._show_history_report(state)
+        check_dates(date(2026, 9, 12))
+
     def test_background_exports_retain_content_and_dates_and_restore_controls(self):
         class Model(ReportsViewModel):
             timesheet_available = True

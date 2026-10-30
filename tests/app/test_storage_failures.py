@@ -27,11 +27,13 @@ class StorageFailureTests(unittest.TestCase):
         query = GetReportForPeriodQuery(1, "daily", day, day)
         for reason, expected_type, expected_code in (
             ("report_period_invalid", ValidationError, "report_period_invalid"),
+            ("username_must_be_string", ValidationError, "username_must_be_string"),
             ("stored_records_invalid", InfrastructureError, "stored_records_invalid"),
             ("could not convert private input to float", InfrastructureError, "report_load_failed"),
         ):
             with self.subTest(reason=reason):
-                repository.get_for_period.side_effect = ValueError(reason)
+                exception = TypeError if reason == "username_must_be_string" else ValueError
+                repository.get_for_period.side_effect = exception(reason)
                 result = handler.handle(query)
                 self.assertIsInstance(result.error, expected_type)
                 self.assertEqual((result.error.code, result.error.message), (expected_code, expected_code))

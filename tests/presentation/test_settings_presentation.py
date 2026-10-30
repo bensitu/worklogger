@@ -13,6 +13,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QColorDialog, QDialog, QLineEdit, QMessageBox
 
 from worklogger.app.use_cases.settings import GetSettingHandler, SetSettingHandler
+from worklogger.app.job_runner import CancellationToken, JobHandle
 from worklogger.__about__ import APP_VERSION
 from worklogger.config.constants import (
     AI_ASSIST_ENABLED_SETTING_KEY,
@@ -61,6 +62,20 @@ class MemorySettingsRepository:
 
     def delete(self, user_id: int, key: str) -> None:
         self.values.pop((user_id, key), None)
+
+
+class DeferredSettingsRunner:
+    def __init__(self):
+        self.jobs = []
+
+    def submit(self, name, work, *, on_complete):
+        token = CancellationToken()
+        self.jobs.append((name, work, on_complete, token))
+        return JobHandle(name, token.cancel)
+
+    def finish(self, index):
+        _name, work, complete, token = self.jobs[index]
+        complete(work(token))
 
 
 def _view_model(repository: MemorySettingsRepository) -> SettingsViewModel:
@@ -594,6 +609,132 @@ class SettingsPresentationTests(unittest.TestCase):
             self.assertEqual(load.call_count, 1)
         self.assertFalse(page.state.show_holidays)
         self.assertFalse(page.state.show_recent_context)
+
+    def test_background_refresh_preserves_state_and_coalesces_requests(self):
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        self.assertTrue(page.refresh())
+        previous = page.state
+        runner = DeferredSettingsRunner()
+        page.set_job_runner(runner)
+        refreshed = Mock()
+        page.profile_refresh_requested.connect(refreshed)
+        with patch.object(model, "load", wraps=model.load) as load:
+            self.assertTrue(page.refresh())
+            self.assertTrue(page.refresh())
+            load.assert_not_called()
+            self.assertEqual(len(runner.jobs), 1)
+            self.assertIs(page.state, previous)
+            self.assertEqual(page.standard_hours_input.value(), previous.standard_work_hours)
+            self.assertTrue(page.is_busy)
+            self.assertFalse(page.category_stack.isEnabled())
+            runner.finish(0)
+            load.assert_called_once_with()
+        self.assertFalse(page.is_busy)
+        self.assertTrue(page.category_stack.isEnabled())
+        refreshed.assert_called_once_with()
+        runner.jobs[0][2](Result.success(previous))
+        refreshed.assert_called_once_with()
+
+    def test_refresh_results_cannot_replace_saved_preferences_or_outlive_the_page(self):
+        from shiboken6 import delete
+
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        page.refresh()
+        runner = DeferredSettingsRunner()
+        page.set_job_runner(runner)
+        page.refresh()
+        _name, work, complete, token = runner.jobs[0]
+        stale = work(token)
+        page._set_bool(SHOW_HOLIDAYS_SETTING_KEY, False)
+        self.assertTrue(token.is_cancelled())
+        runner.finish(1)
+        self.assertFalse(page.state.show_holidays)
+        complete(stale)
+        self.assertFalse(page.state.show_holidays)
+        self.assertFalse(page.is_busy)
+        page.refresh()
+        callback, token = runner.jobs[2][2:]
+        delete(page)
+        self.assertTrue(token.is_cancelled())
+        callback(stale)
+
+    def test_refresh_waits_for_queued_writes_and_recovers_from_load_failure(self):
+        model = _view_model(MemorySettingsRepository())
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        page.refresh()
+        runner = DeferredSettingsRunner()
+        page.set_job_runner(runner)
+        page.holidays_switch.click()
+        page.recent_context_switch.click()
+        self.assertTrue(page.refresh())
+        self.assertEqual(len(runner.jobs), 1)
+        runner.finish(0)
+        self.assertEqual(len(runner.jobs), 2)
+        runner.finish(1)
+        self.assertEqual(len(runner.jobs), 3)
+        self.assertEqual(runner.jobs[2][0], "load_settings")
+        previous = page.state
+        failure = Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
+        runner.jobs[2][2](failure)
+        self.assertIs(page.state, previous)
+        self.assertFalse(page.is_busy)
+        self.assertTrue(page.category_stack.isEnabled())
+        self.assertEqual(page.last_error.code, "settings_load_failed")
+        self.assertTrue(page.refresh())
+        runner.finish(3)
+        self.assertIsNone(page.last_error)
+        self.assertFalse(page.state.show_holidays)
+        self.assertFalse(page.state.show_recent_context)
+        self.assertFalse(page.is_busy)
+        page.set_job_runner(Mock(submit=Mock(side_effect=RuntimeError("closed"))))
+        with self.assertLogs("worklogger.presentation.settings.preferences", level="ERROR"):
+            self.assertFalse(page.refresh())
+        self.assertFalse(page.is_busy)
+        self.assertEqual(page.last_error.code, "settings_load_failed")
+
+    def test_credential_refresh_runs_off_the_ui_thread_and_keeps_events_responsive(self):
+        from threading import Event, get_ident
+
+        from PySide6.QtCore import QTimer
+        from tests.presentation.qt_support import wait_for_condition
+        from worklogger.presentation.job_runner import QtJobRunner
+
+        entered, release = Event(), Event()
+        thread_ids = []
+
+        def load_secret(_name):
+            thread_ids.append(get_ident())
+            entered.set()
+            release.wait(5)
+            return Result.success("")
+
+        model = _view_model(MemorySettingsRepository())
+        model._external_key_store = Mock(get_secret=load_secret)
+        page = SettingsPage(model)
+        self.addCleanup(page.deleteLater)
+        runner = QtJobRunner()
+        page.set_job_runner(runner)
+        completions = []
+        page.profile_refresh_requested.connect(lambda: completions.append(get_ident()))
+        try:
+            self.assertTrue(page.refresh())
+            self.assertTrue(wait_for_condition(entered.is_set))
+            events = []
+            QTimer.singleShot(0, lambda: events.append(True))
+            self.assertTrue(wait_for_condition(lambda: bool(events)))
+            self.assertTrue(page.is_busy)
+            self.assertNotEqual(thread_ids, [get_ident()])
+            release.set()
+            self.assertTrue(wait_for_condition(lambda: not page.is_busy))
+            self.assertEqual(completions, [get_ident()])
+            self.assertIsNotNone(page.state)
+        finally:
+            release.set()
+            self.assertTrue(runner.shutdown(wait=True))
 
     def test_preference_queue_continues_after_write_and_display_failures(self):
         from worklogger.app.job_runner import CancellationToken

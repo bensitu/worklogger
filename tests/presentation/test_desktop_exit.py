@@ -18,6 +18,26 @@ from worklogger.main import DesktopAlreadyRunningError, _acquire_instance_lock, 
 
 
 class DesktopExitTests(unittest.TestCase):
+    def test_disposal_releases_account_workers_and_shared_runner_reference(self):
+        from PySide6.QtWidgets import QWidget
+        from shiboken6 import isValid
+        from tests.presentation.test_app_window import _app
+        from worklogger.composition.lifecycle import dispose_runtime
+        from worklogger.presentation.job_runner import shared_job_runner
+
+        application = _app()
+        runner = shared_job_runner()
+        window = QWidget()
+        runtime = SimpleNamespace(window=window, job_runner=runner, local_inference=None)
+        dispose_runtime(runtime)
+        self.assertFalse(isValid(window))
+        self.assertFalse(isValid(runner))
+        dispose_runtime(runtime)
+        self.assertIsNone(getattr(application, "_worklogger_job_runner", None))
+        replacement = shared_job_runner()
+        self.assertIsNot(replacement, runner)
+        dispose_runtime(SimpleNamespace(window=QWidget(), job_runner=replacement, local_inference=None))
+
     def test_startup_assistance_retries_with_manual_sign_in_and_releases_lock_on_exit(self):
         failed = Result.failure(InfrastructureError("settings_load_failed", "settings_load_failed"))
         cancelled = Result.failure(CancellationError("auth_cancelled", "auth_cancelled"))
@@ -80,7 +100,7 @@ class DesktopExitTests(unittest.TestCase):
                 resources.window.last_error = None
                 runtime = SimpleNamespace(window=resources.window, job_runner=resources.runner,
                                           local_inference=resources.inference)
-                with patch("worklogger.bootstrap.build_desktop_runtime", return_value=Result.success(runtime)), redirect_stdout(io.StringIO()):
+                with patch("worklogger.bootstrap.build_diagnostic_runtime", return_value=Result.success(runtime)), redirect_stdout(io.StringIO()):
                     self.assertEqual(smoke_runtime_check(), 0 if refreshed else 1)
                 resources.assert_has_calls([
                     call.window.close(),
