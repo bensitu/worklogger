@@ -1,19 +1,41 @@
-"""Dispose owned test windows before another test reapplies application styles."""
+"""Bounded Qt event waiting and owned test-window cleanup."""
 
 import gc
-from time import monotonic
-from PySide6.QtCore import QCoreApplication, QEvent
-from PySide6.QtTest import QTest
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QTimer
 from PySide6.QtWidgets import QApplication
 
 
 def wait_for_condition(predicate, timeout_ms=3000):
-    deadline = monotonic() + timeout_ms / 1000
-    while not predicate():
-        if monotonic() >= deadline:
-            return False
-        QTest.qWait(10)
-    return True
+    if predicate():
+        return True
+    if timeout_ms <= 0:
+        return False
+    loop = QEventLoop()
+    poll, deadline = QTimer(loop), QTimer(loop)
+    errors = []
+
+    def check():
+        try:
+            if predicate():
+                loop.quit()
+        except Exception as error:
+            errors.append(error)
+            loop.quit()
+
+    poll.timeout.connect(check)
+    deadline.setSingleShot(True)
+    deadline.timeout.connect(loop.quit)
+    poll.start(10)
+    deadline.start(timeout_ms)
+    try:
+        loop.exec()
+    finally:
+        poll.stop()
+        deadline.stop()
+        loop.deleteLater()
+    if errors:
+        raise errors[0]
+    return bool(predicate())
 
 
 def dispose_test_windows():

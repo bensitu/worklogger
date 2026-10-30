@@ -198,9 +198,7 @@ class RuntimeBootstrapTests(unittest.TestCase):
             panel.clear_button.click()
             settings.set(runtime.user.id, "local_model_enabled", "1")
             settings.set(runtime.user.id, MINIMAL_MODE_SETTING_KEY, "1")
-            runtime.window.hide()
-            self.assertTrue(runtime.job_runner.shutdown(wait=True))
-            runtime.local_inference.close()
+            runtimes.close()
             with patch("worklogger.composition.context.LocalInferenceRuntime", side_effect=inference):
                 restarted = build_desktop_runtime(DesktopRuntimeConfig(database_path=root / "worklog.db",
                     password_iterations=1000), argv=[])
