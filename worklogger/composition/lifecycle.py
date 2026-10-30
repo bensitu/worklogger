@@ -44,6 +44,7 @@ def dispose_runtime(runtime) -> None:
             try:
                 window = runtime.window
                 if isinstance(window, QWidget) and isValid(window):
+                    window.hide()
                     window.deleteLater()
                     QCoreApplication.sendPostedEvents(window, QEvent.Type.DeferredDelete)
             finally:

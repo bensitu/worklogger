@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QCloseEvent
 
 from worklogger.bootstrap import DesktopRuntimeConfig, build_diagnostic_runtime
+from worklogger.composition.lifecycle import dispose_runtime
 from worklogger.infrastructure.language_preferences import LanguagePreferences
 from worklogger.infrastructure.repositories.worklog_sqlite import SQLiteWorkLogRepository
 from worklogger.infrastructure.repositories.calendar_sqlite import SQLiteCalendarEventRepository
@@ -1282,11 +1283,11 @@ class TimeEntryWorkflowTests(unittest.TestCase):
         self.assertTrue(result.ok, result.error)
         self.runtime = result.value
         self.window = result.value.window
-        self.addCleanup(lambda: self.runtime.job_runner.shutdown(wait=True))
-        self.addCleanup(self.window.close)
+        self.addCleanup(dispose_runtime, self.runtime)
         self.panel = self.window.entry_panel
         self.panel._job_runner = ImmediateJobRunner()
         self.window._job_runner = self.panel._job_runner
+        self.window._settings_workflow._job_runner = self.panel._job_runner
         self.panel._polish_task._runner = self.panel._job_runner
         self.repository = SQLiteWorkLogRepository(result.value.connection_factory)
         self.now = datetime(2026, 5, 20, 9, tzinfo=self.panel.view_model.service.local_timezone)
