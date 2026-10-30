@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 
 from collections.abc import Callable
 from typing import Protocol
@@ -16,7 +16,7 @@ from worklogger.config.constants import (
 )
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.settings.validation import normalize_setting
-from worklogger.domain.shared.errors import InfrastructureError, ValidationError
+from worklogger.domain.shared.errors import InfrastructureError
 from worklogger.domain.shared.result import Result
 
 
@@ -107,7 +107,7 @@ class SetSettingHandler:
                 else:
                     value = self._holiday_region_validator(value)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("settings_save_failed", exc, logger_name=__name__))
         try:
             self._repository.set(command.user_id, key, value)
         except Exception as error:
@@ -123,7 +123,7 @@ class GetSettingHandler:
         try:
             key = _normalize_key(query.key)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("settings_load_failed", exc, logger_name=__name__))
         try:
             return Result.success(self._repository.get(query.user_id, key, query.default))
         except Exception as error:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 
 from calendar import monthrange
 from datetime import date
@@ -21,7 +21,6 @@ from worklogger.domain.analytics.rules import (
 from worklogger.config.constants import MONTHLY_TARGET_HOURS_SETTING_KEY, STANDARD_WORK_HOURS_SETTING_KEY, WEEK_START_MONDAY_SETTING_KEY
 from worklogger.domain.settings.repositories import SettingsRepository
 from worklogger.domain.settings.values import setting_bool
-from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog
 from worklogger.domain.worklog.repositories import WorkLogRepository
@@ -39,6 +38,8 @@ class GetAnalyticsBundleHandler:
                 raise ValueError("analytics_scope_invalid")
             if query.metric not in {"hours", "average"}:
                 raise ValueError("analytics_metric_invalid")
+            if type(query.year) is not int or not 1 <= query.year <= 9999:
+                raise ValueError("analytics_scope_invalid")
             if scope == "monthly":
                 if query.month is None:
                     raise ValueError("month_required")
@@ -48,7 +49,7 @@ class GetAnalyticsBundleHandler:
             else:
                 bundle = self._annual(query)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("analytics_load_failed", exc, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure('analytics_load_failed', error, logger_name=__name__))
         return Result.success(bundle)
@@ -128,7 +129,7 @@ class GetAnalyticsDashboardHandler:
             value = replace(value, target_hours=plan.target_hours, planned_work_days=plan.planned_days,
                             target_mode=plan.target_mode, planning_error=plan.error_code)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("analytics_load_failed", exc, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure('analytics_load_failed', error, logger_name=__name__))
         return Result.success(value)

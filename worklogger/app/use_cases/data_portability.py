@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 from worklogger.app.job_runner import CancellationToken
 from worklogger.app.commands.data_portability_commands import ImportWorkLogsCsvCommand
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 from worklogger.domain.shared.errors import CancellationError, ValidationError
 from worklogger.domain.shared.result import Result
 from worklogger.domain.worklog.models import WorkLog, WorkModeValue
@@ -159,7 +159,7 @@ class ImportWorkLogsCsvHandler:
         try:
             self._repository.import_many(preview.rows, overwrite=overwrite, replace_dates=replace_dates)
         except ValueError as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("csv_import_failed", exc, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure("csv_import_failed", error, logger_name=__name__))
         return Result.success(

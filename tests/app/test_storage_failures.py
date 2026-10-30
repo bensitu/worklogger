@@ -15,11 +15,41 @@ from worklogger.app.use_cases.work_logs import GetAllWorkLogsHandler, GetMonthRe
 from worklogger.app.use_cases.notes import GetDailyNoteHandler
 from worklogger.app.use_cases.calendar import GetCalendarEventsForRangeHandler
 from worklogger.app.use_cases.local_models import ListLocalModelsHandler
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.domain.shared.errors import InfrastructureError, ValidationError
 from worklogger.domain.shared.result import Result
 
 
 class StorageFailureTests(unittest.TestCase):
+    def test_storage_boundaries_preserve_codes_without_exposing_exception_messages(self):
+        day = date(2026, 10, 10)
+        repository = Mock()
+        handler = GetReportForPeriodHandler(repository)
+        query = GetReportForPeriodQuery(1, "daily", day, day)
+        for reason, expected_type, expected_code in (
+            ("report_period_invalid", ValidationError, "report_period_invalid"),
+            ("stored_records_invalid", InfrastructureError, "stored_records_invalid"),
+            ("could not convert private input to float", InfrastructureError, "report_load_failed"),
+        ):
+            with self.subTest(reason=reason):
+                repository.get_for_period.side_effect = ValueError(reason)
+                result = handler.handle(query)
+                self.assertIsInstance(result.error, expected_type)
+                self.assertEqual((result.error.code, result.error.message), (expected_code, expected_code))
+
+    def test_analytics_rejects_invalid_years_before_reading_records(self):
+        from worklogger.app.queries.analytics_queries import GetAnalyticsBundleQuery
+        from worklogger.app.use_cases.analytics import GetAnalyticsBundleHandler
+
+        repository = Mock()
+        handler = GetAnalyticsBundleHandler(repository)
+        for scope in ("monthly", "quarterly", "annual"):
+            for year in (0, 10000, True, "2026"):
+                with self.subTest(scope=scope, year=year):
+                    result = handler.handle(GetAnalyticsBundleQuery(1, year, 10, "hours", True, scope=scope))
+                    self.assertEqual(result.error.code, "analytics_scope_invalid")
+        repository.list_for_month.assert_not_called()
+        repository.list_range.assert_not_called()
+
     def test_note_size_errors_distinguish_content_limits_and_preserve_storage(self):
         from worklogger.app.use_cases.notes import DailyNotesService
         from worklogger.domain.notes.models import MAX_NOTE_CONTENT_BYTES

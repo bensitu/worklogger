@@ -7,6 +7,7 @@ from datetime import date
 from typing import Protocol
 
 from worklogger.app.queries.ai_queries import BuildAiContextQuery
+from worklogger.app.failures import application_failure
 from worklogger.app.entry_labels import classification_label
 from worklogger.app.queries.calendar_queries import GetCalendarEventsForRangeQuery
 from worklogger.app.queries.quick_log_queries import GetQuickLogsForRangeQuery
@@ -80,7 +81,7 @@ class BuildAiContextHandler:
         try:
             start_day, end_day = _context_range(query.selected_day, query.period_type, options["week_start_monday"])
         except ValueError as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("ai_context_failed", exc, logger_name=__name__))
         work_logs = self._work_logs_handler.list_range(query.user_id, start_day, end_day)
         if not work_logs.ok or work_logs.value is None:
             return Result.failure(work_logs.error or InfrastructureError("ai_context_failed", "ai_context_failed"))

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 
 import json
 import math
@@ -79,7 +79,7 @@ class GenerateReportHandler:
             if not math.isfinite(standard_hours) or not 1 <= standard_hours <= 24:
                 raise ValueError("standard_work_hours_invalid")
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("report_load_failed", exc, logger_name=__name__))
 
         try:
             display_name = profile_display_name(self._profiles, command.user_id)

@@ -181,7 +181,10 @@ def normalize_work_log(
     if not start and ((isinstance(work_log.entry_type, CustomEntryType) and work_log.entry_type.category != "leave") or normalize_entry_type(work_log.entry_type) in {EntryType.MEETING, EntryType.TRAINING, EntryType.BREAK, EntryType.OTHER}):
         raise ValueError("time_range_incomplete")
 
-    break_hours = float(work_log.break_hours or 0)
+    try:
+        break_hours = float(work_log.break_hours or 0)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("break_hours_too_long") from None
     if not math.isfinite(break_hours) or break_hours > max_shift_hours:
         raise ValueError("break_hours_too_long")
     if break_hours < 0:

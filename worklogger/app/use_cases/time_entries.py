@@ -27,7 +27,7 @@ from worklogger.domain.worklog.rules import entry_interval, normalize_work_log
 from worklogger.app.entry_selection import EntrySelectionResolver
 from worklogger.app.ports import EntryTypeOperations, ProjectOperations, WorkModeOperations
 from worklogger.app.time_entry_state import RecordingState
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 from worklogger.app.use_cases.manual_entries import ManualEntryWriter
 from worklogger.domain.projects.models import WorkContext
 from worklogger.domain.worklog.replacement import EntryReplacement
@@ -129,8 +129,9 @@ class TimeEntryService:
             code = str(exc)
             if code == "auto_record_restore_failed":
                 self.restore_failed = True
-            error_type = ConflictError if code in {"worklog_entry_conflict", "time_entry_timer_conflict", "record_change_conflict"} else ValidationError
-            self.last_error = error_type(code, code)
+            self.last_error = (ConflictError(code, code)
+                               if code in {"worklog_entry_conflict", "time_entry_timer_conflict", "record_change_conflict"}
+                               else application_failure(error_code, exc, logger_name=__name__))
         except Exception as error:
             self.last_error = infrastructure_failure(error_code, error, logger_name=__name__)
         return Result.failure(self.last_error)
@@ -148,8 +149,8 @@ class TimeEntryService:
         try:
             return Result.success(self.repository.search_entries(self.user_id, criteria, cursor=cursor,
                                                                limit=self._search_page_size))
-        except ValueError:
-            return Result.failure(ValidationError("record_search_invalid", "record_search_invalid"))
+        except ValueError as error:
+            return Result.failure(application_failure("record_search_failed", error, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure("record_search_failed", error, logger_name=__name__))
 
@@ -314,6 +315,8 @@ class TimeEntryService:
         timer = self.timer
         if timer is None:
             raise ValueError("auto_record_not_started")
+        if not isinstance(end, datetime) or end.tzinfo is None:
+            raise ValueError("time_range_invalid")
         record = normalize_work_log(WorkLog(self.user_id, timer.started_at.date(), timer.started_at.strftime("%H:%M"),
             end.strftime("%H:%M"), timer.legacy_break_hours, require_entry_content(content), timer.entry_type,
             started_at=timer.started_at, ended_at=end, capture_id=timer.capture_id,
@@ -354,7 +357,10 @@ class TimeEntryService:
         def resume():
             if self.timer is None or self.timer.break_until is None:
                 raise ValueError("auto_record_break_not_active")
-            moment = self.timer.break_until if at_deadline else min(now or self.now(), self.timer.break_until)
+            requested = now or self.now()
+            if not isinstance(requested, datetime) or requested.tzinfo is None:
+                raise ValueError("time_range_invalid")
+            moment = self.timer.break_until if at_deadline else min(requested, self.timer.break_until)
             next_timer = EntryTimer(uuid4().hex, moment, self.timer.resume_type, self.timer.resume_content,
                 context=self.timer.context,
                 work_mode=self.timer.work_mode or {EntryType.REMOTE: WorkMode.REMOTE, EntryType.BUSINESS_TRIP: WorkMode.BUSINESS_TRIP}.get(self.timer.resume_type))

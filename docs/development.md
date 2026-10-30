@@ -78,6 +78,11 @@ Use descriptive English identifiers/comments and standard Python naming.
 Describe responsibilities and behavior with neutral, professional terminology.
 Remove unused scaffolding rather than preserving it for an unspecified feature.
 
+Application error boundaries preserve coded validation failures and distinguish
+unreadable stored data from invalid input. Pass unexpected exception messages
+through the shared failure mapper rather than using them as public error codes;
+diagnostic logs must not include user content or credentials.
+
 Keep long operations off the UI thread. Honor cancellation, ownership, optimistic
 updates, and disposal. Treat error codes as stable diagnostic identifiers.
 Schedule modal workflow dialogs for deletion when their execution ends, including

@@ -1,6 +1,6 @@
 """Account background import and preferences."""
 
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 
 from typing import Protocol
 
@@ -10,7 +10,6 @@ from worklogger.domain.settings.background import (
     BackgroundState,
     validate_opacity,
 )
-from worklogger.domain.shared.errors import ValidationError
 from worklogger.domain.shared.result import Result
 
 
@@ -41,7 +40,7 @@ class BackgroundService:
             if type(enabled) is not bool:
                 raise ValueError("background_enabled_invalid")
         except ValueError as error:
-            return Result.failure(ValidationError(str(error), str(error)))
+            return Result.failure(application_failure("background_storage_failed", error, logger_name=__name__))
         return self._run(lambda: self._repository.set_options(self._user_id, enabled=enabled, opacity=opacity))
 
     def clear(self) -> Result[BackgroundState]:
@@ -52,6 +51,6 @@ class BackgroundService:
         try:
             return Result.success(operation())
         except ValueError as error:
-            return Result.failure(ValidationError(str(error), str(error)))
+            return Result.failure(application_failure("background_storage_failed", error, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure('background_storage_failed', error, logger_name=__name__))

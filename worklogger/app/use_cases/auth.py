@@ -37,10 +37,9 @@ from worklogger.domain.shared.errors import (
     ConflictError,
     InfrastructureError,
     NotFoundError,
-    ValidationError,
 )
 from worklogger.domain.shared.result import Result
-from worklogger.app.failures import storage_boundary
+from worklogger.app.failures import application_failure, storage_boundary
 
 
 @dataclass(frozen=True)
@@ -82,7 +81,7 @@ class RegisterUserHandler:
                 recovery_key=recovery_key,
             )
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
         return Result.success(RegisteredUser(user=user, recovery_key=recovery_key))
 
 
@@ -101,7 +100,7 @@ class LoginHandler:
             username = normalize_username(command.username)
             password = require_password(command.password, min_length=1, max_bytes=None)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
 
         remaining = _locked_seconds(self._failures, username)
         if remaining:
@@ -166,7 +165,7 @@ class ChangePasswordHandler:
                 field_name="new_password",
             )
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
         user = self._credentials.get_by_id(command.user_id)
         if user is None:
             return Result.failure(AuthenticationError("invalid_credentials", "invalid_credentials"))
@@ -197,7 +196,7 @@ class ResetPasswordHandler:
                 field_name="new_password",
             )
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
         remaining = _locked_seconds(self._failures, username)
         if remaining:
             self._credentials.verify_dummy_password(recovery_key)
@@ -257,7 +256,7 @@ class CreateManagedUserHandler:
                 must_change_password=bool(command.must_change_password),
             )
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
         return Result.success(RegisteredUser(user=user, recovery_key=recovery_key))
 
 
@@ -277,7 +276,7 @@ class AdminResetPasswordHandler:
         try:
             password = require_password(command.new_password, field_name="new_password")
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("auth_state_failed", exc, logger_name=__name__))
         reset_password = self._credentials.reset_password_by_admin(
             command.target_user_id,
             password,

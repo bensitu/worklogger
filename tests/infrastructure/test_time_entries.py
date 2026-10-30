@@ -28,6 +28,20 @@ from worklogger.infrastructure.security.password_hasher import PBKDF2PasswordHas
 
 
 class TimeEntryTests(unittest.TestCase):
+    def test_failed_timer_end_preserves_recording_for_explicit_recovery(self):
+        self.assertTrue(self.service.start("normal", "Ongoing").ok)
+        original = self.make_service().timer
+        for end in (self.now.replace(tzinfo=None), self.now + timedelta(hours=17)):
+            with self.subTest(end=end):
+                result = self.service.finish("Completed", now=end)
+                self.assertEqual(result.error.code, "time_range_invalid")
+                self.assertEqual(self.make_service().timer, original)
+                self.assertEqual(self.repository.list_for_day(self.user.id, self.now.date()), ())
+        result = self.service.finish("Completed", now=self.now + timedelta(hours=8))
+        self.assertTrue(result.ok, result.error)
+        self.assertEqual(result.value.worked_hours(), 8)
+        self.assertIsNone(self.make_service().timer)
+
     def test_explicit_splits_preserve_selected_offsets_after_sqlite_round_trip(self):
         from zoneinfo import ZoneInfo
 

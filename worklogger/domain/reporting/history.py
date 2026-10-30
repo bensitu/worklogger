@@ -24,7 +24,10 @@ class ReportHistoryFilter:
 
     def __post_init__(self):
         object.__setattr__(self, "report_type", normalize_report_type(self.report_type))
-        object.__setattr__(self, "sort", ReportSort(self.sort))
+        try:
+            object.__setattr__(self, "sort", ReportSort(self.sort))
+        except (TypeError, ValueError):
+            raise ValueError("report_history_filter_invalid") from None
         if (not isinstance(self.start, date) or not isinstance(self.end, date) or self.start > self.end
                 or not isinstance(self.text, str) or len(self.text) > 256):
             raise ValueError("report_history_filter_invalid")

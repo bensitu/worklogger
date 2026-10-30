@@ -3,8 +3,7 @@
 from uuid import uuid4
 from worklogger.domain.worklog.models import CustomEntryType, EntryType
 from worklogger.domain.shared.result import Result
-from worklogger.domain.shared.errors import ValidationError
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 from typing import Generic
 from worklogger.domain.worklog.type_repository import ClassificationRepository, Definition
 
@@ -31,7 +30,7 @@ class ClassificationService(Generic[Definition]):
                 label.strip(), category, previous.revision if previous else 0)
             return Result.success(self.repository.save_type(self.user_id, definition))
         except ValueError as error:
-            return Result.failure(ValidationError(str(error), str(error)))
+            return Result.failure(application_failure(self.collection_prefix + "_save_failed", error, logger_name=__name__))
         except Exception as error:
             code = self.collection_prefix + "_save_failed"
             return Result.failure(infrastructure_failure(code, error, logger_name=__name__))
@@ -41,7 +40,7 @@ class ClassificationService(Generic[Definition]):
             self.repository.archive_type(self.user_id, definition)
             return Result.success(None)
         except ValueError as error:
-            return Result.failure(ValidationError(str(error), str(error)))
+            return Result.failure(application_failure(self.collection_prefix + "_save_failed", error, logger_name=__name__))
         except Exception as error:
             code = self.collection_prefix + "_save_failed"
             return Result.failure(infrastructure_failure(code, error, logger_name=__name__))

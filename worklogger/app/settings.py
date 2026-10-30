@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Protocol
 
 from worklogger.app.queries.settings_queries import GetSettingQuery
-from worklogger.domain.shared.errors import InfrastructureError
+from worklogger.app.failures import infrastructure_failure
 from worklogger.domain.shared.result import Result
 
 
@@ -33,5 +33,5 @@ def read_setting_values(reader: SettingsReader, user_id: int,
                 return Result.failure(result.error)
             values[key] = result.value if result.value is not None else default
         return Result.success(values)
-    except Exception:
-        return Result.failure(InfrastructureError(error_code, error_code))
+    except Exception as error:
+        return Result.failure(infrastructure_failure(error_code, error, logger_name=__name__))

@@ -24,8 +24,9 @@ class NoteHistoryFilter:
     limit: int = 50
 
     def __post_init__(self):
-        if self.start > self.end or not 1 <= self.limit <= 100:
-            raise ValueError("Invalid note history range or page size")
+        if (not isinstance(self.start, date) or not isinstance(self.end, date)
+                or self.start > self.end or type(self.limit) is not int or not 1 <= self.limit <= 100):
+            raise ValueError("note_load_failed")
 
 
 @dataclass(frozen=True)

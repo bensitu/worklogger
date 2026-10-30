@@ -1,6 +1,6 @@
 """Account-scoped profile reads and optimistic display-name updates."""
 
-from worklogger.app.failures import infrastructure_failure
+from worklogger.app.failures import application_failure, infrastructure_failure
 
 from worklogger.domain.auth.models import User
 from worklogger.domain.auth.profile import normalize_display_name
@@ -27,7 +27,7 @@ class UserProfileService:
         try:
             name = normalize_display_name(value)
         except ValueError as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("user_profile_save_failed", exc, logger_name=__name__))
         try:
             return Result.success(self._repository.set_display_name(
                 self._user_id, name, expected_display_name=expected_display_name))

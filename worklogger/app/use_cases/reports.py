@@ -13,7 +13,7 @@ from worklogger.app.queries.report_queries import (
     GetReportForPeriodQuery,
     ListReportsQuery,
 )
-from worklogger.app.failures import infrastructure_failure, storage_boundary
+from worklogger.app.failures import application_failure, infrastructure_failure, storage_boundary
 from worklogger.app.use_cases.report_generation import GeneratedReport as GeneratedReport
 from worklogger.app.use_cases.report_generation import GenerateReportHandler as GenerateReportHandler
 from worklogger.domain.reporting.models import Report
@@ -24,7 +24,7 @@ from worklogger.domain.reporting.templates import (
     normalize_template_language,
     normalize_template_type,
 )
-from worklogger.domain.shared.errors import ConflictError, InfrastructureError, NotFoundError, ValidationError
+from worklogger.domain.shared.errors import ConflictError, InfrastructureError, NotFoundError
 from worklogger.domain.shared.result import Result
 
 
@@ -42,7 +42,7 @@ class SaveReportHandler:
             if not isinstance(command.content, str) or not command.content.strip():
                 raise ValueError("report_content_required")
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("report_save_failed", exc, logger_name=__name__))
         report = Report(
             id=command.report_id,
             user_id=command.user_id,
@@ -60,7 +60,7 @@ class SaveReportHandler:
                 return Result.failure(ConflictError("report_conflict", "report_conflict"))
             if str(exc) == "report_not_found":
                 return Result.failure(NotFoundError("report_not_found", "report_not_found"))
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("report_save_failed", exc, logger_name=__name__))
         except Exception as error:
             return Result.failure(infrastructure_failure("report_save_failed", error, logger_name=__name__))
 
@@ -132,7 +132,7 @@ class GetReportForPeriodHandler:
                 query.period_end,
             )
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("report_load_failed", exc, logger_name=__name__))
         return Result.success(
             self._repository.get_for_period(
                 query.user_id,
@@ -155,7 +155,7 @@ class ListReportsHandler:
             if query.period_start is not None and query.period_end < query.period_start:
                 raise ValueError("report_period_invalid")
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("report_history_failed", exc, logger_name=__name__))
         try:
             if query.period_start is not None and query.period_end is not None:
                 reader = getattr(self._repository, "list_range", None)
@@ -181,7 +181,7 @@ class SaveReportTemplateHandler:
             if len(command.content.encode("utf-8")) > 1024 * 1024:
                 raise ValueError("template_content_too_long")
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("template_save_failed", exc, logger_name=__name__))
         template = ReportTemplate(
             id=None,
             user_id=command.user_id,
@@ -204,7 +204,7 @@ class ResetReportTemplateHandler:
             template_type = normalize_template_type(command.template_type)
             language = normalize_template_language(command.language)
         except (TypeError, ValueError) as exc:
-            return Result.failure(ValidationError(str(exc), str(exc)))
+            return Result.failure(application_failure("template_save_failed", exc, logger_name=__name__))
         try:
             self._repository.remove(command.user_id, language, template_type)
         except Exception as error:
