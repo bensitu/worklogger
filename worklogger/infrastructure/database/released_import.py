@@ -1,5 +1,7 @@
 """One-time conversion of released unversioned databases, not development schemas."""
 
+from datetime import datetime, timezone
+
 from worklogger.domain.auth.policies import username_key
 from worklogger.infrastructure.database.current_schema import (
     TABLE_STATEMENTS,
@@ -119,12 +121,28 @@ def _validate_imported_worklog(connection, *, expected_count):
         raise ValueError("database_record_invalid") from None
 
 
+def _latest_timestamp(previous, current):
+    latest, latest_moment = None, None
+    try:
+        for value in (previous, current):
+            if value in (None, ""):
+                continue
+            moment = datetime.fromisoformat(value)
+            if moment.tzinfo is None:
+                moment = moment.replace(tzinfo=timezone.utc)
+            if latest_moment is None or moment > latest_moment:
+                latest, latest_moment = value, moment
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("database_record_invalid") from None
+    return latest
+
+
 def _normalize_login_attempts(connection):
     merged = {}
     for name, count, locked, failed in connection.execute("SELECT username,failed_count,locked_until,last_failed_at FROM login_attempts"):
         key = username_key(name)
         previous = merged.get(key, (0, None, None))
-        merged[key] = (min(20, previous[0] + int(count or 0)), max(previous[1] or "", locked or "") or None,
-                       max(previous[2] or "", failed or "") or None)
+        merged[key] = (min(20, previous[0] + int(count or 0)), _latest_timestamp(previous[1], locked),
+                       _latest_timestamp(previous[2], failed))
     connection.execute("DELETE FROM login_attempts")
     connection.executemany("INSERT INTO login_attempts VALUES(?,?,?,?)", [(key, *value) for key, value in merged.items()])

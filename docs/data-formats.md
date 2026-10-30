@@ -66,6 +66,12 @@ time-record undo.
 
 Imports are limited to 10 MiB and 50,000 rows. UTF-8 is preferred, with the selected
 language's legacy encoding as a fallback. Field boundaries are trimmed.
+Legacy encodings can decode the same bytes differently without reporting an
+error. For files from another region, verify the text in an editor or spreadsheet
+application using the known source encoding, then save a UTF-8 copy before import.
+The import confirmation summarizes counts, not encoding correctness. Changing
+the interface language is not a reliable way to determine a file's encoding.
+Programmatic imports can specify `encoding` explicitly when it is known.
 Spreadsheet-sensitive exported text receives an apostrophe prefix.
 Exports containing protected text include `text_format=spreadsheet-safe-v1`.
 This marker allows import to restore formula-like text and literal apostrophes

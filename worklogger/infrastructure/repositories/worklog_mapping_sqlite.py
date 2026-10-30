@@ -80,10 +80,12 @@ class WorkLogStorage:
             raise ValueError("stored_work_log_invalid")
         if (row["start"] and not record.start_time) or (row["end"] and not record.end_time):
             raise ValueError("stored_work_log_invalid")
-        if bool(record.start_time) != bool(record.end_time) or (
-                record.has_times and record.started_at is None
-                and calc_shift_span_hours(record.start_time, record.end_time) is None):
+        if bool(record.start_time) != bool(record.end_time):
             raise ValueError("stored_work_log_invalid")
+        if record.has_times and record.started_at is None:
+            span = calc_shift_span_hours(record.start_time, record.end_time)
+            if span is None or break_hours >= span:
+                raise ValueError("stored_work_log_invalid")
         return (
             normalize_work_log(record)
             if record.started_at is not None or record.ended_at is not None

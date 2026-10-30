@@ -40,6 +40,8 @@ English, Japanese, Korean, Simplified Chinese, and Traditional Chinese interface
 
 If your computer shows a security warning or the application does not open, check the [download guidance](docs/packaging.md#application-downloads) and [startup help](docs/troubleshooting.md#startup). Only use downloads you trust; do not disable security software.
 
+**Check your download:** release files include signed checksums. See [Verify downloaded files](docs/packaging.md#verify-downloaded-files). These checks do not replace Windows or macOS publisher verification.
+
 ## Your Data and Optional Services
 
 **Use it locally, on your terms.** Your records are stored on your computer. Create an account within the app and start recording; Google/Microsoft sign-in, AI assistance, and cloud backups are optional.

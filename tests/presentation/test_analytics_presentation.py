@@ -236,6 +236,39 @@ class AnalyticsPresentationTests(unittest.TestCase):
                     self.assertEqual(path.read_bytes(), original)
             set_language("en_US")
 
+    def test_dashboard_pdf_preserves_oversized_table_cells_and_following_rows(self):
+        from dataclasses import replace
+        from worklogger.domain.analytics.rules import dashboard_data
+
+        dashboard = dashboard_data((), year=2026, month=10, scope="monthly", standard_hours=8, monthly_target=168)
+        for separator in (" ", "\n", ""):
+            with self.subTest(separator=repr(separator)), tempfile.TemporaryDirectory() as directory:
+                parts = tuple(f"Segment{index:04d}\u4f5c\u696d" for index in range(1000))
+                label = separator.join(parts)
+                bundle = replace(dashboard.daily_average_trend, periods=(),
+                                 line_data=((label, 123.45), ("Following row", 67.89)))
+                path = Path(directory) / "dashboard.pdf"
+                result = AnalyticsPdfExporter().export_dashboard(path, replace(dashboard, daily_average_trend=bundle),
+                                                                 scope="monthly")
+                self.assertTrue(result.ok, result.error)
+                document = QPdfDocument()
+                self.assertEqual(document.load(str(path)), QPdfDocument.Error.None_)
+                try:
+                    pages = [document.getAllText(index).text() for index in range(document.pageCount())]
+                    for index in range(1, document.pageCount()):
+                        self.assertLessEqual(document.getAllText(index).boundingRectangle().bottom(),
+                                             document.pagePointSize(index).height())
+                finally:
+                    document.close()
+                    del document
+                text = "".join("\n".join(pages[1:]).split())
+                remaining = iter(text)
+                self.assertTrue(all(character in remaining for character in "".join(parts)),
+                                "Table cell content must remain complete and ordered across pages")
+                self.assertEqual(text.count("123.45h"), 1)
+                self.assertIn("Followingrow", text)
+                self.assertIn("67.89h", text)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = _app()

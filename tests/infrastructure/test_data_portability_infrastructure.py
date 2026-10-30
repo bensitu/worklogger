@@ -518,6 +518,30 @@ class DataPortabilityInfrastructureTests(unittest.TestCase):
         source.write_bytes(b"date,note\n2026-04-20,\xff\n")
         self.assertFalse(WorkLogCsvImporter(encoding="utf-8").parse(source, user).ok)
 
+    def test_csv_import_preserves_supported_locale_encodings_and_explicit_overrides(self):
+        source = Path(self._tempdir.name) / "encoded.csv"
+        samples = (("ja_JP", "cp932", "\u4f5c\u696d"), ("ko_KR", "cp949", "\uc791\uc5c5"),
+                   ("zh_CN", "gb18030", "\u5de5\u4f5c"), ("zh_TW", "big5", "\u5de5\u4f5c"))
+        for language, encoding, note in samples:
+            with self.subTest(encoding=encoding), patch(
+                    "worklogger.infrastructure.export.worklog_csv_import.get_language", return_value=language):
+                content = f"date,note\n2026-04-20,{note}\n"
+                for utf_encoding in ("utf-8", "utf-8-sig"):
+                    source.write_bytes(content.encode(utf_encoding))
+                    parsed = WorkLogCsvImporter().parse(source, 1)
+                    self.assertTrue(parsed.ok, parsed.error)
+                    self.assertEqual(parsed.value.rows[0].note, note)
+                source.write_bytes(content.encode(encoding))
+                parsed = WorkLogCsvImporter().parse(source, 1)
+                self.assertTrue(parsed.ok, parsed.error)
+                self.assertEqual(parsed.value.rows[0].note, note)
+            with self.subTest(explicit_encoding=encoding), patch(
+                    "worklogger.infrastructure.export.worklog_csv_import.get_language", return_value="en_US"):
+                self.assertFalse(WorkLogCsvImporter().parse(source, 1).ok)
+                parsed = WorkLogCsvImporter(encoding=encoding).parse(source, 1)
+                self.assertTrue(parsed.ok, parsed.error)
+                self.assertEqual(parsed.value.rows[0].note, note)
+
     def test_export_preserves_destination_on_failure_and_protects_spreadsheet_text(self):
         path = Path(self._tempdir.name) / "export.csv"
         exporter = WorkLogCsvExporter()

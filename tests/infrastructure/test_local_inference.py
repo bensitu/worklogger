@@ -3,7 +3,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from worklogger.app.ports import AIRequest
 from worklogger.app.use_cases.ai import RewriteTextHandler
@@ -325,3 +325,23 @@ class LocalInferenceTests(unittest.TestCase):
                 self.assertNotIn("Original note", repr(result.error) + "\n".join(log.output))
         self.service._engine_factory = original_factory
         self.assertTrue(self.handler.handle(RewriteTextCommand(1, "Next note")).ok)
+        with (patch.object(self.store, "verify_model", side_effect=RuntimeError("Private verification detail")),
+              self.assertLogs("worklogger.infrastructure.ai.runtime", level="ERROR") as log):
+            failed = self.handler.handle(RewriteTextCommand(1, "Private input"))
+        self.assertEqual(failed.error.code, "local_model_generation_failed")
+        self.assertIn("RuntimeError", "\n".join(log.output))
+        self.assertNotIn("Private", repr(failed.error) + "\n".join(log.output))
+
+    def test_inventory_removal_during_availability_check_returns_an_unavailable_result(self):
+        self.select()
+        def available():
+            with self.service._state_lock:
+                self.service._entry = None
+                self.service._reason = "local_model_not_selected"
+            return True
+        with (patch.object(LocalInferenceRuntime, "available", new_callable=PropertyMock, side_effect=available),
+              patch.object(self.store, "verify_model") as verify):
+            result = self.service.generate(AIRequest(({"role": "user", "content": "Example"},), "default", 30))
+        self.assertEqual(result.error.code, "local_model_not_selected")
+        verify.assert_not_called()
+        self.assertEqual(self.engines, [])

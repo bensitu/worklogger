@@ -31,12 +31,15 @@ Historical entries describe their respective releases; see the [user guide](docs
 - Local model loading errors cover runtime compatibility as well as memory limits, with safe backend-version diagnostics.
 - Failed or cancelled local model imports remove temporary files and roll back newly copied models if metadata cannot be saved, without deleting existing model files.
 - Background job and completion failures retain safe diagnostic codes without logging private exception payloads or blocking other completed requests.
-- Settings preference saves continue after submission or display failures, and local model caches invalidate when files are replaced.
+- Settings load preferences and protected credentials in the background, preserve edits during refresh, and continue queued saves after submission or display failures. Local model caches invalidate when files are replaced.
 - Report, analytics, identity, and template dialogs perform storage and export work through the shared desktop job runner, keeping the interface responsive and preserving edits when an operation fails.
 - AI context applies note-sharing permissions to associated historical entries, using the same deduplication rules as report generation.
 - Sign-in throttling provides consistent lockout responses for unknown IDs with bounded storage. External AI responses support structured text parts, and local model imports check available disk space before and during copying.
 - Deployment configuration is cached while unchanged and reloaded after file replacement. Unused event dispatch and hidden account controls have been removed without changing stored data.
 - Daily summaries preserve timed work when standalone notes are present. Invalid analytics periods and unusable record boundaries produce actionable errors rather than uncaught exceptions.
+- Average-hour charts use a consistent daily basis. Oversized PDF table rows continue across pages without losing their content.
+- Database upgrades retain original files when account associations are invalid and compare login-lock timestamps by actual time. Record checks identify invalid deductions and captured timestamps, while damaged report metadata produces a recoverable error.
+- Account switching releases completed worker resources, and diagnostic startup requires an explicit database and unambiguous account selection.
 - Browser authorization and local model transfers no longer occupy interactive AI workers. History pagination retains queued requests, sign-in clears the password field on success, and analytics exports retain the last successfully loaded data after a refresh failure.
 - Cloud credentials can be removed explicitly, turning off automatic backup without deleting remote files. Restore completion reloads application data even if its settings panel was closed.
 - Background display failures release their busy state. Numeric preferences save completed input, and asynchronous settings refresh preserves text being edited.

@@ -3,8 +3,8 @@
 from datetime import date, timedelta
 from calendar import monthrange
 
-from PySide6.QtCore import QMarginsF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QGuiApplication, QPageLayout, QPageSize, QPainter, QPdfWriter, QPen
+from PySide6.QtCore import QMarginsF, QPointF, QRectF, Qt
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QPageLayout, QPageSize, QPainter, QPdfWriter, QPen, QTextLayout, QTextOption
 
 from worklogger.domain.analytics.scales import chart_tick_step
 from worklogger.infrastructure.entry_type_labels import classification_label, work_mode_label
@@ -222,6 +222,9 @@ class _DashboardPdf:
                 self.text(QRectF(0, self.y, self.width, 24), title, size=15, bold=True)
                 self.y += 26
                 headings()
+            if self.y + height > self.height - 35:
+                self._split_table_row(row, widths, title, headings)
+                continue
             x = 0
             for value, width, flag in zip(row, widths, flags):
                 self._font(11)
@@ -232,6 +235,52 @@ class _DashboardPdf:
             self.painter.drawLine(0, int(self.y + height), self.width, int(self.y + height))
             self.y += height
         self.y += 12
+
+    def _split_table_row(self, row, widths, title, headings):
+        self._font(11)
+        cells = []
+        for value, width in zip(row, widths):
+            text = str(value).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\u2028")
+            layout = QTextLayout(text, self.painter.font(), self.painter.device())
+            option = QTextOption()
+            option.setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+            layout.setTextOption(option)
+            layout.beginLayout()
+            while True:
+                line = layout.createLine()
+                if not line.isValid():
+                    break
+                line.setLineWidth(self.width * width - 14)
+                line.setLeadingIncluded(True)
+            layout.endLayout()
+            cells.append(layout)
+        positions = [0] * len(cells)
+        while True:
+            available = self.height - 35 - self.y - 6
+            x, used = 0, 0
+            self.painter.setPen(QColor(_INK))
+            for index, (layout, width) in enumerate(zip(cells, widths)):
+                cell_height = 0
+                while positions[index] < layout.lineCount():
+                    line = layout.lineAt(positions[index])
+                    if cell_height + line.height() > available:
+                        break
+                    line.draw(self.painter, QPointF(x + 7, self.y + 3 + cell_height))
+                    cell_height += line.height()
+                    positions[index] += 1
+                used = max(used, cell_height)
+                x += self.width * width
+            if used == 0:
+                raise RuntimeError("analytics_pdf_export_failed")
+            self.y += max(22, used + 6)
+            self.painter.setPen(QPen(QColor(_BORDER), 0.6))
+            self.painter.drawLine(0, int(self.y), self.width, int(self.y))
+            if all(position == layout.lineCount() for position, layout in zip(positions, cells)):
+                return
+            self._new_page()
+            self.text(QRectF(0, self.y, self.width, 24), title, size=15, bold=True)
+            self.y += 26
+            headings()
 
     def details(self, dashboard):
         self._new_page()

@@ -145,6 +145,9 @@ class LocalInferenceRuntime:
                     return Result.failure(ValidationError(self.reason, self.reason))
                 with self._state_lock:
                     entry = self._entry
+                    if entry is None:
+                        reason = self._reason or "local_model_not_selected"
+                        return Result.failure(ValidationError(reason, reason))
                 verified = self.store.verify_model(entry.id, is_cancelled=control.interrupted)
                 control.check()
                 if not verified.ok or not verified.value.verified:
@@ -278,7 +281,8 @@ class LocalInferenceRuntime:
         except InterruptedError:
             error = CancellationError if control.reason == "ai_rewrite_cancelled" else InfrastructureError
             return Result.failure(error(control.reason, control.reason))
-        except Exception:
+        except Exception as error:
+            LOGGER.error("local_model_generation_failed: %s", type(error).__name__)
             return Result.failure(
                 InfrastructureError(
                     "local_model_generation_failed", "local_model_generation_failed"

@@ -275,6 +275,8 @@ draft. Reload explicitly discards it; saving edited content replaces it.
 
 **Allow in reports** and **Allow in AI context** are separate per-date choices and
 default to off. AI sharing also requires the account privacy setting.
+Historical entries already referenced by a note follow that note's sharing
+choices rather than being included separately around those choices.
 Deleting a time record does not delete its date's note.
 
 If Previous entries are shown, Add to note asks for confirmation. It saves the

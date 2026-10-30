@@ -120,6 +120,9 @@ fallback. Credential namespaces include account/database context.
 Remembered-session and provider-registration files use authenticated encryption.
 Machine keys are protected with current-user DPAPI on Windows or a private local
 key file on other platforms. Protect the containing OS profile.
+This fallback does not protect against other processes running as the same OS
+user that can read the machine key and database. Use an approved system keyring
+and restrict access to the operating-system account.
 Changing machine or database path may require re-entering credentials.
 
 Only approved OS keyring backends are used; plaintext-file backends are rejected.

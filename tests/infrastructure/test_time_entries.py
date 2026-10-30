@@ -720,6 +720,18 @@ class TimeEntryTests(unittest.TestCase):
         self.assertEqual(notes.get_for_day(other.id, day).content, "Independent memo")
         self.assertEqual(self.repository.list_for_day(other.id, day)[0].note, "Record content")
 
+    def test_stored_deductions_cannot_silently_zero_a_timed_record(self):
+        record = self.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "Retained content").value
+        for deduction in (1, 2):
+            with self.subTest(deduction=deduction):
+                with self.factory.transaction() as connection:
+                    connection.execute('UPDATE worklog SET "break"=? WHERE id=?', (deduction, record.id))
+                with self.assertRaisesRegex(ValueError, "stored_work_logs_invalid"):
+                    self.repository.list_for_day(self.user.id, record.day)
+                with self.factory.connection() as connection:
+                    stored = connection.execute('SELECT "break",note FROM worklog WHERE id=?', (record.id,)).fetchone()
+                    self.assertEqual(tuple(stored), (deduction, record.note))
+
     def test_invalid_optional_offsets_do_not_hide_valid_clock_records(self):
         record = self.service.save_manual(self.now.date(), "09:00", "10:00", "normal", "Retained content").value
         with self.factory.transaction() as connection:

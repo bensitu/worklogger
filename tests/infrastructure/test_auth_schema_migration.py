@@ -27,6 +27,47 @@ def released_database(path: Path, *, iterations: int = 1000):
 
 
 class AuthSchemaMigrationTests(unittest.TestCase):
+    def test_login_attempt_merge_selects_latest_instants_across_formats_and_offsets(self):
+        cases = (
+            ("2026-05-21T09:00:00+00:00", "2026-05-21 10:00:00"),
+            ("2026-05-21T15:00:00+09:00", "2026-05-21 07:00:00"),
+            ("2026-05-22T00:10:00+09:00", "2026-05-21T16:00:00+00:00"),
+            ("2026-05-21T10:00:00+02:00", "2026-05-21T08:30:00-01:00"),
+        )
+        for earlier, later in cases:
+            for reverse in (False, True):
+                with self.subTest(earlier=earlier, later=later, reverse=reverse), tempfile.TemporaryDirectory() as directory:
+                    path = Path(directory) / "accounts.db"
+                    factory, _, _ = released_database(path)
+                    attempts = [("ADMIN", 12, earlier, later), ("admin", 13, later, earlier),
+                                ("unknown", 1, None, None)]
+                    with factory.transaction() as connection:
+                        connection.executemany("INSERT INTO login_attempts VALUES(?,?,?,?)",
+                                               reversed(attempts) if reverse else attempts)
+                    self.assertEqual(MigrationRunner(factory).run_pending(), MIGRATION_VERSIONS)
+                    with factory.connection() as connection:
+                        rows = [tuple(row) for row in connection.execute("SELECT * FROM login_attempts ORDER BY username")]
+                    self.assertEqual(rows, [("admin", 20, later, later), ("unknown", 1, None, None)])
+                    snapshot = next(path.parent.glob("*.bak_upgrade_*"))
+                    with closing(sqlite3.connect(snapshot)) as connection:
+                        self.assertEqual(sorted(connection.execute("SELECT * FROM login_attempts")), sorted(attempts))
+
+    def test_invalid_login_attempt_timestamps_preserve_the_released_database(self):
+        for column in ("locked_until", "last_failed_at"):
+            with self.subTest(column=column), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "accounts.db"
+                factory, _, _ = released_database(path)
+                with factory.transaction() as connection:
+                    connection.execute("INSERT INTO login_attempts VALUES('ADMIN',3,NULL,NULL)")
+                    connection.execute(f"UPDATE login_attempts SET {column}='invalid'")
+                    original = tuple(connection.execute("SELECT * FROM login_attempts").fetchone())
+                with self.assertRaisesRegex(ValueError, "^database_record_invalid$"):
+                    MigrationRunner(factory).run_pending()
+                with factory.connection() as connection:
+                    self.assertEqual(tuple(connection.execute("SELECT * FROM login_attempts").fetchone()), original)
+                    self.assertIn("salt", {row[1] for row in connection.execute("PRAGMA table_info(users)")})
+                self.assertTrue(list(path.parent.glob("*.bak_upgrade_*")))
+
     def test_released_credentials_records_and_snapshot_are_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "worklog.db"
